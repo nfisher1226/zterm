@@ -8,7 +8,8 @@ pub fn build(b: *Builder) void {
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.linkLibC();
-    exe.linkSystemLibrary("gtk4");
+    exe.linkSystemLibrary("gtk+-3.0");
+    exe.linkSystemLibrary("vte-2.91");
     exe.install();
 
     exe.addPackage(.{
