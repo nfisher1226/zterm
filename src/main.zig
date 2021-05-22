@@ -67,8 +67,31 @@ pub fn main() !void {
                 const window_ptr = @ptrCast(*c.GtkWindow, window);
                 c.gtk_window_set_title(window_ptr, options.title);
 
-                const notebook = c.gtk_notebook_new();
+                var notebook = c.gtk_notebook_new();
                 const notebook_ptr = @ptrCast(*c.GtkNotebook, notebook);
+
+                const addbutton = c.gtk_button_new_from_icon_name("list-add", @intToEnum(c.GtkIconSize, c.GTK_ICON_SIZE_MENU));
+                c.gtk_button_set_relief(@ptrCast(*c.GtkButton, addbutton), @intToEnum(c.GtkReliefStyle, c.GTK_RELIEF_NONE));
+                c.gtk_notebook_set_action_widget(notebook_ptr, addbutton, @intToEnum(c.GtkPackType, c.GTK_PACK_END));
+                c.gtk_widget_show(addbutton);
+
+                _ = gtk.g_signal_connect(
+                    addbutton,
+                    "clicked",
+                    @ptrCast(c.GCallback, struct {
+                    fn a(b: *c.GtkButton, nb: c.gpointer) void {
+                        const command = @ptrCast([*c]const u8, os.getenvZ("SHELL") orelse "/bin/sh");
+                        _ = new_tab(
+                            @ptrCast(*c.GtkNotebook, @alignCast(8, nb)),
+                            @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
+                                c.g_strdup(command),
+                                null,
+                            })),
+                        );
+                    }
+                }.a),
+                @ptrCast(c.gpointer, notebook),
+                );
 
                 const command = @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
                     c.g_strdup(options.command),
