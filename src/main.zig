@@ -4,9 +4,54 @@ const gtk = @import("zig-gtk");
 const allocator = std.heap.page_allocator;
 const c = gtk.c;
 const fmt = std.fmt;
+const mem = std.mem;
+const os = std.os;
+const process = std.process;
+const stderr = std.io.getStdErr().writer();
 const stdout = std.io.getStdOut().writer();
 
+const params = comptime [_]clap.Param(clap.Help){
+    clap.parseParam("-h, --help                     Display this help and exit.") catch unreachable,
+    clap.parseParam("-e, --command <COMMAND>        Command and args to execute.") catch unreachable,
+    clap.parseParam("-t, --title <TITLE>            Defines the window title.") catch unreachable,
+    clap.parseParam("-w, --working-directory <DIR>  Set the terminal's working directory.") catch unreachable,
+};
+
+const Opts = struct {
+    command: [*c]const u8,
+    title: [*c]const u8,
+    directory: [*c]const u8,
+};
+
 pub fn main() !void {
+    var diag: clap.Diagnostic = undefined;
+    var args = clap.parse(clap.Help, &params, allocator, &diag) catch |err| {
+        diag.report(stderr, err) catch {};
+        return err;
+    };
+    defer args.deinit();
+    if (args.flag("--help")) {
+        usage(0);
+    }
+
+    const cmd: [*c]const u8 = if (args.option("--command")) |e| eblk: {
+        const res = try mem.Allocator.dupeZ(allocator, u8, e);
+        break :eblk @ptrCast([*c]const u8, res);
+    } else @ptrCast([*c]const u8, os.getenvZ("SHELL") orelse "/bin/sh");
+    const title: [*c]const u8 = if (args.option("--title")) |t| tblk: {
+        const res = try mem.Allocator.dupeZ(allocator, u8, t);
+        break :tblk @ptrCast([*c]const u8, res);
+    } else @ptrCast([*c]const u8, "Zterm");
+    const directory: [*c]const u8 = if (args.option("--working-directory")) |d| dblk: {
+        const res = try mem.Allocator.dupeZ(allocator, u8, d);
+        break :dblk @ptrCast([*c]const u8, res);
+    } else @ptrCast([*c]const u8, os.getenvZ("PWD") orelse os.getenvZ("HOME") orelse "/");
+    var opts = Opts {
+        .command = cmd,
+        .title = title,
+        .directory = directory,
+    };
+
     const app = c.gtk_application_new("org.hitchhiker-linux.zterm", .G_APPLICATION_FLAGS_NONE) orelse @panic("null app :(");
     defer c.g_object_unref(app);
 
@@ -15,16 +60,18 @@ pub fn main() !void {
         "activate",
         @ptrCast(c.GCallback, struct {
             fn f(a: *c.GtkApplication, data: c.gpointer) void {
+                // Cast the gpointer to a normal pointer and dereference it, giving us
+                // our "opts" struct initialized earlier.
+                const options = @ptrCast(*Opts, @alignCast(8, data)).*;
                 const window = c.gtk_application_window_new(a);
                 const window_ptr = @ptrCast(*c.GtkWindow, window);
-                c.gtk_window_set_title(window_ptr, "Zterm");
+                c.gtk_window_set_title(window_ptr, options.title);
 
                 const notebook = c.gtk_notebook_new();
                 const notebook_ptr = @ptrCast(*c.GtkNotebook, notebook);
 
-                const shell = @ptrCast([*c]const u8, std.os.getenvZ("SHELL") orelse "/bin/sh");
                 const command = @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
-                    c.g_strdup(shell),
+                    c.g_strdup(options.command),
                     null,
                 }));
 
@@ -47,7 +94,9 @@ pub fn main() !void {
                 c.gtk_widget_grab_focus(@ptrCast(*c.GtkWidget, term));
             }
         }.f),
-        null,
+        // Here we cast a pointer to "opts" to a gpointer and pass it into the
+        // GCallback created above
+        @ptrCast(c.gpointer, &opts),
         null,
         @intToEnum(c.GConnectFlags, 0),
     );
@@ -108,4 +157,12 @@ fn new_tab(notebook: *c.GtkNotebook, command: [*c][*c]c.gchar) *c.GtkWidget {
     _ = c.gtk_notebook_append_page(notebook, term, 0);
     c.gtk_notebook_set_tab_label(notebook, @ptrCast(*c.GtkWidget, term), @ptrCast(*c.GtkWidget, box));
     return @ptrCast(*c.GtkWidget, term);
+}
+
+fn usage(status: u8) void {
+    stderr.print("Usage: {s} ", .{"zterm"}) catch unreachable;
+    clap.usage(stderr, &params) catch unreachable;
+    stderr.print("\nFlags: \n", .{}) catch unreachable;
+    clap.help(stderr, &params) catch unreachable;
+    process.exit(status);
 }
