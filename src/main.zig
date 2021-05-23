@@ -23,6 +23,19 @@ const Opts = struct {
     directory: [*c]const u8,
 };
 
+const Tab = struct {
+    box: *c.GtkWidget,
+    tab_label: *c.GtkWidget,
+    terms: std.AutoHashMap(u64, *c.GtkWidget),
+};
+
+const RunData = struct {
+    window: *c.GtkWindow,
+    notebook: *c.GtkWidget,
+    opts: *Opts,
+    tabs: std.HashMap(*Tab),
+};
+
 pub fn main() !void {
     var diag: clap.Diagnostic = undefined;
     var args = clap.parse(clap.Help, &params, allocator, &diag) catch |err| {
@@ -72,6 +85,9 @@ pub fn main() !void {
 
                 const addbutton = c.gtk_button_new_from_icon_name("list-add", @intToEnum(c.GtkIconSize, c.GTK_ICON_SIZE_MENU));
                 c.gtk_button_set_relief(@ptrCast(*c.GtkButton, addbutton), @intToEnum(c.GtkReliefStyle, c.GTK_RELIEF_NONE));
+                c.gtk_widget_set_has_tooltip(addbutton, 1);
+                c.gtk_widget_set_tooltip_text(addbutton, "Open new tab");
+                c.gtk_widget_set_can_focus(addbutton, 0);
                 c.gtk_notebook_set_action_widget(notebook_ptr, addbutton, @intToEnum(c.GtkPackType, c.GTK_PACK_END));
                 c.gtk_widget_show(addbutton);
 
@@ -161,6 +177,8 @@ fn new_tab(notebook: *c.GtkNotebook, command: [*c][*c]c.gchar) *c.GtkWidget {
     const label = c.gtk_label_new("Zterm");
     const closebutton = c.gtk_button_new_from_icon_name("window-close", @intToEnum(c.GtkIconSize, c.GTK_ICON_SIZE_MENU));
     c.gtk_button_set_relief(@ptrCast(*c.GtkButton, closebutton), @intToEnum(c.GtkReliefStyle, c.GTK_RELIEF_NONE));
+    c.gtk_widget_set_has_tooltip(closebutton, 1);
+    c.gtk_widget_set_tooltip_text(closebutton, "Close tab");
     c.gtk_box_pack_start(box_ptr, label, 0, 1, 1);
     c.gtk_box_pack_start(box_ptr, closebutton, 0, 1, 1);
     c.gtk_widget_show_all(box);
@@ -175,6 +193,15 @@ fn new_tab(notebook: *c.GtkNotebook, command: [*c][*c]c.gchar) *c.GtkWidget {
         @ptrCast(c.gpointer, term),
     );
 
+    var terms = std.AutoHashMap(u64, *c.GtkWidget).init(allocator);
+    terms.putNoClobber(@ptrToInt(term), term) catch unreachable;
+    var tab = Tab {
+        .box = box,
+        .tab_label = label,
+        .terms = terms,
+    };
+
+    std.debug.print("Pointer: {s}\n", .{tab.terms.get(@ptrToInt(term))});
 
     c.gtk_widget_show(@ptrCast(*c.GtkWidget, term));
     _ = c.gtk_notebook_append_page(notebook, term, 0);
