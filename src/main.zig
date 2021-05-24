@@ -1,6 +1,8 @@
 const std = @import("std");
 const clap = @import("zig-clap");
-const gtk = @import("zig-gtk");
+const cb = @import("callbacks.zig");
+const data = @import("data.zig");
+const gtk = @import("gtk.zig");
 const allocator = std.heap.page_allocator;
 const c = gtk.c;
 const fmt = std.fmt;
@@ -15,25 +17,6 @@ const params = comptime [_]clap.Param(clap.Help){
     clap.parseParam("-e, --command <COMMAND>        Command and args to execute.") catch unreachable,
     clap.parseParam("-t, --title <TITLE>            Defines the window title.") catch unreachable,
     clap.parseParam("-w, --working-directory <DIR>  Set the terminal's working directory.") catch unreachable,
-};
-
-const Opts = struct {
-    command: [*c]const u8,
-    title: [*c]const u8,
-    directory: [*c]const u8,
-};
-
-const Tab = struct {
-    box: *c.GtkWidget,
-    tab_label: *c.GtkWidget,
-    terms: std.AutoHashMap(u64, *c.GtkWidget),
-};
-
-const RunData = struct {
-    window: *c.GtkWindow,
-    notebook: *c.GtkWidget,
-    opts: *Opts,
-    tabs: std.HashMap(*Tab),
 };
 
 pub fn main() !void {
@@ -59,7 +42,7 @@ pub fn main() !void {
         const res = try mem.Allocator.dupeZ(allocator, u8, d);
         break :dblk @ptrCast([*c]const u8, res);
     } else @ptrCast([*c]const u8, os.getenvZ("PWD") orelse os.getenvZ("HOME") orelse "/");
-    var opts = Opts {
+    var opts = data.Opts {
         .command = cmd,
         .title = title,
         .directory = directory,
@@ -71,68 +54,7 @@ pub fn main() !void {
     _ = c.g_signal_connect_data(
         app,
         "activate",
-        @ptrCast(c.GCallback, struct {
-            fn f(a: *c.GtkApplication, data: c.gpointer) void {
-                // Cast the gpointer to a normal pointer and dereference it, giving us
-                // our "opts" struct initialized earlier.
-                const options = @ptrCast(*Opts, @alignCast(8, data)).*;
-                const window = c.gtk_application_window_new(a);
-                const window_ptr = @ptrCast(*c.GtkWindow, window);
-                c.gtk_window_set_title(window_ptr, options.title);
-
-                var notebook = c.gtk_notebook_new();
-                const notebook_ptr = @ptrCast(*c.GtkNotebook, notebook);
-
-                const addbutton = c.gtk_button_new_from_icon_name("list-add", @intToEnum(c.GtkIconSize, c.GTK_ICON_SIZE_MENU));
-                c.gtk_button_set_relief(@ptrCast(*c.GtkButton, addbutton), @intToEnum(c.GtkReliefStyle, c.GTK_RELIEF_NONE));
-                c.gtk_widget_set_has_tooltip(addbutton, 1);
-                c.gtk_widget_set_tooltip_text(addbutton, "Open new tab");
-                c.gtk_widget_set_can_focus(addbutton, 0);
-                c.gtk_notebook_set_action_widget(notebook_ptr, addbutton, @intToEnum(c.GtkPackType, c.GTK_PACK_END));
-                c.gtk_widget_show(addbutton);
-
-                _ = gtk.g_signal_connect(
-                    addbutton,
-                    "clicked",
-                    @ptrCast(c.GCallback, struct {
-                    fn a(b: *c.GtkButton, nb: c.gpointer) void {
-                        const command = @ptrCast([*c]const u8, os.getenvZ("SHELL") orelse "/bin/sh");
-                        _ = new_tab(
-                            @ptrCast(*c.GtkNotebook, @alignCast(8, nb)),
-                            @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
-                                c.g_strdup(command),
-                                null,
-                            })),
-                        );
-                    }
-                }.a),
-                @ptrCast(c.gpointer, notebook),
-                );
-
-                const command = @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
-                    c.g_strdup(options.command),
-                    null,
-                }));
-
-                const term = new_tab(notebook_ptr, command);
-
-                _ = gtk.g_signal_connect(
-                    window,
-                    "delete-event",
-                    @ptrCast(c.GCallback, struct {
-                    fn q() void {
-                        c.gtk_main_quit();
-                    }
-                }.q),
-                null,
-                );
-
-                c.gtk_container_add(@ptrCast(*c.GtkContainer, window), notebook);
-
-                c.gtk_widget_show_all(window);
-                c.gtk_widget_grab_focus(@ptrCast(*c.GtkWidget, term));
-            }
-        }.f),
+        @ptrCast(c.GCallback, cb.activate),
         // Here we cast a pointer to "opts" to a gpointer and pass it into the
         // GCallback created above
         @ptrCast(c.gpointer, &opts),
@@ -141,72 +63,6 @@ pub fn main() !void {
     );
 
     _ = c.g_application_run(@ptrCast(*c.GApplication, app), 0, null);
-}
-
-fn new_tab(notebook: *c.GtkNotebook, command: [*c][*c]c.gchar) *c.GtkWidget {
-    const term = c.vte_terminal_new();
-    const term_ptr = @ptrCast([*c]c.VteTerminal, term);
-    c.vte_terminal_spawn_async(
-        term_ptr,
-        @intToEnum(c.VtePtyFlags, c.VTE_PTY_DEFAULT),
-        null,
-        command,
-        null,
-        @intToEnum(c.GSpawnFlags, c.G_SPAWN_DEFAULT),
-        null,
-        @intToPtr(?*c_void, @as(c_int, 0)),
-        null,
-        -1,
-        null,
-        null,
-        @intToPtr(?*c_void, @as(c_int, 0)),
-    );
-
-    _ = gtk.g_signal_connect(
-        term,
-        "child-exited",
-        @ptrCast(c.GCallback, struct {
-        fn e(t: *c.VteTerminal) void {
-            c.gtk_widget_destroy(@ptrCast(*c.GtkWidget, t));
-        }}.e),
-        null,
-    );
-
-    const box = c.gtk_box_new(@intToEnum(c.GtkOrientation, 0), 10);
-    const box_ptr = @ptrCast(*c.GtkBox, box);
-    const label = c.gtk_label_new("Zterm");
-    const closebutton = c.gtk_button_new_from_icon_name("window-close", @intToEnum(c.GtkIconSize, c.GTK_ICON_SIZE_MENU));
-    c.gtk_button_set_relief(@ptrCast(*c.GtkButton, closebutton), @intToEnum(c.GtkReliefStyle, c.GTK_RELIEF_NONE));
-    c.gtk_widget_set_has_tooltip(closebutton, 1);
-    c.gtk_widget_set_tooltip_text(closebutton, "Close tab");
-    c.gtk_box_pack_start(box_ptr, label, 0, 1, 1);
-    c.gtk_box_pack_start(box_ptr, closebutton, 0, 1, 1);
-    c.gtk_widget_show_all(box);
-
-    _ = gtk.g_signal_connect(
-        closebutton,
-        "clicked",
-        @ptrCast(c.GCallback, struct {
-        fn c(but: *c.GtkButton, terminal: c.gpointer) void {
-            c.gtk_widget_destroy(@ptrCast(*c.GtkWidget, @alignCast(8, terminal)));
-        }}.c),
-        @ptrCast(c.gpointer, term),
-    );
-
-    var terms = std.AutoHashMap(u64, *c.GtkWidget).init(allocator);
-    terms.putNoClobber(@ptrToInt(term), term) catch unreachable;
-    var tab = Tab {
-        .box = box,
-        .tab_label = label,
-        .terms = terms,
-    };
-
-    std.debug.print("Pointer: {s}\n", .{tab.terms.get(@ptrToInt(term))});
-
-    c.gtk_widget_show(@ptrCast(*c.GtkWidget, term));
-    _ = c.gtk_notebook_append_page(notebook, term, 0);
-    c.gtk_notebook_set_tab_label(notebook, @ptrCast(*c.GtkWidget, term), @ptrCast(*c.GtkWidget, box));
-    return @ptrCast(*c.GtkWidget, term);
 }
 
 fn usage(status: u8) void {

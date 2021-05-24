@@ -17,11 +17,6 @@ pub fn build(b: *Builder) void {
         .path = "./lib/zig-clap/clap.zig",
     });
 
-    exe.addPackage(.{
-        .name = "zig-gtk",
-        .path = "./lib/zig-gtk/gtk.zig",
-    });
-
     const run_cmd = exe.run();
     run_cmd.step.dependOn(b.getInstallStep());
     if (b.args) |args| {
