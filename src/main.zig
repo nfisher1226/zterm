@@ -1,7 +1,6 @@
 const std = @import("std");
 const clap = @import("zig-clap");
-const cb = @import("callbacks.zig");
-const data = @import("data.zig");
+const gui = @import("gui.zig");
 const gtk = @import("gtk.zig");
 const allocator = std.heap.page_allocator;
 const c = gtk.c;
@@ -42,7 +41,7 @@ pub fn main() !void {
         const res = try mem.Allocator.dupeZ(allocator, u8, d);
         break :dblk @ptrCast([*c]const u8, res);
     } else @ptrCast([*c]const u8, os.getenvZ("PWD") orelse os.getenvZ("HOME") orelse "/");
-    var opts = data.Opts {
+    var opts = gui.Opts {
         .command = cmd,
         .title = title,
         .directory = directory,
@@ -54,7 +53,7 @@ pub fn main() !void {
     _ = c.g_signal_connect_data(
         app,
         "activate",
-        @ptrCast(c.GCallback, cb.activate),
+        @ptrCast(c.GCallback, gui.activate),
         // Here we cast a pointer to "opts" to a gpointer and pass it into the
         // GCallback created above
         @ptrCast(c.gpointer, &opts),

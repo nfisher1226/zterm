@@ -1,5 +1,4 @@
 const std = @import("std");
-const data = @import("data.zig");
 const gtk = @import("gtk.zig");
 const allocator = std.heap.page_allocator;
 const c = gtk.c;
@@ -8,14 +7,35 @@ const stderr = std.io.getStdErr().writer();
 const stdout = std.io.getStdOut().writer();
 
 const menu_size = @intToEnum(c.GtkIconSize, c.GTK_ICON_SIZE_MENU);
+const horizontal = @intToEnum(c.GtkOrientation, 0);
 const pack_end = @intToEnum(c.GtkPackType, c.GTK_PACK_END);
 const pack_start = @intToEnum(c.GtkPackType, c.GTK_PACK_START);
 const relief_none = @intToEnum(c.GtkReliefStyle, c.GTK_RELIEF_NONE);
+const vertical = @intToEnum(c.GtkOrientation, 1);
+
+pub const Opts = struct {
+    command: [*c]const u8,
+    title: [*c]const u8,
+    directory: [*c]const u8,
+};
+
+pub const Tab = struct {
+    box: *c.GtkWidget,
+    tab_label: *c.GtkWidget,
+    terms: std.AutoHashMap(u64, *c.GtkWidget),
+};
+
+pub const RunData = struct {
+    window: *c.GtkWindow,
+    notebook: *c.GtkWidget,
+    opts: *Opts,
+    tabs: std.HashMap(*Tab),
+};
 
 pub fn activate(a: *c.GtkApplication, appdata: c.gpointer) void {
     // Cast the gpointer to a normal pointer and dereference it, giving us
     // our "opts" struct initialized earlier.
-    const options = @ptrCast(*data.Opts, @alignCast(8, appdata)).*;
+    const options = @ptrCast(*Opts, @alignCast(8, appdata)).*;
     const window = c.gtk_application_window_new(a);
     const window_ptr = @ptrCast(*c.GtkWindow, window);
     c.gtk_window_set_title(window_ptr, options.title);
@@ -24,27 +44,24 @@ pub fn activate(a: *c.GtkApplication, appdata: c.gpointer) void {
     const notebook_ptr = @ptrCast(*c.GtkNotebook, notebook);
 
     const addbutton = c.gtk_button_new_from_icon_name("tab-new", menu_size);
-    c.gtk_button_set_relief(@ptrCast(*c.GtkButton, addbutton), relief_none);
-    c.gtk_widget_set_has_tooltip(addbutton, 1);
     c.gtk_widget_set_tooltip_text(addbutton, "Open new tab");
-    c.gtk_widget_set_can_focus(addbutton, 0);
 
     const splitbutton = c.gtk_button_new_from_icon_name("list-add", menu_size);
-    c.gtk_button_set_relief(@ptrCast(*c.GtkButton, splitbutton), relief_none);
-    c.gtk_widget_set_has_tooltip(splitbutton, 1);
     c.gtk_widget_set_tooltip_text(splitbutton, "Split view");
-    c.gtk_widget_set_can_focus(splitbutton, 0);
 
     const rotatebutton = c.gtk_button_new_from_icon_name("object-rotate-right", menu_size);
-    c.gtk_button_set_relief(@ptrCast(*c.GtkButton, rotatebutton), relief_none);
-    c.gtk_widget_set_has_tooltip(rotatebutton, 1);
     c.gtk_widget_set_tooltip_text(rotatebutton, "Change split orientation");
-    c.gtk_widget_set_can_focus(rotatebutton, 0);
 
-    const ctrlbox = c.gtk_box_new(@intToEnum(c.GtkOrientation, 0), 0);
-    c.gtk_box_pack_start(@ptrCast(*c.GtkBox, ctrlbox), addbutton, 0, 1, 1);
-    c.gtk_box_pack_start(@ptrCast(*c.GtkBox, ctrlbox), splitbutton, 0, 1, 1);
-    c.gtk_box_pack_start(@ptrCast(*c.GtkBox, ctrlbox), rotatebutton, 0, 1, 1);
+    const ctrlbox = c.gtk_box_new(horizontal, 0);
+
+    const ctrlbuttons = [3]*c.GtkWidget{ addbutton, splitbutton, rotatebutton };
+    for (ctrlbuttons) |button| {
+        c.gtk_button_set_relief(@ptrCast(*c.GtkButton, button), relief_none);
+        c.gtk_widget_set_has_tooltip(button, 1);
+        c.gtk_widget_set_can_focus(button, 0);
+        c.gtk_box_pack_start(@ptrCast(*c.GtkBox, ctrlbox), button, 0, 1, 1);
+    }
+
     c.gtk_widget_show_all(ctrlbox);
     c.gtk_notebook_set_action_widget(notebook_ptr, ctrlbox, pack_end);
 
@@ -80,7 +97,7 @@ pub fn activate(a: *c.GtkApplication, appdata: c.gpointer) void {
     c.gtk_widget_grab_focus(@ptrCast(*c.GtkWidget, term));
 }
 
-pub fn addbutton_callback(button: *c.GtkButton, notebook: c.gpointer) void {
+fn addbutton_callback(button: *c.GtkButton, notebook: c.gpointer) void {
     const command = @ptrCast([*c]const u8, os.getenvZ("SHELL") orelse "/bin/sh");
     _ = new_tab(
         @ptrCast(*c.GtkNotebook, @alignCast(8, notebook)),
@@ -91,7 +108,7 @@ pub fn addbutton_callback(button: *c.GtkButton, notebook: c.gpointer) void {
     );
 }
 
-pub fn new_tab(notebook: *c.GtkNotebook, command: [*c][*c]c.gchar) data.Tab {
+fn new_term(command: [*c][*c]c.gchar) *c.GtkWidget {
     const term = c.vte_terminal_new();
     const term_ptr = @ptrCast([*c]c.VteTerminal, term);
     c.vte_terminal_spawn_async(
@@ -109,7 +126,11 @@ pub fn new_tab(notebook: *c.GtkNotebook, command: [*c][*c]c.gchar) data.Tab {
         null,
         @intToPtr(?*c_void, @as(c_int, 0)),
     );
+    return term;
+}
 
+fn new_tab(notebook: *c.GtkNotebook, command: [*c][*c]c.gchar) Tab {
+    const term = new_term(command);
     _ = gtk.g_signal_connect(
         term,
         "child-exited",
@@ -120,7 +141,7 @@ pub fn new_tab(notebook: *c.GtkNotebook, command: [*c][*c]c.gchar) data.Tab {
         null,
     );
 
-    const box = c.gtk_box_new(@intToEnum(c.GtkOrientation, 0), 10);
+    const box = c.gtk_box_new(horizontal, 10);
     const box_ptr = @ptrCast(*c.GtkBox, box);
     const label = c.gtk_label_new("Zterm");
     const closebutton = c.gtk_button_new_from_icon_name("window-close", menu_size);
@@ -143,7 +164,7 @@ pub fn new_tab(notebook: *c.GtkNotebook, command: [*c][*c]c.gchar) data.Tab {
 
     var terms = std.AutoHashMap(u64, *c.GtkWidget).init(allocator);
     terms.putNoClobber(@ptrToInt(term), term) catch unreachable;
-    var tab = data.Tab {
+    var tab = Tab {
         .box = box,
         .tab_label = label,
         .terms = terms,
