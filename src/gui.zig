@@ -2,16 +2,10 @@ const std = @import("std");
 const gtk = @import("gtk.zig");
 const allocator = std.heap.page_allocator;
 const c = gtk.c;
+const hashmap = std.AutoHashMap;
 const os = std.os;
 const stderr = std.io.getStdErr().writer();
 const stdout = std.io.getStdOut().writer();
-
-const menu_size = @intToEnum(c.GtkIconSize, c.GTK_ICON_SIZE_MENU);
-const horizontal = @intToEnum(c.GtkOrientation, 0);
-const pack_end = @intToEnum(c.GtkPackType, c.GTK_PACK_END);
-const pack_start = @intToEnum(c.GtkPackType, c.GTK_PACK_START);
-const relief_none = @intToEnum(c.GtkReliefStyle, c.GTK_RELIEF_NONE);
-const vertical = @intToEnum(c.GtkOrientation, 1);
 
 pub const Opts = struct {
     command: [*c]const u8,
@@ -22,23 +16,21 @@ pub const Opts = struct {
 pub const Tab = struct {
     box: *c.GtkWidget,
     tab_label: *c.GtkWidget,
-    terms: std.AutoHashMap(u64, *c.GtkWidget),
-};
-
-pub const RunData = struct {
-    opts: *Opts,
-    tabs: std.AutoHashMap(u64, *Tab),
+    terms: hashmap(u64, *c.GtkWidget),
 };
 
 var builder: *c.GtkBuilder = undefined;
 var notebook: [*]c.GtkWidget = undefined;
 var window: [*]c.GtkWidget = undefined;
 var options: Opts = undefined;
+var tabs: hashmap(u64, Tab) = undefined;
 
-pub fn activate(application: *c.GtkApplication, appdata: c.gpointer) void {
+pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     // Cast the gpointer to a normal pointer and dereference it, giving us
     // our "opts" struct initialized earlier.
-    options = @ptrCast(*Opts, @alignCast(8, appdata)).*;
+    options = @ptrCast(*Opts, @alignCast(8, opts)).*;
+    tabs= hashmap(u64, Tab).init(allocator);
+    defer tabs.deinit();
 
     builder = c.gtk_builder_new();
     var ret = c.gtk_builder_add_from_file(builder, "./src/gui.glade", @intToPtr([*c][*c]c._GError, 0));
@@ -69,6 +61,27 @@ pub fn activate(application: *c.GtkApplication, appdata: c.gpointer) void {
         null,
     );
 
+    _ = gtk.g_signal_connect(
+        split_view,
+        "activate",
+        @ptrCast(c.GCallback, split_tab),
+        null,
+    );
+
+    _ = gtk.g_signal_connect(
+        rotate_view,
+        "activate",
+        @ptrCast(c.GCallback, rotate_tab),
+        null,
+    );
+
+    _ = gtk.g_signal_connect(
+        quit_app,
+        "activate",
+        @ptrCast(c.GCallback, quit_callback),
+        null,
+    );
+
     const command = @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
         c.g_strdup(options.command),
         null,
@@ -88,7 +101,6 @@ pub fn activate(application: *c.GtkApplication, appdata: c.gpointer) void {
         null,
     );
 
-    std.debug.print("Application ready\n", .{});
     c.gtk_widget_show_all(window);
     c.gtk_widget_grab_focus(@ptrCast(*c.GtkWidget, term));
     c.gtk_main();
@@ -96,7 +108,7 @@ pub fn activate(application: *c.GtkApplication, appdata: c.gpointer) void {
 
 fn new_tab_callback(menuitem: *c.GtkMenuItem, user_data: c.gpointer) void {
     const command = @ptrCast([*c]const u8, os.getenvZ("SHELL") orelse "/bin/sh");
-    _ = new_tab_init(
+    const tab = new_tab_init(
         @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
             c.g_strdup(command),
             null,
@@ -137,16 +149,16 @@ fn new_tab_init(command: [*c][*c]c.gchar) Tab {
         null,
     );
 
-    const box = c.gtk_box_new(horizontal, 10);
-    const box_ptr = @ptrCast(*c.GtkBox, box);
+    const lbox = c.gtk_box_new(gtk.horizontal, 10);
+    const lbox_ptr = @ptrCast(*c.GtkBox, lbox);
     const label = c.gtk_label_new("Zterm");
-    const closebutton = c.gtk_button_new_from_icon_name("window-close", menu_size);
-    c.gtk_button_set_relief(@ptrCast(*c.GtkButton, closebutton), relief_none);
+    const closebutton = c.gtk_button_new_from_icon_name("window-close", gtk.menu_size);
+    c.gtk_button_set_relief(@ptrCast(*c.GtkButton, closebutton), gtk.relief_none);
     c.gtk_widget_set_has_tooltip(closebutton, 1);
     c.gtk_widget_set_tooltip_text(closebutton, "Close tab");
-    c.gtk_box_pack_start(box_ptr, label, 0, 1, 1);
-    c.gtk_box_pack_start(box_ptr, closebutton, 0, 1, 1);
-    c.gtk_widget_show_all(box);
+    c.gtk_box_pack_start(lbox_ptr, label, 0, 1, 1);
+    c.gtk_box_pack_start(lbox_ptr, closebutton, 0, 1, 1);
+    c.gtk_widget_show_all(lbox);
 
     _ = gtk.g_signal_connect(
         closebutton,
@@ -160,17 +172,52 @@ fn new_tab_init(command: [*c][*c]c.gchar) Tab {
 
     var terms = std.AutoHashMap(u64, *c.GtkWidget).init(allocator);
     terms.putNoClobber(@ptrToInt(term), term) catch unreachable;
+    const box = c.gtk_box_new(gtk.horizontal, 0);
+    c.gtk_box_set_homogeneous(@ptrCast(*c.GtkBox, box), 1);
     var tab = Tab {
         .box = box,
         .tab_label = label,
         .terms = terms,
     };
 
-    c.gtk_widget_show(@ptrCast(*c.GtkWidget, term));
+    tabs.putNoClobber(@ptrToInt(box), tab) catch |e| {
+        stderr.print("{}\n", .{e}) catch unreachable;
+    };
+
+    c.gtk_box_pack_start(@ptrCast(*c.GtkBox, box), term, 1, 1, 1);
+    c.gtk_widget_show(@ptrCast(*c.GtkWidget, box));
     const notebook_ptr = @ptrCast(*c.GtkNotebook, notebook);
-    _ = c.gtk_notebook_append_page(notebook_ptr, term, 0);
-    c.gtk_notebook_set_tab_label(notebook_ptr, @ptrCast(*c.GtkWidget, term), @ptrCast(*c.GtkWidget, box));
+    _ = c.gtk_notebook_append_page(notebook_ptr, box, 0);
+    c.gtk_notebook_set_tab_label(notebook_ptr, @ptrCast(*c.GtkWidget, box), @ptrCast(*c.GtkWidget, lbox));
     return tab;
+}
+
+fn get_current_tab() Tab {
+    const tab_num = c.gtk_notebook_get_current_page(@ptrCast(*c.GtkNotebook, notebook));
+    const box_widget = c.gtk_notebook_get_nth_page(@ptrCast(*c.GtkNotebook, notebook), tab_num);
+    const tab = if (tabs.get(@ptrToInt(box_widget))) |t| t else unreachable;
+    return tab;
+}
+
+fn split_tab() void {
+    const tab = get_current_tab();
+    const command = @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
+        c.g_strdup(options.command),
+        null,
+    }));
+    const term = new_term(command);
+    c.gtk_widget_show(term);
+    c.gtk_box_pack_start(@ptrCast(*c.GtkBox, tab.box), term, 1, 1, 1);
+}
+
+fn rotate_tab() void {
+    const tab = get_current_tab();
+    const orientation = c.gtk_orientable_get_orientation(@ptrCast(*c.GtkOrientable, tab.box));
+    if (@enumToInt(orientation) == 0) {
+        c.gtk_orientable_set_orientation(@ptrCast(*c.GtkOrientable, tab.box), gtk.vertical);
+    } else {
+        c.gtk_orientable_set_orientation(@ptrCast(*c.GtkOrientable, tab.box), gtk.horizontal);
+    }
 }
 
 pub fn quit_callback() void {
