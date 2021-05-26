@@ -16,6 +16,7 @@ pub const Opts = struct {
 pub const Tab = struct {
     box: *c.GtkWidget,
     tab_label: *c.GtkWidget,
+    close_button: *c.GtkWidget,
     terms: hashmap(u64, *c.GtkWidget),
 };
 
@@ -72,6 +73,13 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
         rotate_view,
         "activate",
         @ptrCast(c.GCallback, rotate_tab),
+        null,
+    );
+
+    _ = gtk.g_signal_connect(
+        notebook,
+        "page-removed",
+        @ptrCast(c.GCallback, page_removed_callback),
         null,
     );
 
@@ -139,36 +147,16 @@ fn new_term(command: [*c][*c]c.gchar) *c.GtkWidget {
 
 fn new_tab_init(command: [*c][*c]c.gchar) Tab {
     const term = new_term(command);
-    _ = gtk.g_signal_connect(
-        term,
-        "child-exited",
-        @ptrCast(c.GCallback, struct {
-        fn e(t: *c.VteTerminal) void {
-            c.gtk_widget_destroy(@ptrCast(*c.GtkWidget, t));
-        }}.e),
-        null,
-    );
-
     const lbox = c.gtk_box_new(gtk.horizontal, 10);
     const lbox_ptr = @ptrCast(*c.GtkBox, lbox);
     const label = c.gtk_label_new("Zterm");
-    const closebutton = c.gtk_button_new_from_icon_name("window-close", gtk.menu_size);
-    c.gtk_button_set_relief(@ptrCast(*c.GtkButton, closebutton), gtk.relief_none);
-    c.gtk_widget_set_has_tooltip(closebutton, 1);
-    c.gtk_widget_set_tooltip_text(closebutton, "Close tab");
+    const close_button = c.gtk_button_new_from_icon_name("window-close", gtk.menu_size);
+    c.gtk_button_set_relief(@ptrCast(*c.GtkButton, close_button), gtk.relief_none);
+    c.gtk_widget_set_has_tooltip(close_button, 1);
+    c.gtk_widget_set_tooltip_text(close_button, "Close tab");
     c.gtk_box_pack_start(lbox_ptr, label, 0, 1, 1);
-    c.gtk_box_pack_start(lbox_ptr, closebutton, 0, 1, 1);
+    c.gtk_box_pack_start(lbox_ptr, close_button, 0, 1, 1);
     c.gtk_widget_show_all(lbox);
-
-    _ = gtk.g_signal_connect(
-        closebutton,
-        "clicked",
-        @ptrCast(c.GCallback, struct {
-        fn c(but: *c.GtkButton, terminal: c.gpointer) void {
-            c.gtk_widget_destroy(@ptrCast(*c.GtkWidget, @alignCast(8, terminal)));
-        }}.c),
-        @ptrCast(c.gpointer, term),
-    );
 
     var terms = std.AutoHashMap(u64, *c.GtkWidget).init(allocator);
     terms.putNoClobber(@ptrToInt(term), term) catch unreachable;
@@ -177,6 +165,7 @@ fn new_tab_init(command: [*c][*c]c.gchar) Tab {
     var tab = Tab {
         .box = box,
         .tab_label = label,
+        .close_button = close_button,
         .terms = terms,
     };
 
@@ -184,12 +173,75 @@ fn new_tab_init(command: [*c][*c]c.gchar) Tab {
         stderr.print("{}\n", .{e}) catch unreachable;
     };
 
+    const data = @ptrCast(c.gpointer, box);
+    _ = gtk.g_signal_connect(
+        close_button,
+        "clicked",
+        @ptrCast(c.GCallback, close_tab_callback),
+        data,
+    );
+
+    _ = gtk.g_signal_connect(
+        term,
+        "child-exited",
+        @ptrCast(c.GCallback, close_term_callback),
+        null,
+    );
+
     c.gtk_box_pack_start(@ptrCast(*c.GtkBox, box), term, 1, 1, 1);
-    c.gtk_widget_show(@ptrCast(*c.GtkWidget, box));
+    c.gtk_widget_show_all(@ptrCast(*c.GtkWidget, box));
     const notebook_ptr = @ptrCast(*c.GtkNotebook, notebook);
     _ = c.gtk_notebook_append_page(notebook_ptr, box, 0);
     c.gtk_notebook_set_tab_label(notebook_ptr, @ptrCast(*c.GtkWidget, box), @ptrCast(*c.GtkWidget, lbox));
     return tab;
+}
+
+fn close_tab_callback(button: *c.GtkButton, box: c.gpointer) void {
+    const box_widget = @ptrCast(*c.GtkWidget, @alignCast(8, box));
+    const key = @ptrToInt(box_widget);
+    const num = c.gtk_notebook_page_num(@ptrCast(*c.GtkNotebook, notebook), box_widget);
+    c.gtk_notebook_remove_page(@ptrCast(*c.GtkNotebook, notebook), num);
+    if (tabs.get(key)) |tab| {
+        var terms = tab.terms;
+        terms.deinit();
+        _ = tabs.remove(key);
+    }
+}
+
+fn close_tab_by_ref(tab: Tab) void {
+    const key = @ptrToInt(tab.box);
+    const num = c.gtk_notebook_page_num(@ptrCast(*c.GtkNotebook, notebook), tab.box);
+    c.gtk_notebook_remove_page(@ptrCast(*c.GtkNotebook, notebook), num);
+    if (tabs.get(key)) |_| {
+        var terms = tab.terms;
+        terms.deinit();
+        _ = tabs.remove(key);
+    }
+}
+
+fn close_term_callback(term: *c.VteTerminal) void {
+    const box = c.gtk_widget_get_parent(@ptrCast(*c.GtkWidget, term));
+    const key = @ptrToInt(box);
+    const num = c.gtk_notebook_page_num(@ptrCast(*c.GtkNotebook, notebook), box);
+    c.gtk_container_remove(
+        @ptrCast(*c.GtkContainer, box),
+        @ptrCast(*c.GtkWidget, term));
+    c.gtk_widget_destroy(@ptrCast(*c.GtkWidget, term));
+    if (tabs.get(key)) |tab| {
+        const termkey = @ptrToInt(term);
+        var terms = tab.terms;
+        _ = terms.remove(termkey);
+        if (terms.count() == 0) {
+            close_tab_by_ref(tab);
+        }
+    }
+}
+
+fn page_removed_callback() void {
+    const pages = c.gtk_notebook_get_n_pages(@ptrCast(*c.GtkNotebook, notebook));
+    if (pages == 0) {
+        c.gtk_main_quit();
+    }
 }
 
 fn get_current_tab() Tab {
@@ -208,6 +260,12 @@ fn split_tab() void {
     const term = new_term(command);
     c.gtk_widget_show(term);
     c.gtk_box_pack_start(@ptrCast(*c.GtkBox, tab.box), term, 1, 1, 1);
+    _ = gtk.g_signal_connect(
+        term,
+        "child-exited",
+        @ptrCast(c.GCallback, close_term_callback),
+        @ptrCast(c.gpointer, tab.box),
+    );
 }
 
 fn rotate_tab() void {
@@ -217,6 +275,12 @@ fn rotate_tab() void {
         c.gtk_orientable_set_orientation(@ptrCast(*c.GtkOrientable, tab.box), gtk.vertical);
     } else {
         c.gtk_orientable_set_orientation(@ptrCast(*c.GtkOrientable, tab.box), gtk.horizontal);
+    }
+}
+
+fn get_tab_from_close_button() void {
+    for (tabs.iterator()) |tab| {
+        std.debug.print("Tab: {s}\n", .{@ptrToInt(tab.close_button)});
     }
 }
 
