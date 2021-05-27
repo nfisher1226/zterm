@@ -55,6 +55,20 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     const close_tab = gtk.builder_get_widget(builder, "close_tab");
     const quit_app = gtk.builder_get_widget(builder, "quit_app");
 
+    const command = @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
+        c.g_strdup(options.command),
+        null,
+    }));
+
+    const tab = new_tab_init(command);
+    // We have to get the terminal in order to grab focus, use an
+    // iterator and return the first (and only) entry's value field
+    var term = if (tab.terms.iterator().next()) |entry| termblk: {
+        break :termblk entry.value;
+    } else unreachable;
+    c.gtk_widget_show_all(window);
+    c.gtk_widget_grab_focus(@ptrCast(*c.GtkWidget, term));
+
     _ = gtk.g_signal_connect(
         new_tab,
         "activate",
@@ -90,18 +104,6 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
         null,
     );
 
-    const command = @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
-        c.g_strdup(options.command),
-        null,
-    }));
-
-    const tab = new_tab_init(command);
-    // We have to get the terminal in order to grab focus, use an
-    // iterator and return the first (and only) entry's value field
-    var term = if (tab.terms.iterator().next()) |entry| termblk: {
-        break :termblk entry.value;
-    } else unreachable;
-
     _ = gtk.g_signal_connect(
         window,
         "delete-event",
@@ -109,8 +111,6 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
         null,
     );
 
-    c.gtk_widget_show_all(window);
-    c.gtk_widget_grab_focus(@ptrCast(*c.GtkWidget, term));
     c.gtk_main();
 }
 
@@ -231,7 +231,9 @@ fn close_term_callback(term: *c.VteTerminal) void {
         const termkey = @ptrToInt(term);
         var terms = tab.terms;
         _ = terms.remove(termkey);
-        if (terms.count() == 0) {
+        const kids = c.gtk_container_get_children(@ptrCast(*c.GtkContainer, box));
+        const len = c.g_list_length(kids);
+        if (len == 0) {
             close_tab_by_ref(tab);
         }
     }
@@ -252,7 +254,7 @@ fn get_current_tab() Tab {
 }
 
 fn split_tab() void {
-    const tab = get_current_tab();
+    var tab = get_current_tab();
     const command = @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
         c.g_strdup(options.command),
         null,
@@ -260,6 +262,7 @@ fn split_tab() void {
     const term = new_term(command);
     c.gtk_widget_show(term);
     c.gtk_box_pack_start(@ptrCast(*c.GtkBox, tab.box), term, 1, 1, 1);
+    tab.terms.put(@ptrToInt(term), term) catch unreachable;
     _ = gtk.g_signal_connect(
         term,
         "child-exited",
