@@ -17,7 +17,6 @@ pub const Tab = struct {
     box: *c.GtkWidget,
     tab_label: *c.GtkWidget,
     close_button: *c.GtkWidget,
-    terms: hashmap(u64, *c.GtkWidget),
 };
 
 var builder: *c.GtkBuilder = undefined;
@@ -63,11 +62,11 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     const tab = new_tab_init(command);
     // We have to get the terminal in order to grab focus, use an
     // iterator and return the first (and only) entry's value field
-    var term = if (tab.terms.iterator().next()) |entry| termblk: {
-        break :termblk entry.value;
-    } else unreachable;
+    const kids = c.gtk_container_get_children(@ptrCast(*c.GtkContainer, tab.box));
+    const term = c.g_list_nth_data(kids, 0);
+    const term_ptr = @ptrCast(*c.GtkWidget, @alignCast(8, term));
     c.gtk_widget_show_all(window);
-    c.gtk_widget_grab_focus(@ptrCast(*c.GtkWidget, term));
+    c.gtk_widget_grab_focus(term_ptr);
 
     _ = gtk.g_signal_connect(
         new_tab,
@@ -94,6 +93,13 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
         notebook,
         "page-removed",
         @ptrCast(c.GCallback, page_removed_callback),
+        null,
+    );
+
+    _ = gtk.g_signal_connect(
+        notebook,
+        "select-page",
+        @ptrCast(c.GCallback, select_page_callback),
         null,
     );
 
@@ -158,15 +164,12 @@ fn new_tab_init(command: [*c][*c]c.gchar) Tab {
     c.gtk_box_pack_start(lbox_ptr, close_button, 0, 1, 1);
     c.gtk_widget_show_all(lbox);
 
-    var terms = std.AutoHashMap(u64, *c.GtkWidget).init(allocator);
-    terms.putNoClobber(@ptrToInt(term), term) catch unreachable;
     const box = c.gtk_box_new(gtk.horizontal, 0);
     c.gtk_box_set_homogeneous(@ptrCast(*c.GtkBox, box), 1);
     var tab = Tab {
         .box = box,
         .tab_label = label,
         .close_button = close_button,
-        .terms = terms,
     };
 
     tabs.putNoClobber(@ptrToInt(box), tab) catch |e| {
@@ -202,8 +205,6 @@ fn close_tab_callback(button: *c.GtkButton, box: c.gpointer) void {
     const num = c.gtk_notebook_page_num(@ptrCast(*c.GtkNotebook, notebook), box_widget);
     c.gtk_notebook_remove_page(@ptrCast(*c.GtkNotebook, notebook), num);
     if (tabs.get(key)) |tab| {
-        var terms = tab.terms;
-        terms.deinit();
         _ = tabs.remove(key);
     }
 }
@@ -213,8 +214,6 @@ fn close_tab_by_ref(tab: Tab) void {
     const num = c.gtk_notebook_page_num(@ptrCast(*c.GtkNotebook, notebook), tab.box);
     c.gtk_notebook_remove_page(@ptrCast(*c.GtkNotebook, notebook), num);
     if (tabs.get(key)) |_| {
-        var terms = tab.terms;
-        terms.deinit();
         _ = tabs.remove(key);
     }
 }
@@ -229,12 +228,14 @@ fn close_term_callback(term: *c.VteTerminal) void {
     c.gtk_widget_destroy(@ptrCast(*c.GtkWidget, term));
     if (tabs.get(key)) |tab| {
         const termkey = @ptrToInt(term);
-        var terms = tab.terms;
-        _ = terms.remove(termkey);
         const kids = c.gtk_container_get_children(@ptrCast(*c.GtkContainer, box));
         const len = c.g_list_length(kids);
         if (len == 0) {
             close_tab_by_ref(tab);
+        } else {
+            const first = c.g_list_nth_data(kids, 0);
+            const first_ptr = @ptrCast(*c.GtkWidget, @alignCast(8, first));
+            c.gtk_widget_grab_focus(first_ptr);
         }
     }
 }
@@ -243,8 +244,19 @@ fn page_removed_callback() void {
     const pages = c.gtk_notebook_get_n_pages(@ptrCast(*c.GtkNotebook, notebook));
     if (pages == 0) {
         c.gtk_main_quit();
+    } else {
+        select_page_callback();
     }
 }
+
+fn select_page_callback() void {
+    const tab = get_current_tab();
+    const kids = c.gtk_container_get_children(@ptrCast(*c.GtkContainer, tab.box));
+    const first = c.g_list_nth_data(kids, 0);
+    const first_ptr = @ptrCast(*c.GtkWidget, @alignCast(8, first));
+    c.gtk_widget_grab_focus(first_ptr);
+}
+
 
 fn get_current_tab() Tab {
     const tab_num = c.gtk_notebook_get_current_page(@ptrCast(*c.GtkNotebook, notebook));
@@ -262,7 +274,6 @@ fn split_tab() void {
     const term = new_term(command);
     c.gtk_widget_show(term);
     c.gtk_box_pack_start(@ptrCast(*c.GtkBox, tab.box), term, 1, 1, 1);
-    tab.terms.put(@ptrToInt(term), term) catch unreachable;
     _ = gtk.g_signal_connect(
         term,
         "child-exited",
@@ -278,12 +289,6 @@ fn rotate_tab() void {
         c.gtk_orientable_set_orientation(@ptrCast(*c.GtkOrientable, tab.box), gtk.vertical);
     } else {
         c.gtk_orientable_set_orientation(@ptrCast(*c.GtkOrientable, tab.box), gtk.horizontal);
-    }
-}
-
-fn get_tab_from_close_button() void {
-    for (tabs.iterator()) |tab| {
-        std.debug.print("Tab: {s}\n", .{@ptrToInt(tab.close_button)});
     }
 }
 
