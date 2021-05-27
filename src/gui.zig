@@ -2,6 +2,7 @@ const std = @import("std");
 const gtk = @import("gtk.zig");
 const allocator = std.heap.page_allocator;
 const c = gtk.c;
+const fs = std.fs;
 const hashmap = std.AutoHashMap;
 const os = std.os;
 const stderr = std.io.getStdErr().writer();
@@ -33,7 +34,8 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     defer tabs.deinit();
 
     builder = c.gtk_builder_new();
-    var ret = c.gtk_builder_add_from_file(builder, "./src/gui.glade", @intToPtr([*c][*c]c._GError, 0));
+    const glade_str = @embedFile("gui.glade");
+    var ret = c.gtk_builder_add_from_string(builder, glade_str, glade_str.len, @intToPtr([*c][*c]c._GError, 0));
     if (ret == 0) {
         stderr.print("builder file fail\n", .{}) catch unreachable;
         std.process.exit(1);
