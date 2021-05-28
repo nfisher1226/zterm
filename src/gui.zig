@@ -1,5 +1,6 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
+const prefs = @import("prefs.zig");
 const allocator = std.heap.page_allocator;
 const c = gtk.c;
 const fs = std.fs;
@@ -102,6 +103,13 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
         notebook,
         "select-page",
         @ptrCast(c.GCallback, select_page_callback),
+        null,
+    );
+
+    _ = gtk.g_signal_connect(
+        preferences,
+        "activate",
+        @ptrCast(c.GCallback, prefs.run),
         null,
     );
 
