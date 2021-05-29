@@ -15,6 +15,12 @@
       <mime-type>jpg/image</mime-type>
     </mime-types>
   </object>
+  <object class="GtkAdjustment" id="scollback_lines_adjustment">
+    <property name="upper">10000</property>
+    <property name="value">500</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
   <object class="GtkDialog" id="prefs_window">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">Vterm - Preferences</property>
@@ -149,7 +155,7 @@
                           <item id="replaces_title" translatable="yes">Replaces initial title</item>
                           <item id="before_title" translatable="yes">Goes before initial title</item>
                           <item id="after_title" translatable="yes">Goes after initial title</item>
-                          <item id="no_dynamic_title" translatable="yes">Isn't displayed</item>
+                          <item id="not_displayed" translatable="yes">Isn't displayed</item>
                         </items>
                       </object>
                       <packing>
@@ -203,7 +209,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton">
+                  <object class="GtkCheckButton" id="custom_command_checkbox">
                     <property name="label" translatable="yes">Run a custom command instead of user shell</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
@@ -221,7 +227,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkLabel" id="custom_command_label">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can-focus">False</property>
@@ -234,7 +240,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="custom_command_entry">
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
@@ -299,7 +305,7 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="label" translatable="yes">Cursor Shape</property>
+                        <property name="label" translatable="yes">Cursor Style:</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -312,11 +318,11 @@
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="hexpand">True</property>
-                        <property name="active-id">block_cursor</property>
+                        <property name="active-id">block</property>
                         <items>
-                          <item id="block_cursor" translatable="yes">Block</item>
-                          <item id="i_beam_cursor" translatable="yes">I-Beam</item>
-                          <item id="underline_cursor" translatable="yes">Underline</item>
+                          <item id="block" translatable="yes">Block</item>
+                          <item id="i_beam" translatable="yes">I-Beam</item>
+                          <item id="underline" translatable="yes">Underline</item>
                         </items>
                       </object>
                       <packing>
@@ -346,6 +352,117 @@
                     <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="position">6</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">Scrollback</property>
+                        <attributes>
+                          <attribute name="weight" value="bold"/>
+                        </attributes>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="hexpand">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">7</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <child>
+                      <object class="GtkCheckButton" id="infinite_scrollback_checkbox">
+                        <property name="label" translatable="yes">Infinite Scrollback</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="draw-indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="hexpand">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <child>
+                      <object class="GtkLabel" id="scrollback_lines_label">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">Scrollback Lines:</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="scrollback_lines_spinbox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="hexpand">True</property>
+                        <property name="adjustment">scollback_lines_adjustment</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">9</property>
                   </packing>
                 </child>
               </object>
@@ -812,7 +929,7 @@
                     <property name="can-focus">False</property>
                     <child>
                       <object class="GtkCheckButton" id="system_font_checkbutton">
-                        <property name="label" translatable="yes">checkbutton</property>
+                        <property name="label" translatable="yes">Use system font</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">False</property>
@@ -830,7 +947,7 @@
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
                         <property name="hexpand">True</property>
-                        <property name="font">Monospace 12</property>
+                        <property name="font">Sans 12</property>
                         <property name="language">en-us</property>
                         <property name="preview-text"/>
                       </object>
@@ -886,14 +1003,14 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkComboBoxText" id="background_combo_box">
+                  <object class="GtkComboBoxText" id="background_combobox">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="active-id">solid_color_background</property>
+                    <property name="active-id">solid_color</property>
                     <items>
-                      <item id="solid_color_background" translatable="yes">Solid Color</item>
-                      <item id="image_background" translatable="yes">Image</item>
-                      <item id="transparent_color_background" translatable="yes">Transparent Color</item>
+                      <item id="solid_color" translatable="yes">Solid Color</item>
+                      <item id="image" translatable="yes">Image</item>
+                      <item id="transparent" translatable="yes">Transparent Color</item>
                     </items>
                   </object>
                   <packing>
@@ -922,12 +1039,12 @@
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="hexpand">True</property>
-                        <property name="active-id">background_image_style_tiled</property>
+                        <property name="active-id">tiled</property>
                         <items>
-                          <item id="background_image_style_tiled" translatable="yes">Tyled</item>
-                          <item id="background_image_style_centered" translatable="yes">Centered</item>
-                          <item id="background_image_style_scaled" translatable="yes">Scaled</item>
-                          <item id="background_image_style_stretched" translatable="yes">Stretched</item>
+                          <item id="tiled" translatable="yes">Tiled</item>
+                          <item id="centered" translatable="yes">Centered</item>
+                          <item id="scaled" translatable="yes">Scaled</item>
+                          <item id="stretched" translatable="yes">Stretched</item>
                         </items>
                       </object>
                       <packing>
@@ -967,7 +1084,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkBox">
+                  <object class="GtkBox" id="background_style_opacity_box">
                     <property name="name">background_image_opacity_box</property>
                     <property name="can-focus">False</property>
                     <child>
