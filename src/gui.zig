@@ -219,17 +219,17 @@ fn new_tab_init(command: [*c][*c]c.gchar) Tab {
 fn close_tab_by_button(button: *c.GtkButton, box: c.gpointer) void {
     const box_widget = @ptrCast(*c.GtkWidget, @alignCast(8, box));
     const key = @ptrToInt(box_widget);
-    if (tabs.get(key)) |tab| {
-        close_tab_by_ref(tab);
-    }
+    close_tab_by_ref(key);
 }
 
-fn close_tab_by_ref(tab: Tab) void {
-    const key = @ptrToInt(tab.box);
-    const num = c.gtk_notebook_page_num(@ptrCast(*c.GtkNotebook, notebook), tab.box);
-    c.gtk_notebook_remove_page(@ptrCast(*c.GtkNotebook, notebook), num);
-    if (tabs.get(key)) |_| {
-        _ = tabs.remove(key);
+fn close_tab_by_ref(key: u64) void {
+    if (tabs.get(key)) |tab| {
+        const num = c.gtk_notebook_page_num(@ptrCast(*c.GtkNotebook, notebook), tab.box);
+        // if num < 0 tab is already closed
+        if (num >= 0) {
+            c.gtk_notebook_remove_page(@ptrCast(*c.GtkNotebook, notebook), num);
+            _ = tabs.remove(key);
+        }
     }
 }
 
@@ -237,9 +237,7 @@ fn close_current_tab() void {
     const num = c.gtk_notebook_get_current_page(@ptrCast(*c.GtkNotebook, notebook));
     const box = c.gtk_notebook_get_nth_page(@ptrCast(*c.GtkNotebook, notebook), num);
     const key = @ptrToInt(box);
-    if (tabs.get(key)) |tab| {
-        close_tab_by_ref(tab);
-    }
+    close_tab_by_ref(key);
 }
 
 fn close_term_callback(term: *c.VteTerminal) void {
@@ -255,7 +253,7 @@ fn close_term_callback(term: *c.VteTerminal) void {
         const kids = c.gtk_container_get_children(@ptrCast(*c.GtkContainer, box));
         const len = c.g_list_length(kids);
         if (len == 0) {
-            close_tab_by_ref(tab);
+            close_tab_by_ref(key);
         } else {
             const first = c.g_list_nth_data(kids, 0);
             const first_ptr = @ptrCast(*c.GtkWidget, @alignCast(8, first));
