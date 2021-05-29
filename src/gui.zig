@@ -22,8 +22,8 @@ pub const Tab = struct {
 };
 
 var builder: *c.GtkBuilder = undefined;
-var notebook: [*]c.GtkWidget = undefined;
-var window: [*]c.GtkWidget = undefined;
+var notebook: *c.GtkWidget = undefined;
+var window: *c.GtkWidget = undefined;
 var options: Opts = undefined;
 var tabs: hashmap(u64, Tab) = undefined;
 
@@ -43,19 +43,19 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     }
     c.gtk_builder_set_application(builder, application);
 
-    window = gtk.builder_get_widget(builder, "window");
+    window = gtk.builder_get_widget(builder, "window").?;
     const window_ptr = @ptrCast(*c.GtkWindow, window);
     c.gtk_window_set_title(window_ptr, options.title);
 
-    notebook = gtk.builder_get_widget(builder, "notebook");
+    notebook = gtk.builder_get_widget(builder, "notebook").?;
     const notebook_ptr = @ptrCast(*c.GtkNotebook, notebook);
 
-    const new_tab = gtk.builder_get_widget(builder, "new_tab");
-    const split_view = gtk.builder_get_widget(builder, "split_view");
-    const rotate_view = gtk.builder_get_widget(builder, "rotate_view");
-    const preferences = gtk.builder_get_widget(builder, "preferences");
-    const close_tab = gtk.builder_get_widget(builder, "close_tab");
-    const quit_app = gtk.builder_get_widget(builder, "quit_app");
+    const new_tab = gtk.builder_get_widget(builder, "new_tab").?;
+    const split_view = gtk.builder_get_widget(builder, "split_view").?;
+    const rotate_view = gtk.builder_get_widget(builder, "rotate_view").?;
+    const preferences = gtk.builder_get_widget(builder, "preferences").?;
+    const close_tab = gtk.builder_get_widget(builder, "close_tab").?;
+    const quit_app = gtk.builder_get_widget(builder, "quit_app").?;
 
     const command = @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
         c.g_strdup(options.command),
@@ -110,6 +110,13 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
         preferences,
         "activate",
         @ptrCast(c.GCallback, prefs.run),
+        null,
+    );
+
+    _ = gtk.g_signal_connect(
+        close_tab,
+        "activate",
+        @ptrCast(c.GCallback, close_current_tab),
         null,
     );
 
@@ -190,7 +197,7 @@ fn new_tab_init(command: [*c][*c]c.gchar) Tab {
     _ = gtk.g_signal_connect(
         close_button,
         "clicked",
-        @ptrCast(c.GCallback, close_tab_callback),
+        @ptrCast(c.GCallback, close_tab_by_button),
         data,
     );
 
@@ -209,13 +216,11 @@ fn new_tab_init(command: [*c][*c]c.gchar) Tab {
     return tab;
 }
 
-fn close_tab_callback(button: *c.GtkButton, box: c.gpointer) void {
+fn close_tab_by_button(button: *c.GtkButton, box: c.gpointer) void {
     const box_widget = @ptrCast(*c.GtkWidget, @alignCast(8, box));
     const key = @ptrToInt(box_widget);
-    const num = c.gtk_notebook_page_num(@ptrCast(*c.GtkNotebook, notebook), box_widget);
-    c.gtk_notebook_remove_page(@ptrCast(*c.GtkNotebook, notebook), num);
     if (tabs.get(key)) |tab| {
-        _ = tabs.remove(key);
+        close_tab_by_ref(tab);
     }
 }
 
@@ -225,6 +230,15 @@ fn close_tab_by_ref(tab: Tab) void {
     c.gtk_notebook_remove_page(@ptrCast(*c.GtkNotebook, notebook), num);
     if (tabs.get(key)) |_| {
         _ = tabs.remove(key);
+    }
+}
+
+fn close_current_tab() void {
+    const num = c.gtk_notebook_get_current_page(@ptrCast(*c.GtkNotebook, notebook));
+    const box = c.gtk_notebook_get_nth_page(@ptrCast(*c.GtkNotebook, notebook), num);
+    const key = @ptrToInt(box);
+    if (tabs.get(key)) |tab| {
+        close_tab_by_ref(tab);
     }
 }
 

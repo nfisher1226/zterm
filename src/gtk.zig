@@ -16,8 +16,36 @@ pub fn g_signal_connect(instance: c.gpointer, detailed_signal: [*c]const c.gchar
     return c.g_signal_connect_data(instance, detailed_signal, c_handler, data, null, flags.*);
 }
 
-pub fn builder_get_widget(builder: *c.GtkBuilder, name: [*]const u8) [*]c.GtkWidget {
-    var gobject = @ptrCast([*c]c.GTypeInstance, c.gtk_builder_get_object(builder, name));
-    var gwidget = @ptrCast([*c]c.GtkWidget, c.g_type_check_instance_cast(gobject, c.gtk_widget_get_type()));
-    return gwidget;
+pub fn builder_get_widget(builder: *c.GtkBuilder, name: [*]const u8) ?*c.GtkWidget {
+    const obj = c.gtk_builder_get_object(builder, name);
+    if (obj == null) {
+        return null;
+    } else {
+        var gobject = @ptrCast([*c]c.GTypeInstance, obj);
+        var gwidget = @ptrCast(*c.GtkWidget, c.g_type_check_instance_cast(gobject, c.gtk_widget_get_type()));
+        return gwidget;
+    }
+}
+
+pub fn toggle_button_get_active(but: *c.GtkToggleButton) bool {
+    if (c.gtk_toggle_button_get_active(but) == 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+pub fn widget_set_sensitive(widget: *c.GtkWidget, state: bool) void {
+    if (state) {
+        c.gtk_widget_set_sensitive(widget, 1);
+    } else {
+        c.gtk_widget_set_sensitive(widget, 0);
+    }
+}
+pub fn widget_set_visible(widget: *c.GtkWidget, state: bool) void {
+    if (state) {
+        c.gtk_widget_set_visible(widget, 1);
+    } else {
+        c.gtk_widget_set_visible(widget, 0);
+    }
 }
