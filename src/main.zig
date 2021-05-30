@@ -19,8 +19,8 @@ const params = comptime [_]clap.Param(clap.Help){
 };
 
 pub fn main() !void {
-    var diag: clap.Diagnostic = undefined;
-    var args = clap.parse(clap.Help, &params, allocator, &diag) catch |err| {
+    var diag = clap.Diagnostic{};
+    var args = clap.parse(clap.Help, &params, .{ .diagnostic = &diag }) catch |err| {
         diag.report(stderr, err) catch {};
         return err;
     };
