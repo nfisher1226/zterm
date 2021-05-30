@@ -11,8 +11,8 @@
   <object class="GtkFileFilter" id="filefilter1">
     <mime-types>
       <mime-type>image</mime-type>
-      <mime-type>png/image</mime-type>
-      <mime-type>jpg/image</mime-type>
+      <mime-type>image/png</mime-type>
+      <mime-type>image/jpg</mime-type>
     </mime-types>
   </object>
   <object class="GtkAdjustment" id="scollback_lines_adjustment">
@@ -21,7 +21,7 @@
     <property name="step-increment">1</property>
     <property name="page-increment">10</property>
   </object>
-  <object class="GtkDialog" id="prefs_window">
+  <object class="GtkDialog" id="window">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">Vterm - Preferences</property>
     <property name="type-hint">dialog</property>
@@ -42,6 +42,7 @@
                 <property name="receives-default">True</property>
                 <property name="tooltip-text" translatable="yes">Close Dialog</property>
                 <property name="use-stock">True</property>
+                <accelerator key="w" signal="activate" modifiers="GDK_CONTROL_MASK"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -147,7 +148,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkComboBoxText" id="dynamic_title_box">
+                      <object class="GtkComboBoxText" id="dynamic_title_combobox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="active-id">after_title</property>
@@ -209,7 +210,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="custom_command_checkbox">
+                  <object class="GtkCheckButton" id="custom_command_checkbutton">
                     <property name="label" translatable="yes">Run a custom command instead of user shell</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
@@ -314,7 +315,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkComboBoxText" id="cursor_shape_combobox">
+                      <object class="GtkComboBoxText" id="cursor_style_combobox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="hexpand">True</property>
@@ -332,7 +333,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id=" cursor_blinks_checkbutton">
+                      <object class="GtkCheckButton" id="cursor_blinks_checkbutton">
                         <property name="label" translatable="yes">Cursor Blinks</property>
                         <property name="related-action"/>
                         <property name="visible">True</property>
@@ -397,7 +398,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
-                      <object class="GtkCheckButton" id="infinite_scrollback_checkbox">
+                      <object class="GtkCheckButton" id="infinite_scrollback_checkbutton">
                         <property name="label" translatable="yes">Infinite Scrollback</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
@@ -928,7 +929,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
-                      <object class="GtkCheckButton" id="system_font_checkbox">
+                      <object class="GtkCheckButton" id="system_font_checkbutton">
                         <property name="label" translatable="yes">Use system font</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
@@ -1003,7 +1004,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkComboBoxText" id="background_combobox">
+                  <object class="GtkComboBoxText" id="background_style_combobox">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="active-id">solid_color</property>
@@ -1035,7 +1036,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkComboBoxText" id="background_style_combobox">
+                      <object class="GtkComboBoxText" id="background_image_style_combobox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="hexpand">True</property>
@@ -1053,7 +1054,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkFileChooserButton">
+                      <object class="GtkFileChooserButton" id="background_image_file_button">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="hexpand">True</property>
@@ -1100,7 +1101,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkScale">
+                      <object class="GtkScale" id="background_style_opacity_scale">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
