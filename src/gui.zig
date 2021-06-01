@@ -199,7 +199,7 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     c.gtk_main();
 }
 
-fn new_tab_callback(menuitem: *c.GtkMenuItem, user_data: c.gpointer) void {
+fn new_tab_callback(menuitem: *c.GtkMenuItem) void {
     const tab = Tab.init(
         @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
             c.g_strdup(options.command),
