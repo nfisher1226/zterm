@@ -33,6 +33,29 @@ pub const ImageStyle = enum {
     stretched,
 };
 
+pub const BackgroundImage = struct {
+    file: []const u8,
+    style: ImageStyle,
+};
+
+pub const BackgroundValue = union(BackgroundStyle) {
+    solid_color: void,
+    image: BackgroundImage,
+    transparent: f64,
+};
+
+pub const Background = struct {
+    background_style: BackgroundStyle,
+    background_value: BackgroundValue,
+
+    pub fn default() Background {
+        return Background {
+            .background_style = BackgroundStyle.solid_color,
+            .background_value = BackgroundValue.solid_color,
+        };
+    }
+};
+
 pub const RGBColor = struct {
     red: u64,
     green: u64,
@@ -120,22 +143,6 @@ pub const Cursor = struct {
         return Cursor {
             .cursor_style = CursorStyle.block,
             .cursor_blinks = true,
-        };
-    }
-};
-
-pub const Background = struct {
-    background_style: BackgroundStyle,
-    background_image_file: ?[]const u8,
-    background_image_style: ?ImageStyle,
-    background_opacity: ?u64,
-
-    pub fn default() Background {
-        return Background {
-            .background_style = BackgroundStyle.solid_color,
-            .background_image_file = null,
-            .background_image_style = null,
-            .background_opacity = null,
         };
     }
 };
