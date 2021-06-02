@@ -115,9 +115,9 @@ pub const Background = struct {
 };
 
 pub const RGBColor = struct {
-    red: u64,
-    green: u64,
-    blue: u64,
+    red: u8,
+    green: u8,
+    blue: u8,
 
     pub fn default() RGBColor {
         return RGBColor {
@@ -131,9 +131,9 @@ pub const RGBColor = struct {
         var rgba: c.GdkRGBA = undefined;
         _ = c.gtk_color_button_get_rgba(button, &rgba);
         return RGBColor {
-            .red = @floatToInt(u64, math.round(rgba.red * 255.0)),
-            .green = @floatToInt(u64, math.round(rgba.green * 255.0)),
-            .blue = @floatToInt(u64, math.round(rgba.blue * 255.0)),
+            .red = @floatToInt(u8, math.round(rgba.red * 255.0)),
+            .green = @floatToInt(u8, math.round(rgba.green * 255.0)),
+            .blue = @floatToInt(u8, math.round(rgba.blue * 255.0)),
         };
     }
 
