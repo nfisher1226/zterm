@@ -92,35 +92,48 @@ pub const PrefWidgets = struct {
         };
     }
 
+    fn get_initial_title(self: PrefWidgets) []const u8 {
+        const val = c.gtk_entry_get_text(@ptrCast(*c.GtkEntry, self.initial_title_entry));
+        const len = mem.len(val);
+        return val[0..len];
+    }
+
+    fn get_title_style(self: PrefWidgets) config.DynamicTitleStyle {
+        const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.dynamic_title_combobox));
+        const style = parse_title_style(id).?;
+        return style;
+    }
+
+    fn get_custom_command(self: PrefWidgets) config.CustomCommand {
+        const is_custom = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, self.custom_command_checkbutton));
+        if (is_custom) {
+            const val = c.gtk_entry_get_text(@ptrCast(*c.GtkEntry, self.custom_command_entry));
+            const len = mem.len(val);
+            return config.CustomCommand{ .command = val[0..len] };
+        } else {
+            return config.CustomCommand.none;
+        }
+    }
+
+    fn get_cursor_style(self: PrefWidgets) config.CursorStyle {
+        const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.cursor_style_combobox));
+        const style = parse_title_style(id).?;
+        return style;
+    }
+
+    fn get_cursor(self:PrefWidgets) config.Cursor {
+        const style = self.get_cursor_style;
+        const blinks = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, self.cursor_blinks_checkbutton));
+        return Cursor {
+            .cursor_style = style,
+            .cursor_blinks = blinks,
+        };
+    }
+
     fn get_colors(self: PrefWidgets) config.Colors {
-        //return config.Colors {
-        //    .text_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.text_color)),
-        //    .background_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.background_color)),
-        //    .black_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.black_color)),
-        //    .red_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.red_color)),
-        //    .green_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.green_color)),
-        //    .brown_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.brown_color)),
-        //    .blue_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.blue_color)),
-        //    .magenta_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.magenta_color)),
-        //    .cyan_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.cyan_color)),
-        //    .light_grey_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.light_grey_color)),
-        //    .dark_grey_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.dark_grey_color)),
-        //    .light_red_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.light_red_color)),
-        //    .light_green_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.light_green_color)),
-        //    .yellow_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.yellow_color)),
-        //    .light_blue_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.light_blue_color)),
-        //    .light_magenta_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.light_magenta_color)),
-        //    .light_cyan_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.light_cyan_color)),
-        //    .white_color = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, self.white_color)),
-        //};
         var colors = config.Colors.default();
         inline for (std.meta.fields(config.Colors)) |color| {
             const widget = @field(self, color.name);
-            //inline for (std.meta.fields(PrefWidgets)) |w| {
-            //    if (mem.eql(u8, w.name, color.name)) {
-            //        widget = @field(self, w.name);
-            //    }
-            //}
             const value = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, widget));
             @field(colors, color.name) = value;
         }
@@ -212,6 +225,16 @@ fn toggle_background(background_combobox: *c.GtkComboBox, data: c.gpointer) void
 
 }
 
+fn parse_title_style(style: [*c]const u8) ?config.DynamicTitleStyle {
+    const len = mem.len(style);
+    inline for (meta.fields(config.DynamicTitleStyle)) |field| {
+        if (mem.eql(u8, style[0..len], field.name)) {
+            return @field(config.DynamicTitleStyle, field.name);
+        }
+    }
+    return null;
+}
+
 fn parse_background_style(style: [*c]const u8) ?config.BackgroundStyle {
     const len = mem.len(style);
     inline for (meta.fields(config.BackgroundStyle)) |field| {
@@ -234,6 +257,9 @@ fn parse_image_style(style: [*c]const u8) ?config.ImageStyle {
 
 fn save_and_close(b: *c.GtkButton, data: c.gpointer) void {
     var conf = config.Config.default();
+    conf.initial_title = widgets.get_initial_title();
+    conf.dynamic_title_style = widgets.get_title_style();
+    conf.custom_command = widgets.get_custom_command();
     conf.colors = widgets.get_colors();
     std.debug.print("Config: {s}\n", .{conf});
     c.gtk_window_close(@ptrCast(*c.GtkWindow, widgets.window));

@@ -128,7 +128,7 @@
                       <object class="GtkEntry" id="initial_title_entry">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
-                        <property name="text" translatable="yes">Vterm</property>
+                        <property name="text" translatable="yes">Zterm</property>
                         <property name="input-purpose">alpha</property>
                       </object>
                       <packing>

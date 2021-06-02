@@ -12,18 +12,72 @@ pub const DynamicTitleStyle = enum {
     before_title,
     after_title,
     not_displayed,
+
+    pub fn default() DynamicTitleStyle {
+        return DynamicTitleStyle.after_title;
+    }
+};
+
+pub const CustomCommandType = enum {
+    command,
+    none,
+};
+
+pub const CustomCommand = union(CustomCommandType) {
+    command: []const u8,
+    none: void,
+};
+
+pub const ScrollbackType = enum {
+    finite,
+    infinite,
+};
+
+pub const Scrollback = union(ScrollbackType) {
+    finite: u64,
+    infinite: void,
+};
+
+pub const FontType = enum {
+    system,
+    custom,
+};
+
+pub const Font = union(FontType) {
+    system: void,
+    custom: []const u8,
 };
 
 pub const CursorStyle = enum {
     block,
     i_beam,
     underline,
+
+    pub fn default() CursorStyle {
+        return CursorStyle.block;
+    }
+};
+
+pub const Cursor = struct {
+    cursor_style: CursorStyle,
+    cursor_blinks: bool,
+
+    pub fn default() Cursor {
+        return Cursor {
+            .cursor_style = CursorStyle.default(),
+            .cursor_blinks = true,
+        };
+    }
 };
 
 pub const BackgroundStyle = enum {
     solid_color,
     image,
     transparent,
+
+    pub fn default() BackgroundStyle {
+        return BackgroundStyle.solid_color;
+    }
 };
 
 pub const ImageStyle = enum {
@@ -31,6 +85,10 @@ pub const ImageStyle = enum {
     centered,
     scaled,
     stretched,
+
+    pub fn default() ImageStyle {
+        return ImageStyle.tiled;
+    }
 };
 
 pub const BackgroundImage = struct {
@@ -50,7 +108,7 @@ pub const Background = struct {
 
     pub fn default() Background {
         return Background {
-            .background_style = BackgroundStyle.solid_color,
+            .background_style = BackgroundStyle.default(),
             .background_value = BackgroundValue.solid_color,
         };
     }
@@ -132,30 +190,16 @@ pub const Colors = struct {
     }
 
     pub fn from_pref_widgets(widgets: prefs.PrefWidgets) Colors {
-    }
-};
-
-pub const Cursor = struct {
-    cursor_style: CursorStyle,
-    cursor_blinks: bool,
-
-    pub fn default() Cursor {
-        return Cursor {
-            .cursor_style = CursorStyle.block,
-            .cursor_blinks = true,
-        };
+        return widgets.get_colors();
     }
 };
 
 pub const Config = struct {
     initial_title: []const u8,
     dynamic_title_style: DynamicTitleStyle,
-    custom_command_use: bool,
-    custom_command: ?[]const u8,
-    infinite_scrollback: bool,
-    scrollback_lines: ?u64,
-    system_font_use: bool,
-    font: ?[]const u8,
+    custom_command: CustomCommand,
+    scrollback: Scrollback,
+    font: Font,
     background: Background,
     colors: Colors,
     cursor: Cursor,
@@ -163,13 +207,10 @@ pub const Config = struct {
     pub fn default() Config {
         return Config {
             .initial_title = "Zterm",
-            .dynamic_title_style = DynamicTitleStyle.after_title,
-            .custom_command_use = false,
-            .custom_command = null,
-            .infinite_scrollback = false,
-            .scrollback_lines = 500,
-            .system_font_use = true,
-            .font = null,
+            .dynamic_title_style = DynamicTitleStyle.default(),
+            .custom_command = CustomCommand.none,
+            .scrollback = Scrollback{ .finite = 500 },
+            .font = Font.system,
             .background = Background.default(),
             .colors = Colors.default(),
             .cursor = Cursor.default(),
