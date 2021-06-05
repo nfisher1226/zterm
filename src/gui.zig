@@ -149,6 +149,95 @@ const Gui = struct {
         const tab = if (tabs.get(@ptrToInt(box_widget))) |t| t else unreachable;
         return tab;
     }
+
+    fn nth_tab(self: Gui, num: c_int) void {
+        c.gtk_notebook_set_current_page(@ptrCast(*c.GtkNotebook, self.notebook), num);
+    }
+
+    fn next_tab(self: Gui) void {
+        c.gtk_notebook_next_page(@ptrCast(*c.GtkNotebook, self.notebook));
+    }
+
+    fn prev_tab(self: Gui) void {
+        c.gtk_notebook_prev_page(@ptrCast(*c.GtkNotebook, self.ntoebook));
+    }
+
+    fn connect_accels(self: Gui) void {
+        const tab1_closure = c.g_cclosure_new(goto_tab_1, null, null);
+        const tab2_closure = c.g_cclosure_new(goto_tab_2, null, null);
+        const tab3_closure = c.g_cclosure_new(goto_tab_3, null, null);
+        const tab4_closure = c.g_cclosure_new(goto_tab_4, null, null);
+        const tab5_closure = c.g_cclosure_new(goto_tab_5, null, null);
+        const tab6_closure = c.g_cclosure_new(goto_tab_6, null, null);
+        const tab7_closure = c.g_cclosure_new(goto_tab_7, null, null);
+        const tab8_closure = c.g_cclosure_new(goto_tab_8, null, null);
+        const tab9_closure = c.g_cclosure_new(goto_tab_9, null, null);
+        const accel_group = c.gtk_accel_group_new();
+        c.gtk_accel_group_connect(
+            accel_group,
+            c.GDK_KEY_1,
+            gtk.alt_mask,
+            gtk.accel_locked,
+            tab1_closure,
+        );
+        c.gtk_accel_group_connect(
+            accel_group,
+            c.GDK_KEY_2,
+            gtk.alt_mask,
+            gtk.accel_locked,
+            tab2_closure,
+        );
+        c.gtk_accel_group_connect(
+            accel_group,
+            c.GDK_KEY_3,
+            gtk.alt_mask,
+            gtk.accel_locked,
+            tab3_closure,
+        );
+        c.gtk_accel_group_connect(
+            accel_group,
+            c.GDK_KEY_4,
+            gtk.alt_mask,
+            gtk.accel_locked,
+            tab4_closure,
+        );
+        c.gtk_accel_group_connect(
+            accel_group,
+            c.GDK_KEY_5,
+            gtk.alt_mask,
+            gtk.accel_locked,
+            tab5_closure,
+        );
+        c.gtk_accel_group_connect(
+            accel_group,
+            c.GDK_KEY_6,
+            gtk.alt_mask,
+            gtk.accel_locked,
+            tab6_closure,
+        );
+        c.gtk_accel_group_connect(
+            accel_group,
+            c.GDK_KEY_7,
+            gtk.alt_mask,
+            gtk.accel_locked,
+            tab7_closure,
+        );
+        c.gtk_accel_group_connect(
+            accel_group,
+            c.GDK_KEY_8,
+            gtk.alt_mask,
+            gtk.accel_locked,
+            tab8_closure,
+        );
+        c.gtk_accel_group_connect(
+            accel_group,
+            c.GDK_KEY_9,
+            gtk.alt_mask,
+            gtk.accel_locked,
+            tab9_closure,
+        );
+        c.gtk_window_add_accel_group(@ptrCast(*c.GtkWindow, self.window), accel_group);
+    }
 };
 
 var gui: Gui = undefined;
@@ -195,6 +284,7 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     c.gtk_widget_grab_focus(term_ptr);
 
     gui.connect_signals();
+    gui.connect_accels();
 
     c.gtk_main();
 }
@@ -321,6 +411,42 @@ fn rotate_tab() void {
     } else {
         c.gtk_orientable_set_orientation(@ptrCast(*c.GtkOrientable, tab.box), gtk.horizontal);
     }
+}
+
+fn goto_tab_1() callconv(.C) void {
+    gui.nth_tab(0);
+}
+
+fn goto_tab_2() callconv(.C) void {
+    gui.nth_tab(1);
+}
+
+fn goto_tab_3() callconv(.C) void {
+    gui.nth_tab(2);
+}
+
+fn goto_tab_4() callconv(.C) void {
+    gui.nth_tab(3);
+}
+
+fn goto_tab_5() callconv(.C) void {
+    gui.nth_tab(4);
+}
+
+fn goto_tab_6() callconv(.C) void {
+    gui.nth_tab(5);
+}
+
+fn goto_tab_7() callconv(.C) void {
+    gui.nth_tab(6);
+}
+
+fn goto_tab_8() callconv(.C) void {
+    gui.nth_tab(7);
+}
+
+fn goto_tab_9() callconv(.C) void {
+    gui.nth_tab(8);
 }
 
 pub fn quit_callback() void {

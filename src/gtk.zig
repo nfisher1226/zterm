@@ -4,11 +4,15 @@ pub const c = @cImport({
 });
 
 pub const menu_size = @intToEnum(c.GtkIconSize, c.GTK_ICON_SIZE_MENU);
-pub const horizontal = @intToEnum(c.GtkOrientation, 0);
+pub const horizontal = @intToEnum(c.GtkOrientation, c.GTK_ORIENTATION_HORIZONTAL);
 pub const pack_end = @intToEnum(c.GtkPackType, c.GTK_PACK_END);
 pub const pack_start = @intToEnum(c.GtkPackType, c.GTK_PACK_START);
 pub const relief_none = @intToEnum(c.GtkReliefStyle, c.GTK_RELIEF_NONE);
-pub const vertical = @intToEnum(c.GtkOrientation, 1);
+pub const vertical = @intToEnum(c.GtkOrientation, c.GTK_ORIENTATION_VERTICAL);
+pub const shift_mask = @intToEnum(c.GdkModifierType, c.GDK_SHIFT_MASK);
+pub const alt_mask = @intToEnum(c.GdkModifierType, c.GDK_MOD1_MASK);
+pub const ctrl_mask = @intToEnum(c.GdkModifierType, c.GDK_CONTROL_MASK);
+pub const accel_locked = @intToEnum(c.GtkAccelFlags, c.GTK_ACCEL_LOCKED);
 
 pub fn g_signal_connect(instance: c.gpointer, detailed_signal: [*c]const c.gchar, c_handler: c.GCallback, data: c.gpointer) c.gulong {
     var zero: u32 = 0;
