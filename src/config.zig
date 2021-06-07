@@ -6,6 +6,8 @@ const allocator = std.heap.page_allocator;
 const c = gtk.c;
 const fmt = std.fmt;
 const math = std.math;
+const mem = std.mem;
+const meta = std.meta;
 
 pub const DynamicTitleStyle = enum {
     replaces_title,
@@ -15,6 +17,16 @@ pub const DynamicTitleStyle = enum {
 
     pub fn default() DynamicTitleStyle {
         return DynamicTitleStyle.after_title;
+    }
+
+    pub fn parse(style: [*c]const u8) ?DynamicTitleStyle {
+        const len = mem.len(style);
+        inline for (meta.fields(DynamicTitleStyle)) |field| {
+            if (mem.eql(u8, style[0..len], field.name)) {
+                return @field(DynamicTitleStyle, field.name);
+            }
+        }
+        return null;
     }
 };
 
@@ -68,6 +80,16 @@ pub const CursorStyle = enum {
     pub fn default() CursorStyle {
         return CursorStyle.block;
     }
+
+    pub fn parse(style: [*c]const u8) ?CursorStyle {
+        const len = mem.len(style);
+        inline for (meta.fields(CursorStyle)) |field| {
+            if (mem.eql(u8, style[0..len], field.name)) {
+                return @field(CursorStyle, field.name);
+            }
+        }
+        return null;
+    }
 };
 
 pub const Cursor = struct {
@@ -90,6 +112,16 @@ pub const BackgroundStyle = enum {
     pub fn default() BackgroundStyle {
         return BackgroundStyle.solid_color;
     }
+
+    pub fn parse(style: [*c]const u8) ?BackgroundStyle {
+        const len = mem.len(style);
+        inline for (meta.fields(BackgroundStyle)) |field| {
+            if (mem.eql(u8, style[0..len], field.name)) {
+                return @field(BackgroundStyle, field.name);
+            }
+        }
+        return null;
+    }
 };
 
 pub const ImageStyle = enum {
@@ -100,6 +132,16 @@ pub const ImageStyle = enum {
 
     pub fn default() ImageStyle {
         return ImageStyle.tiled;
+    }
+
+    pub fn parse(style: [*c]const u8) ?ImageStyle {
+        const len = mem.len(style);
+        inline for (meta.fields(ImageStyle)) |field| {
+            if (mem.eql(u8, style[0..len], field.name)) {
+                return @field(ImageStyle, field.name);
+            }
+        }
+        return null;
     }
 };
 

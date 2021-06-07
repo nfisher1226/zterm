@@ -100,7 +100,7 @@ pub const PrefWidgets = struct {
 
     fn get_title_style(self: PrefWidgets) config.DynamicTitleStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.dynamic_title_combobox));
-        const style = parse_title_style(id).?;
+        const style = config.DynamicTitleStyle.parse(id).?;
         return style;
     }
 
@@ -138,18 +138,21 @@ pub const PrefWidgets = struct {
 
     fn get_background_style(self: PrefWidgets) config.BackgroundStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.background_style_combobox));
-        const style = parse_background_style(id).?;
+        const style = config.BackgroundStyle.parse(id).?;
         return style;
     }
 
     fn get_image_style(self: PrefWidgets) config.ImageStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.background_image_style_combobox));
-        const style = parse_image_style(id).?;
+        const style = config.ImageStyle.parse(id).?;
         return style;
     }
 
-    fn get_background_image(self: PrefWidgets) config.BackgroundImage {
+    fn get_background_image(self: PrefWidgets) ?config.BackgroundImage {
         const val = c.gtk_file_chooser_get_filename(@ptrCast(*c.GtkFileChooser, self.background_image_file_button));
+        if (val == null) {
+            return null;
+        }
         const len = mem.len(val);
         const style = self.get_image_style();
         return config.BackgroundImage {
@@ -165,8 +168,11 @@ pub const PrefWidgets = struct {
                 return config.Background.solid_color;
             },
             config.BackgroundStyle.image => {
-                const img = self.get_background_image();
-                return config.Background{ .image = img };
+                if (self.get_background_image()) |img| {
+                    return config.Background{ .image = img };
+                } else {
+                    return config.Background.solid_color;
+                }
             },
             config.BackgroundStyle.transparent => {
                 const val = c.gtk_range_get_value(@ptrCast(*c.GtkRange, self.background_style_opacity_scale));
@@ -177,7 +183,7 @@ pub const PrefWidgets = struct {
 
     fn get_cursor_style(self: PrefWidgets) config.CursorStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.cursor_style_combobox));
-        const style = parse_cursor_style(id).?;
+        const style = config.CursorStyle.parse(id).?;
         return style;
     }
 
@@ -198,6 +204,19 @@ pub const PrefWidgets = struct {
             @field(colors, color.name) = value;
         }
         return colors;
+    }
+
+    fn get_config(self: PrefWidgets) config.Config {
+        return config.Config {
+            .initial_title = self.get_initial_title(),
+            .dynamic_title_style = self.get_title_style(),
+            .custom_command = self.get_custom_command(),
+            .scrollback = self.get_scrollback(),
+            .font = self.get_font(),
+            .background = self.get_background(),
+            .colors = self.get_colors(),
+            .cursor = self.get_cursor(),
+        };
     }
 };
 
@@ -254,7 +273,6 @@ pub fn run() ?config.Config {
         c.gtk_widget_destroy(widgets.window);
         return null;
     }
-    //c.gtk_widget_show(widgets.window);
 }
 
 fn toggle_custom_command(custom_command_checkbutton: *c.GtkCheckButton, data: c.gpointer) void {
@@ -276,7 +294,7 @@ fn toggle_font(system_font_checkbutton: *c.GtkCheckButton, data: c.gpointer) voi
 
 fn toggle_background(background_combobox: *c.GtkComboBox, data: c.gpointer) void {
     const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, background_combobox));
-    const style = parse_background_style(id).?;
+    const style = config.BackgroundStyle.parse(id).?;
     switch (style) {
         config.BackgroundStyle.solid_color => {
             gtk.widget_set_visible(widgets.background_image_grid, false);
@@ -294,55 +312,8 @@ fn toggle_background(background_combobox: *c.GtkComboBox, data: c.gpointer) void
 
 }
 
-fn parse_title_style(style: [*c]const u8) ?config.DynamicTitleStyle {
-    const len = mem.len(style);
-    inline for (meta.fields(config.DynamicTitleStyle)) |field| {
-        if (mem.eql(u8, style[0..len], field.name)) {
-            return @field(config.DynamicTitleStyle, field.name);
-        }
-    }
-    return null;
-}
-
-fn parse_cursor_style(style: [*c]const u8) ?config.CursorStyle {
-    const len = mem.len(style);
-    inline for (meta.fields(config.CursorStyle)) |field| {
-        if (mem.eql(u8, style[0..len], field.name)) {
-            return @field(config.CursorStyle, field.name);
-        }
-    }
-    return null;
-}
-
-fn parse_background_style(style: [*c]const u8) ?config.BackgroundStyle {
-    const len = mem.len(style);
-    inline for (meta.fields(config.BackgroundStyle)) |field| {
-        if (mem.eql(u8, style[0..len], field.name)) {
-            return @field(config.BackgroundStyle, field.name);
-        }
-    }
-    return null;
-}
-
-fn parse_image_style(style: [*c]const u8) ?config.ImageStyle {
-    const len = mem.len(style);
-    inline for (meta.fields(config.ImageStyle)) |field| {
-        if (mem.eql(u8, style[0..len], field.name)) {
-            return @field(config.ImageStyle, field.name);
-        }
-    }
-    return null;
-}
-
 fn save_and_close(b: *c.GtkButton, data: c.gpointer) void {
-    conf.initial_title = widgets.get_initial_title();
-    conf.dynamic_title_style = widgets.get_title_style();
-    conf.custom_command = widgets.get_custom_command();
-    conf.scrollback = widgets.get_scrollback();
-    conf.font = widgets.get_font();
-    conf.background = widgets.get_background();
-    conf.colors = widgets.get_colors();
-    conf.cursor = widgets.get_cursor();
+    conf = widgets.get_config();
     c.gtk_window_close(@ptrCast(*c.GtkWindow, widgets.window));
     c.gtk_widget_destroy(widgets.window);
 }
