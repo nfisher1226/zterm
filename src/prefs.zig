@@ -100,7 +100,7 @@ pub const PrefWidgets = struct {
 
     fn get_title_style(self: PrefWidgets) config.DynamicTitleStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.dynamic_title_combobox));
-        const style = config.DynamicTitleStyle.parse(id).?;
+        const style = config.parse_enum(config.DynamicTitleStyle, id).?;
         return style;
     }
 
@@ -138,13 +138,13 @@ pub const PrefWidgets = struct {
 
     fn get_background_style(self: PrefWidgets) config.BackgroundStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.background_style_combobox));
-        const style = config.BackgroundStyle.parse(id).?;
+        const style = config.parse_enum(config.BackgroundStyle, id).?;
         return style;
     }
 
     fn get_image_style(self: PrefWidgets) config.ImageStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.background_image_style_combobox));
-        const style = config.ImageStyle.parse(id).?;
+        const style = config.parse_enum(config.ImageStyle, id).?;
         return style;
     }
 
@@ -164,17 +164,17 @@ pub const PrefWidgets = struct {
     fn get_background(self: PrefWidgets) config.Background {
         const style = self.get_background_style();
         switch (style) {
-            config.BackgroundStyle.solid_color => {
+            .solid_color => {
                 return config.Background.solid_color;
             },
-            config.BackgroundStyle.image => {
+            .image => {
                 if (self.get_background_image()) |img| {
                     return config.Background{ .image = img };
                 } else {
-                    return config.Background.solid_color;
+                    return config.Background.default();
                 }
             },
-            config.BackgroundStyle.transparent => {
+            .transparent => {
                 const val = c.gtk_range_get_value(@ptrCast(*c.GtkRange, self.background_style_opacity_scale));
                 return config.Background{ .transparent = val };
             },
@@ -183,7 +183,7 @@ pub const PrefWidgets = struct {
 
     fn get_cursor_style(self: PrefWidgets) config.CursorStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.cursor_style_combobox));
-        const style = config.CursorStyle.parse(id).?;
+        const style = config.parse_enum(config.CursorStyle, id).?;
         return style;
     }
 
@@ -198,7 +198,7 @@ pub const PrefWidgets = struct {
 
     fn get_colors(self: PrefWidgets) config.Colors {
         var colors = config.Colors.default();
-        inline for (std.meta.fields(config.Colors)) |color| {
+        inline for (meta.fields(config.Colors)) |color| {
             const widget = @field(self, color.name);
             const value = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, widget));
             @field(colors, color.name) = value;
@@ -294,17 +294,17 @@ fn toggle_font(system_font_checkbutton: *c.GtkCheckButton, data: c.gpointer) voi
 
 fn toggle_background(background_combobox: *c.GtkComboBox, data: c.gpointer) void {
     const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, background_combobox));
-    const style = config.BackgroundStyle.parse(id).?;
+    const style = config.parse_enum(config.BackgroundStyle, id).?;
     switch (style) {
-        config.BackgroundStyle.solid_color => {
+        .solid_color => {
             gtk.widget_set_visible(widgets.background_image_grid, false);
             gtk.widget_set_visible(widgets.background_style_opacity_box, false);
         },
-        config.BackgroundStyle.image => {
+        .image => {
             gtk.widget_set_visible(widgets.background_image_grid, true);
             gtk.widget_set_visible(widgets.background_style_opacity_box, false);
         },
-        config.BackgroundStyle.transparent => {
+        .transparent => {
             gtk.widget_set_visible(widgets.background_image_grid, false);
             gtk.widget_set_visible(widgets.background_style_opacity_box, true);
         },

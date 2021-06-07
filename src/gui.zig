@@ -408,11 +408,11 @@ fn run_prefs() void {
         std.debug.print("Title Style: {s}\n", .{conf.dynamic_title_style});
         const background = conf.background;
         switch (background) {
-            config.Background.solid_color => std.debug.print("Background: Solid Color\n", .{}),
-            config.Background.image => |value| {
+            .solid_color => std.debug.print("Background: Solid Color\n", .{}),
+            .image => |value| {
                 std.debug.print("Background Image File = {s}\nImage Style = {s}\n", .{value.file, value.style});
             },
-            config.Background.transparent => |value| {
+            .transparent => |value| {
                 std.debug.print("Background Transparency: {d}\n", .{value});
             },
         }
