@@ -127,7 +127,7 @@ const Gui = struct {
             self.notebook, "select-page", @ptrCast(c.GCallback, select_page_callback), null);
 
         _ = gtk.g_signal_connect(
-            self.preferences, "activate", @ptrCast(c.GCallback, prefs.run), null);
+            self.preferences, "activate", @ptrCast(c.GCallback, run_prefs), null);
 
         _ = gtk.g_signal_connect(
             self.close_tab, "activate", @ptrCast(c.GCallback, close_current_tab), null);
@@ -187,6 +187,7 @@ const Gui = struct {
 var gui: Gui = undefined;
 var options: Opts = undefined;
 var tabs: hashmap(u64, Tab) = undefined;
+var conf = config.Config.default();
 
 pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     // Cast the gpointer to a normal pointer and dereference it, giving us
@@ -399,6 +400,13 @@ fn goto_prev_tab() callconv(.C) void {
 
 fn goto_next_tab() callconv(.C) void {
     gui.next_tab();
+}
+
+fn run_prefs() void {
+    if (prefs.run()) |nc| {
+        conf = nc;
+        std.debug.print("{s}\n", .{nc});
+    }
 }
 
 pub fn quit_callback() void {

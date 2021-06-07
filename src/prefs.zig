@@ -115,16 +115,26 @@ pub const PrefWidgets = struct {
         }
     }
 
+    fn get_scrollback(self: PrefWidgets) config.Scrollback {
+        const is_infinite = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, self.infinite_scrollback_checkbutton));
+        if (is_infinite) {
+            return config.Scrollback.infinite;
+        } else {
+            const val = c.gtk_spin_button_get_value(@ptrCast(*c.GtkSpinButton, self.scrollback_lines_spinbox));
+            return config.Scrollback{ .finite = @floatToInt(u64, val) };
+        }
+    }
+
     fn get_cursor_style(self: PrefWidgets) config.CursorStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.cursor_style_combobox));
-        const style = parse_title_style(id).?;
+        const style = parse_cursor_style(id).?;
         return style;
     }
 
     fn get_cursor(self:PrefWidgets) config.Cursor {
-        const style = self.get_cursor_style;
+        const style = self.get_cursor_style();
         const blinks = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, self.cursor_blinks_checkbutton));
-        return Cursor {
+        return config.Cursor {
             .cursor_style = style,
             .cursor_blinks = blinks,
         };
@@ -143,8 +153,9 @@ pub const PrefWidgets = struct {
 
 var builder: *c.GtkBuilder = undefined;
 var widgets: PrefWidgets = undefined;
+var conf: config.Config = undefined;
 
-pub fn run() void {
+pub fn run() ?config.Config {
     builder = c.gtk_builder_new();
     const glade_str = @embedFile("prefs.glade");
     _ = c.gtk_builder_add_from_string(builder, glade_str, glade_str.len, @intToPtr([*c][*c]c._GError, 0));
@@ -185,7 +196,16 @@ pub fn run() void {
         null,
     );
 
-    c.gtk_widget_show(widgets.window);
+    const res = c.gtk_dialog_run(@ptrCast(*c.GtkDialog, widgets.window));
+    if (res == -1) {
+        std.debug.print("OK\n", .{});
+        return conf;
+    } else {
+        c.gtk_window_close(@ptrCast(*c.GtkWindow, widgets.window));
+        c.gtk_widget_destroy(widgets.window);
+        return null;
+    }
+    //c.gtk_widget_show(widgets.window);
 }
 
 fn toggle_custom_command(custom_command_checkbutton: *c.GtkCheckButton, data: c.gpointer) void {
@@ -235,6 +255,16 @@ fn parse_title_style(style: [*c]const u8) ?config.DynamicTitleStyle {
     return null;
 }
 
+fn parse_cursor_style(style: [*c]const u8) ?config.CursorStyle {
+    const len = mem.len(style);
+    inline for (meta.fields(config.CursorStyle)) |field| {
+        if (mem.eql(u8, style[0..len], field.name)) {
+            return @field(config.CursorStyle, field.name);
+        }
+    }
+    return null;
+}
+
 fn parse_background_style(style: [*c]const u8) ?config.BackgroundStyle {
     const len = mem.len(style);
     inline for (meta.fields(config.BackgroundStyle)) |field| {
@@ -256,12 +286,14 @@ fn parse_image_style(style: [*c]const u8) ?config.ImageStyle {
 }
 
 fn save_and_close(b: *c.GtkButton, data: c.gpointer) void {
-    var conf = config.Config.default();
     conf.initial_title = widgets.get_initial_title();
     conf.dynamic_title_style = widgets.get_title_style();
     conf.custom_command = widgets.get_custom_command();
+    conf.scrollback = widgets.get_scrollback();
+    //conf.font = widgets.get_font();
+    //conf.background = widgets.get_background();
     conf.colors = widgets.get_colors();
-    std.debug.print("Config: {s}\n", .{conf});
+    conf.cursor = widgets.get_cursor();
     c.gtk_window_close(@ptrCast(*c.GtkWindow, widgets.window));
     c.gtk_widget_destroy(widgets.window);
 }
