@@ -403,9 +403,18 @@ fn goto_next_tab() callconv(.C) void {
 }
 
 fn run_prefs() void {
-    if (prefs.run()) |nc| {
-        conf = nc;
-        std.debug.print("{s}\n", .{nc});
+    if (prefs.run()) |newconf| {
+        conf = newconf;
+        const background = conf.background;
+        switch (background) {
+            config.Background.solid_color => std.debug.print("Solid Color\n", .{}),
+            config.Background.image => |value| {
+                std.debug.print("File = {s}\nStyle = {s}\n", .{value.file, value.style});
+            },
+            config.Background.transparent => |value| {
+                std.debug.print("Transparency: {d}\n", .{value});
+            },
+        }
     }
 }
 

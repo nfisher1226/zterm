@@ -125,6 +125,56 @@ pub const PrefWidgets = struct {
         }
     }
 
+    fn get_font(self: PrefWidgets) config.Font {
+        const is_system = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, self.system_font_checkbutton));
+        if (is_system) {
+            return config.Font.system;
+        } else {
+            const val = c.gtk_font_chooser_get_font(@ptrCast(*c.GtkFontChooser, self.font_chooser_button));
+            const len = mem.len(val);
+            return config.Font{ .custom = val[0..len] };
+        }
+    }
+
+    fn get_background_style(self: PrefWidgets) config.BackgroundStyle {
+        const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.background_style_combobox));
+        const style = parse_background_style(id).?;
+        return style;
+    }
+
+    fn get_image_style(self: PrefWidgets) config.ImageStyle {
+        const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.background_image_style_combobox));
+        const style = parse_image_style(id).?;
+        return style;
+    }
+
+    fn get_background_image(self: PrefWidgets) config.BackgroundImage {
+        const val = c.gtk_file_chooser_get_filename(@ptrCast(*c.GtkFileChooser, self.background_image_file_button));
+        const len = mem.len(val);
+        const style = self.get_image_style();
+        return config.BackgroundImage {
+            .file = val[0..len],
+            .style = style,
+        };
+    }
+
+    fn get_background(self: PrefWidgets) config.Background {
+        const style = self.get_background_style();
+        switch (style) {
+            config.BackgroundStyle.solid_color => {
+                return config.Background.solid_color;
+            },
+            config.BackgroundStyle.image => {
+                const img = self.get_background_image();
+                return config.Background{ .image = img };
+            },
+            config.BackgroundStyle.transparent => {
+                const val = c.gtk_range_get_value(@ptrCast(*c.GtkRange, self.background_style_opacity_scale));
+                return config.Background{ .transparent = val };
+            },
+        }
+    }
+
     fn get_cursor_style(self: PrefWidgets) config.CursorStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.cursor_style_combobox));
         const style = parse_cursor_style(id).?;
@@ -198,7 +248,6 @@ pub fn run() ?config.Config {
 
     const res = c.gtk_dialog_run(@ptrCast(*c.GtkDialog, widgets.window));
     if (res == -1) {
-        std.debug.print("OK\n", .{});
         return conf;
     } else {
         c.gtk_window_close(@ptrCast(*c.GtkWindow, widgets.window));
@@ -290,8 +339,8 @@ fn save_and_close(b: *c.GtkButton, data: c.gpointer) void {
     conf.dynamic_title_style = widgets.get_title_style();
     conf.custom_command = widgets.get_custom_command();
     conf.scrollback = widgets.get_scrollback();
-    //conf.font = widgets.get_font();
-    //conf.background = widgets.get_background();
+    conf.font = widgets.get_font();
+    conf.background = widgets.get_background();
     conf.colors = widgets.get_colors();
     conf.cursor = widgets.get_cursor();
     c.gtk_window_close(@ptrCast(*c.GtkWindow, widgets.window));

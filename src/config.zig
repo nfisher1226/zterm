@@ -26,6 +26,10 @@ pub const CustomCommandType = enum {
 pub const CustomCommand = union(CustomCommandType) {
     command: []const u8,
     none: void,
+
+    pub fn default() CustomCommand {
+        return CustomCommand.none;
+    }
 };
 
 pub const ScrollbackType = enum {
@@ -36,6 +40,10 @@ pub const ScrollbackType = enum {
 pub const Scrollback = union(ScrollbackType) {
     finite: u64,
     infinite: void,
+
+    pub fn default() Scrollback {
+        return Scrollback{ .finite = 500 };
+    }
 };
 
 pub const FontType = enum {
@@ -46,6 +54,10 @@ pub const FontType = enum {
 pub const Font = union(FontType) {
     system: void,
     custom: []const u8,
+
+    pub fn default() Font {
+        return Font.system;
+    }
 };
 
 pub const CursorStyle = enum {
@@ -96,21 +108,13 @@ pub const BackgroundImage = struct {
     style: ImageStyle,
 };
 
-pub const BackgroundValue = union(BackgroundStyle) {
+pub const Background = union(BackgroundStyle) {
     solid_color: void,
     image: BackgroundImage,
     transparent: f64,
-};
-
-pub const Background = struct {
-    background_style: BackgroundStyle,
-    background_value: BackgroundValue,
 
     pub fn default() Background {
-        return Background {
-            .background_style = BackgroundStyle.default(),
-            .background_value = BackgroundValue.solid_color,
-        };
+        return Background.solid_color;
     }
 };
 
@@ -208,9 +212,9 @@ pub const Config = struct {
         return Config {
             .initial_title = "Zterm",
             .dynamic_title_style = DynamicTitleStyle.default(),
-            .custom_command = CustomCommand.none,
-            .scrollback = Scrollback{ .finite = 500 },
-            .font = Font.system,
+            .custom_command = CustomCommand.default(),
+            .scrollback = Scrollback.default(),
+            .font = Font.default(),
             .background = Background.default(),
             .colors = Colors.default(),
             .cursor = Cursor.default(),
