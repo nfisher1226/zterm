@@ -125,7 +125,7 @@ pub const PrefWidgets = struct {
             return config.Scrollback.infinite;
         } else {
             const val = c.gtk_spin_button_get_value(@ptrCast(*c.GtkSpinButton, self.scrollback_lines_spinbox));
-            return config.Scrollback{ .finite = @floatToInt(u64, val) };
+            return config.Scrollback{ .finite = val };
         }
     }
 

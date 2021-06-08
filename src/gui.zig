@@ -14,6 +14,7 @@ var conf = config.Config.default();
 var gui: Gui = undefined;
 var options: Opts = undefined;
 var tabs: hashmap(u64, Tab) = undefined;
+var terms: hashmap(u64, *c.VteTerminal) = undefined;
 
 pub const Opts = struct {
     command: [*c]const u8,
@@ -196,6 +197,9 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     tabs = hashmap(u64, Tab).init(allocator);
     defer tabs.deinit();
 
+    terms = hashmap(u64, *c.VteTerminal).init(allocator);
+    defer terms.deinit();
+
     const builder = c.gtk_builder_new();
     const glade_str = @embedFile("gui.glade");
     var ret = c.gtk_builder_add_from_string(builder, glade_str, glade_str.len, @intToPtr([*c][*c]c._GError, 0));
@@ -249,6 +253,7 @@ fn new_tab_callback(menuitem: *c.GtkMenuItem) void {
 fn new_term(command: [*c][*c]c.gchar) *c.GtkWidget {
     const term = c.vte_terminal_new();
     const term_ptr = @ptrCast([*c]c.VteTerminal, term);
+    terms.put(@ptrToInt(term), term_ptr) catch {};
     c.vte_terminal_spawn_async(
         term_ptr,
         @intToEnum(c.VtePtyFlags, c.VTE_PTY_DEFAULT),
@@ -264,6 +269,7 @@ fn new_term(command: [*c][*c]c.gchar) *c.GtkWidget {
         null,
         @intToPtr(?*c_void, @as(c_int, 0)),
     );
+    conf.set(term_ptr);
     _ = gtk.g_signal_connect(
         term,
         "child-exited",
@@ -301,12 +307,13 @@ fn close_term_callback(term: *c.VteTerminal) void {
     const box = c.gtk_widget_get_parent(@ptrCast(*c.GtkWidget, term));
     const key = @ptrToInt(box);
     const num = c.gtk_notebook_page_num(@ptrCast(*c.GtkNotebook, gui.notebook), box);
+    const termkey = @ptrToInt(@ptrCast(*c.GtkWidget, term));
+    _ = terms.remove(termkey);
     c.gtk_container_remove(
         @ptrCast(*c.GtkContainer, box),
         @ptrCast(*c.GtkWidget, term));
     c.gtk_widget_destroy(@ptrCast(*c.GtkWidget, term));
     if (tabs.get(key)) |tab| {
-        const termkey = @ptrToInt(term);
         const kids = c.gtk_container_get_children(@ptrCast(*c.GtkContainer, box));
         const len = c.g_list_length(kids);
         if (len == 0) {
@@ -405,16 +412,19 @@ fn goto_next_tab() callconv(.C) void {
 fn run_prefs() void {
     if (prefs.run()) |newconf| {
         conf = newconf;
-        std.debug.print("Title Style: {s}\n", .{conf.dynamic_title_style});
-        const background = conf.background;
-        switch (background) {
-            .solid_color => std.debug.print("Background: Solid Color\n", .{}),
-            .image => |value| {
-                std.debug.print("Background Image File = {s}\nImage Style = {s}\n", .{value.file, value.style});
-            },
-            .transparent => |value| {
-                std.debug.print("Background Transparency: {d}\n", .{value});
-            },
+        //const background = conf.background;
+        //switch (background) {
+        //    .solid_color => std.debug.print("Background: Solid Color\n", .{}),
+        //    .image => |value| {
+        //        std.debug.print("Background Image File = {s}\nImage Style = {s}\n", .{value.file, value.style});
+        //    },
+        //    .transparent => |value| {
+        //        std.debug.print("Background Transparency: {d}\n", .{value});
+        //    },
+        //}
+        var iter = terms.valueIterator();
+        while (iter.next()) |term| {
+            conf.set(term.*);
         }
     }
 }

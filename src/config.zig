@@ -45,11 +45,22 @@ pub const ScrollbackType = enum {
 };
 
 pub const Scrollback = union(ScrollbackType) {
-    finite: u64,
+    finite: f64,
     infinite: void,
 
     pub fn default() Scrollback {
         return Scrollback{ .finite = 500 };
+    }
+
+    pub fn set(self: Scrollback, term: *c.VteTerminal) void {
+        switch (self) {
+            .finite => |value| {
+                c.vte_terminal_set_scrollback_lines(term, @floatToInt(c_long, value));
+            },
+            .infinite => {
+                c.vte_terminal_set_scrollback_lines(term, -1);
+            },
+        }
     }
 };
 
@@ -65,6 +76,16 @@ pub const Font = union(FontType) {
     pub fn default() Font {
         return Font.system;
     }
+
+    fn set(self: Font, term: *c.VteTerminal) void {
+        switch (self) {
+            .system => c.vte_terminal_set_font(term, null),
+            .custom => |value| {
+                const font = c.pango_font_description_from_string(@ptrCast([*c]const u8, &value));
+                c.vte_terminal_set_font(term, font);
+            },
+        }
+    }
 };
 
 pub const CursorStyle = enum {
@@ -74,6 +95,14 @@ pub const CursorStyle = enum {
 
     pub fn default() CursorStyle {
         return CursorStyle.block;
+    }
+
+    fn set(self: CursorStyle, term: *c.VteTerminal) void {
+        switch (self) {
+            .block => c.vte_terminal_set_cursor_shape(term, gtk.cursor_block),
+            .i_beam => c.vte_terminal_set_cursor_shape(term, gtk.cursor_ibeam),
+            .underline => c.vte_terminal_set_cursor_shape(term, gtk.cursor_underline),
+        }
     }
 };
 
@@ -86,6 +115,15 @@ pub const Cursor = struct {
             .cursor_style = CursorStyle.default(),
             .cursor_blinks = true,
         };
+    }
+
+    pub fn set(self: Cursor, term: *c.VteTerminal) void {
+        self.cursor_style.set(term);
+        if (self.cursor_blinks) {
+            c.vte_terminal_set_cursor_blink_mode(term, gtk.cursor_blink_on);
+        } else {
+            c.vte_terminal_set_cursor_blink_mode(term, gtk.cursor_blink_off);
+        }
     }
 };
 
@@ -148,12 +186,21 @@ pub const RGBColor = struct {
         };
     }
 
-    pub fn to_hex(self: RGBColor) ?[]const u8 {
+    fn to_hex(self: RGBColor) ?[]const u8 {
         const buf = fmt.allocPrintZ(
-            allocator, "#{X}{X}{X}",
+            allocator, "#{x}{x}{x}",
             .{self.red, self.green, self.blue}
         ) catch |e| { return null; };
         return buf;
+    }
+
+    fn to_gdk(self: RGBColor) c.GdkRGBA {
+        return c.GdkRGBA {
+            .red = @intToFloat(f64, self.red) / 255.0,
+            .green= @intToFloat(f64, self.green) / 255.0,
+            .blue = @intToFloat(f64, self.blue) / 255.0,
+            .alpha = 1.0,
+        };
     }
 };
 
@@ -200,8 +247,14 @@ pub const Colors = struct {
         };
     }
 
-    pub fn from_pref_widgets(widgets: prefs.PrefWidgets) Colors {
-        return widgets.get_colors();
+    fn set(self: Colors, term: *c.VteTerminal) void {
+        const forecolor = self.text_color.to_gdk();
+        c.vte_terminal_set_color_foreground(term, &forecolor);
+    }
+
+    fn set_bg(self: Colors, term: *c.VteTerminal) void {
+        const bgcolor = self.background_color.to_gdk();
+        c.vte_terminal_set_color_background(term, &bgcolor);
     }
 };
 
@@ -226,5 +279,16 @@ pub const Config = struct {
             .colors = Colors.default(),
             .cursor = Cursor.default(),
         };
+    }
+
+    pub fn set(self: Config, term: *c.VteTerminal) void {
+        self.colors.set(term);
+        const bg = self.background;
+        if (bg == Background.solid_color) {
+            self.colors.set_bg(term);
+        }
+        self.scrollback.set(term);
+        self.font.set(term);
+        self.cursor.set(term);
     }
 };

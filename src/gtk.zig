@@ -13,6 +13,11 @@ pub const shift_mask = @intToEnum(c.GdkModifierType, c.GDK_SHIFT_MASK);
 pub const alt_mask = @intToEnum(c.GdkModifierType, c.GDK_MOD1_MASK);
 pub const ctrl_mask = @intToEnum(c.GdkModifierType, c.GDK_CONTROL_MASK);
 pub const accel_locked = @intToEnum(c.GtkAccelFlags, c.GTK_ACCEL_LOCKED);
+pub const cursor_block = @intToEnum(c.VteCursorShape, c.VTE_CURSOR_SHAPE_BLOCK);
+pub const cursor_ibeam = @intToEnum(c.VteCursorShape, c.VTE_CURSOR_SHAPE_IBEAM);
+pub const cursor_underline = @intToEnum(c.VteCursorShape, c.VTE_CURSOR_SHAPE_UNDERLINE);
+pub const cursor_blink_on = @intToEnum(c.VteCursorBlinkMode, c.VTE_CURSOR_BLINK_ON);
+pub const cursor_blink_off = @intToEnum(c.VteCursorBlinkMode, c.VTE_CURSOR_BLINK_OFF);
 
 pub fn g_signal_connect(instance: c.gpointer, detailed_signal: [*c]const c.gchar, c_handler: c.GCallback, data: c.gpointer) c.gulong {
     var zero: u32 = 0;
