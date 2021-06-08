@@ -36,6 +36,17 @@ pub fn builder_get_widget(builder: *c.GtkBuilder, name: [*]const u8) ?*c.GtkWidg
     }
 }
 
+pub fn builder_get_adjustment(builder: *c.GtkBuilder, name: [*]const u8) ?*c.GtkAdjustment {
+    const obj = c.gtk_builder_get_object(builder, name);
+    if (obj == null) {
+        return null;
+    } else {
+        var gobject = @ptrCast([*c]c.GTypeInstance, obj);
+        var adjustment = @ptrCast(*c.GtkAdjustment, gobject);
+        return adjustment;
+    }
+}
+
 pub fn toggle_button_get_active(but: *c.GtkToggleButton) bool {
     if (c.gtk_toggle_button_get_active(but) == 0) {
         return false;

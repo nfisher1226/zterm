@@ -417,7 +417,7 @@ fn goto_next_tab() callconv(.C) void {
 }
 
 fn run_prefs() void {
-    if (prefs.run()) |newconf| {
+    if (prefs.run(conf)) |newconf| {
         conf = newconf;
         //const background = conf.background;
         //switch (background) {

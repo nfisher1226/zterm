@@ -11,7 +11,7 @@ const stdout = std.io.getStdOut().writer();
 
 var builder: *c.GtkBuilder = undefined;
 var widgets: PrefWidgets = undefined;
-var conf: config.Config = undefined;
+var conf = config.Config.default();
 
 pub const PrefWidgets = struct {
     window: *c.GtkWidget,
@@ -25,6 +25,7 @@ pub const PrefWidgets = struct {
     infinite_scrollback_checkbutton: *c.GtkWidget,
     scrollback_lines_label: *c.GtkWidget,
     scrollback_lines_spinbox: *c.GtkWidget,
+    scrollback_lines_adjustment: *c.GtkAdjustment,
     text_color: *c.GtkWidget,
     background_color: *c.GtkWidget,
     black_color: *c.GtkWidget,
@@ -51,6 +52,7 @@ pub const PrefWidgets = struct {
     background_image_style_combobox: *c.GtkWidget,
     background_style_opacity_box: *c.GtkWidget,
     background_style_opacity_scale: *c.GtkWidget,
+    background_opacity_adjustment: *c.GtkAdjustment,
     close_button: *c.GtkWidget,
 
     fn init(b: *c.GtkBuilder) PrefWidgets {
@@ -66,6 +68,7 @@ pub const PrefWidgets = struct {
             .infinite_scrollback_checkbutton = gtk.builder_get_widget(builder, "infinite_scrollback_checkbutton").?,
             .scrollback_lines_label = gtk.builder_get_widget(builder, "scrollback_lines_label").?,
             .scrollback_lines_spinbox = gtk.builder_get_widget(builder, "scrollback_lines_spinbox").?,
+            .scrollback_lines_adjustment = gtk.builder_get_adjustment(builder, "scollback_lines_adjustment").?,
             .text_color = gtk.builder_get_widget(builder, "text_color").?,
             .background_color = gtk.builder_get_widget(builder, "background_color").?,
             .black_color = gtk.builder_get_widget(builder, "black_color").?,
@@ -92,20 +95,41 @@ pub const PrefWidgets = struct {
             .background_image_style_combobox = gtk.builder_get_widget(builder, "background_image_style_combobox").?,
             .background_style_opacity_box = gtk.builder_get_widget(builder, "background_style_opacity_box").?,
             .background_style_opacity_scale = gtk.builder_get_widget(builder, "background_style_opacity_scale").?,
+            .background_opacity_adjustment = gtk.builder_get_adjustment(builder, "background_opacity_adjustment").?,
             .close_button = gtk.builder_get_widget(builder, "close_button").?,
         };
     }
 
-    fn get_initial_title(self: PrefWidgets) []const u8 {
+    fn get_initial_title(self: PrefWidgets) ?[]const u8 {
         const val = c.gtk_entry_get_text(@ptrCast(*c.GtkEntry, self.initial_title_entry));
-        const len = mem.len(val);
-        return val[0..len];
+        const title = fmt.allocPrint(allocator, "{s}", .{val}) catch return null;
+        return title;
+    }
+
+    fn set_initial_title(self: PrefWidgets) void {
+        const title = fmt.allocPrintZ(allocator, "{s}", .{conf.initial_title}) catch return;
+        std.debug.print("{s}\n", .{@ptrCast([*c]const u8, title)});
+        defer allocator.free(title);
+        c.gtk_entry_set_text(
+            @ptrCast(*c.GtkEntry, self.initial_title_entry),
+            @ptrCast([*c]const u8, &title),
+        );
     }
 
     fn get_title_style(self: PrefWidgets) config.DynamicTitleStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.dynamic_title_combobox));
         const style = config.parse_enum(config.DynamicTitleStyle, id).?;
         return style;
+    }
+
+    fn set_title_style(self: PrefWidgets) void {
+        const box = @ptrCast(*c.GtkComboBox, self.dynamic_title_combobox);
+        switch (conf.dynamic_title_style) {
+            .replaces_title => _ = c.gtk_combo_box_set_active_id(box, "replaces_title"),
+            .before_title => _ = c.gtk_combo_box_set_active_id(box, "before_title"),
+            .after_title => _ = c.gtk_combo_box_set_active_id(box, "after_title"),
+            .not_displayed => _ = c.gtk_combo_box_set_active_id(box, "not_displayed"),
+        }
     }
 
     fn get_custom_command(self: PrefWidgets) config.CustomCommand {
@@ -126,6 +150,21 @@ pub const PrefWidgets = struct {
         } else {
             const val = c.gtk_spin_button_get_value(@ptrCast(*c.GtkSpinButton, self.scrollback_lines_spinbox));
             return config.Scrollback{ .finite = val };
+        }
+    }
+
+    fn set_scrollback(self: PrefWidgets) void {
+        const scrollback = conf.scrollback;
+        switch (scrollback) {
+            .infinite => {
+                c.gtk_toggle_button_set_active(@ptrCast(*c.GtkToggleButton, self.infinite_scrollback_checkbutton), 1);
+                c.gtk_widget_set_sensitive(self.scrollback_lines_spinbox, 0);
+            },
+            .finite => |value| {
+                c.gtk_toggle_button_set_active(@ptrCast(*c.GtkToggleButton, self.infinite_scrollback_checkbutton), 0);
+                c.gtk_widget_set_sensitive(self.scrollback_lines_spinbox, 1);
+                c.gtk_adjustment_set_value(self.scrollback_lines_adjustment, value);
+            },
         }
     }
 
@@ -165,6 +204,9 @@ pub const PrefWidgets = struct {
         };
     }
 
+    fn set_background_image(self: PrefWidgets, image: config.BackgroundImage) void {
+    }
+
     fn get_background(self: PrefWidgets) config.Background {
         const style = self.get_background_style();
         switch (style) {
@@ -185,6 +227,42 @@ pub const PrefWidgets = struct {
         }
     }
 
+    fn set_transparency(self: PrefWidgets, percent: f64) void {
+        c.gtk_adjustment_set_value(self.background_opacity_adjustment, percent);
+    }
+
+    fn set_background(self: PrefWidgets) void {
+        const bg = conf.background;
+        switch (bg) {
+            .solid_color => {
+                c.gtk_widget_hide(self.background_image_grid);
+                c.gtk_widget_hide(self.background_style_opacity_box);
+                _ = c.gtk_combo_box_set_active_id(
+                    @ptrCast(*c.GtkComboBox, self.background_style_combobox),
+                    "solid_color",
+                );
+            },
+            .image => |img| {
+                c.gtk_widget_show_all(self.background_image_grid);
+                c.gtk_widget_hide(self.background_style_opacity_box);
+                _ = c.gtk_combo_box_set_active_id(
+                    @ptrCast(*c.GtkComboBox, self.background_style_combobox),
+                    "image",
+                );
+                self.set_background_image(img);
+            },
+            .transparent => |percent| {
+                c.gtk_widget_hide(self.background_image_grid);
+                c.gtk_widget_show_all(self.background_style_opacity_box);
+                _ = c.gtk_combo_box_set_active_id(
+                    @ptrCast(*c.GtkComboBox, self.background_style_combobox),
+                    "transparent",
+                );
+                self.set_transparency(percent);
+            },
+        }
+    }
+
     fn get_cursor_style(self: PrefWidgets) config.CursorStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.cursor_style_combobox));
         const style = config.parse_enum(config.CursorStyle, id).?;
@@ -200,6 +278,20 @@ pub const PrefWidgets = struct {
         };
     }
 
+    fn set_cursor(self: PrefWidgets) void {
+        if (conf.cursor.cursor_blinks) {
+            c.gtk_toggle_button_set_active(@ptrCast(*c.GtkToggleButton, self.cursor_blinks_checkbutton), 1);
+        } else {
+            c.gtk_toggle_button_set_active(@ptrCast(*c.GtkToggleButton, self.cursor_blinks_checkbutton), 0);
+        }
+        const box = @ptrCast(*c.GtkComboBox, self.cursor_style_combobox);
+        switch (conf.cursor.cursor_style) {
+            .block => _ = c.gtk_combo_box_set_active_id(box, "block"),
+            .i_beam => _ = c.gtk_combo_box_set_active_id(box, "i_beam"),
+            .underline => _ = c.gtk_combo_box_set_active_id(box, "underline"),
+        }
+    }
+
     fn get_colors(self: PrefWidgets) config.Colors {
         var colors = config.Colors.default();
         inline for (meta.fields(config.Colors)) |color| {
@@ -212,7 +304,7 @@ pub const PrefWidgets = struct {
 
     fn get_config(self: PrefWidgets) config.Config {
         return config.Config {
-            .initial_title = self.get_initial_title(),
+            .initial_title = if (self.get_initial_title()) |t| t else "Zterm",
             .dynamic_title_style = self.get_title_style(),
             .custom_command = self.get_custom_command(),
             .scrollback = self.get_scrollback(),
@@ -222,13 +314,23 @@ pub const PrefWidgets = struct {
             .cursor = self.get_cursor(),
         };
     }
+
+    fn set_values(self: PrefWidgets) void {
+        self.set_initial_title();
+        self.set_title_style();
+        self.set_scrollback();
+        self.set_background();
+        self.set_cursor();
+    }
 };
 
-pub fn run() ?config.Config {
+pub fn run(data: config.Config) ?config.Config {
     builder = c.gtk_builder_new();
+    conf = data;
     const glade_str = @embedFile("prefs.glade");
     _ = c.gtk_builder_add_from_string(builder, glade_str, glade_str.len, @intToPtr([*c][*c]c._GError, 0));
     widgets = PrefWidgets.init(builder);
+    widgets.set_values();
 
     _ = gtk.g_signal_connect(
         widgets.custom_command_checkbutton,

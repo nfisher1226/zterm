@@ -49,7 +49,7 @@ pub const Scrollback = union(ScrollbackType) {
     infinite: void,
 
     pub fn default() Scrollback {
-        return Scrollback{ .finite = 500 };
+        return Scrollback{ .finite = 1500 };
     }
 
     pub fn set(self: Scrollback, term: *c.VteTerminal) void {
@@ -258,13 +258,37 @@ pub const Colors = struct {
     }
 
     fn set(self: Colors, term: *c.VteTerminal) void {
-        const forecolor = self.text_color.to_gdk();
-        c.vte_terminal_set_color_foreground(term, &forecolor);
+        const fgcolor = self.text_color.to_gdk();
+        const bgcolor = self.background_color.to_gdk();
+        const palette = self.to_palette();
+        c.vte_terminal_set_color_foreground(term, &fgcolor);
+        c.vte_terminal_set_colors(term, &fgcolor, &bgcolor, &palette, 16);
     }
 
     fn set_bg(self: Colors, term: *c.VteTerminal) void {
         const bgcolor = self.background_color.to_gdk();
         c.vte_terminal_set_color_background(term, &bgcolor);
+    }
+
+    fn to_palette(self: Colors) [16]c.GdkRGBA {
+        return [16]c.GdkRGBA {
+            self.black_color.to_gdk(),
+            self.red_color.to_gdk(),
+            self.green_color.to_gdk(),
+            self.yellow_color.to_gdk(),
+            self.blue_color.to_gdk(),
+            self.magenta_color.to_gdk(),
+            self.cyan_color.to_gdk(),
+            self.light_grey_color.to_gdk(),
+            self.dark_grey_color.to_gdk(),
+            self.brown_color.to_gdk(),
+            self.light_red_color.to_gdk(),
+            self.light_green_color.to_gdk(),
+            self.light_blue_color.to_gdk(),
+            self.light_magenta_color.to_gdk(),
+            self.light_cyan_color.to_gdk(),
+            self.white_color.to_gdk(),
+        };
     }
 };
 
