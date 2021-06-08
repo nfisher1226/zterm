@@ -161,6 +161,7 @@ pub const Background = union(BackgroundStyle) {
     pub fn default() Background {
         return Background.solid_color;
     }
+
 };
 
 pub const RGBColor = struct {
@@ -200,6 +201,15 @@ pub const RGBColor = struct {
             .green= @intToFloat(f64, self.green) / 255.0,
             .blue = @intToFloat(f64, self.blue) / 255.0,
             .alpha = 1.0,
+        };
+    }
+
+    fn to_gdk_alpha(self: RGBColor, opacity: f64) c.GdkRGBA {
+        return c.GdkRGBA {
+            .red = @intToFloat(f64, self.red) / 255.0,
+            .green= @intToFloat(f64, self.green) / 255.0,
+            .blue = @intToFloat(f64, self.blue) / 255.0,
+            .alpha = opacity,
         };
     }
 };
@@ -281,12 +291,21 @@ pub const Config = struct {
         };
     }
 
+    fn set_bg(self: Config, term: *c.VteTerminal) void {
+        switch (self.background) {
+            .solid_color => self.colors.set_bg(term),
+            .image => {},
+            .transparent => |percent| {
+                const opacity = percent / 100.0;
+                const rgba = self.colors.background_color.to_gdk_alpha(opacity);
+                c.vte_terminal_set_color_background(term, &rgba);
+            },
+        }
+    }
+
     pub fn set(self: Config, term: *c.VteTerminal) void {
         self.colors.set(term);
-        const bg = self.background;
-        if (bg == Background.solid_color) {
-            self.colors.set_bg(term);
-        }
+        self.set_bg(term);
         self.scrollback.set(term);
         self.font.set(term);
         self.cursor.set(term);

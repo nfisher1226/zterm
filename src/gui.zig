@@ -210,6 +210,13 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     c.gtk_builder_set_application(builder, application);
 
     gui = Gui.init(builder);
+    // In order to support transparency, we have to make the entire window
+    // transparent, but we want to prevent the titlebar going transparent as well.
+    // These three settings are a hack which achieves this.
+    const screen = c.gtk_widget_get_screen(gui.window);
+    const visual = c.gdk_screen_get_rgba_visual(screen);
+    c.gtk_widget_set_visual(gui.window, visual);
+
     const window_ptr = @ptrCast(*c.GtkWindow, gui.window);
     c.gtk_window_set_title(window_ptr, options.title);
 
@@ -422,6 +429,16 @@ fn run_prefs() void {
         //        std.debug.print("Background Transparency: {d}\n", .{value});
         //    },
         //}
+        const bg = conf.background;
+        switch (bg) {
+            .transparent => |percent| {
+                const opacity = percent / 100.0;
+                c.gtk_widget_set_opacity(gui.window, opacity);
+            },
+            .solid_color, .image => {
+                c.gtk_widget_set_opacity(gui.window, 1.0);
+            },
+        }
         var iter = terms.valueIterator();
         while (iter.next()) |term| {
             conf.set(term.*);
