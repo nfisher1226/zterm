@@ -11,12 +11,7 @@ const meta = std.meta;
 
 pub fn parse_enum(comptime T: type, style: [*c]const u8) ?T {
     const len = mem.len(style);
-    inline for (meta.fields(T)) |field| {
-        if (mem.eql(u8, style[0..len], field.name)) {
-            return @field(T, field.name);
-        }
-    }
-    return null;
+    return meta.stringToEnum(T, style[0..len]);
 }
 
 pub const DynamicTitleStyle = enum {

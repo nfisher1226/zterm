@@ -9,6 +9,10 @@ const meta = std.meta;
 const stderr = std.io.getStdErr().writer();
 const stdout = std.io.getStdOut().writer();
 
+var builder: *c.GtkBuilder = undefined;
+var widgets: PrefWidgets = undefined;
+var conf: config.Config = undefined;
+
 pub const PrefWidgets = struct {
     window: *c.GtkWidget,
     initial_title_entry: *c.GtkWidget,
@@ -219,10 +223,6 @@ pub const PrefWidgets = struct {
         };
     }
 };
-
-var builder: *c.GtkBuilder = undefined;
-var widgets: PrefWidgets = undefined;
-var conf: config.Config = undefined;
 
 pub fn run() ?config.Config {
     builder = c.gtk_builder_new();

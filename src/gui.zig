@@ -10,6 +10,11 @@ const os = std.os;
 const stderr = std.io.getStdErr().writer();
 const stdout = std.io.getStdOut().writer();
 
+var conf = config.Config.default();
+var gui: Gui = undefined;
+var options: Opts = undefined;
+var tabs: hashmap(u64, Tab) = undefined;
+
 pub const Opts = struct {
     command: [*c]const u8,
     title: [*c]const u8,
@@ -183,11 +188,6 @@ const Gui = struct {
         c.gtk_window_add_accel_group(@ptrCast(*c.GtkWindow, self.window), accel_group);
     }
 };
-
-var gui: Gui = undefined;
-var options: Opts = undefined;
-var tabs: hashmap(u64, Tab) = undefined;
-var conf = config.Config.default();
 
 pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     // Cast the gpointer to a normal pointer and dereference it, giving us
