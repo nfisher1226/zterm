@@ -4,6 +4,7 @@ const gtk = @import("gtk.zig");
 const prefs = @import("prefs.zig");
 const allocator = std.heap.page_allocator;
 const c = gtk.c;
+const fmt = std.fmt;
 const fs = std.fs;
 const hashmap = std.AutoHashMap;
 const os = std.os;
@@ -20,6 +21,7 @@ pub const Opts = struct {
     command: [*c]const u8,
     title: [*c]const u8,
     directory: [*c]const u8,
+    hostname: [*c]const u8,
 };
 
 pub const Tab = struct {
@@ -114,6 +116,42 @@ const Gui = struct {
         } else {
             c.gtk_notebook_set_current_page(nb_ptr, 0);
         }
+    }
+
+    fn set_title(self: Gui) void {
+        const window_ptr = @ptrCast(*c.GtkWindow, self.window);
+        const style = conf.dynamic_title_style;
+        var buf: [64]u8 = undefined;
+        const title = switch (style) {
+            .replaces_title => fmt.allocPrintZ(allocator, "{s} on {s}", .{options.directory, options.hostname}),
+            .before_title => fmt.allocPrintZ(allocator, "{s} on {s} - {s}", .{options.directory, options.hostname, conf.initial_title}),
+            .after_title => fmt.allocPrintZ(allocator, "{s} - {s} on {s}", .{conf.initial_title, options.directory, options.hostname}),
+            .not_displayed => fmt.allocPrintZ(allocator, "{s}", .{conf.initial_title}),
+        } catch return;
+        defer allocator.free(title);
+        c.gtk_window_set_title(window_ptr, title.ptr);
+    }
+
+    fn set_background(self: Gui) void {
+        const bg = conf.background;
+        switch (bg) {
+            .transparent => |percent| {
+                const opacity = percent / 100.0;
+                c.gtk_widget_set_opacity(gui.window, opacity);
+            },
+            .solid_color, .image => {
+                c.gtk_widget_set_opacity(gui.window, 1.0);
+            },
+        }
+        var iter = terms.valueIterator();
+        while (iter.next()) |term| {
+            conf.set(term.*);
+        }
+    }
+
+    fn apply_settings(self: Gui) void {
+        self.set_title();
+        self.set_background();
     }
 
     fn connect_signals(self: Gui) void {
@@ -241,6 +279,7 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
 
     gui.connect_signals();
     gui.connect_accels();
+    gui.apply_settings();
 
     c.gtk_main();
 }
@@ -419,20 +458,7 @@ fn goto_next_tab() callconv(.C) void {
 fn run_prefs() void {
     if (prefs.run(conf)) |newconf| {
         conf = newconf;
-        const bg = conf.background;
-        switch (bg) {
-            .transparent => |percent| {
-                const opacity = percent / 100.0;
-                c.gtk_widget_set_opacity(gui.window, opacity);
-            },
-            .solid_color, .image => {
-                c.gtk_widget_set_opacity(gui.window, 1.0);
-            },
-        }
-        var iter = terms.valueIterator();
-        while (iter.next()) |term| {
-            conf.set(term.*);
-        }
+        gui.apply_settings();
     }
 }
 

@@ -41,10 +41,15 @@ pub fn main() !void {
         const res = try mem.Allocator.dupeZ(allocator, u8, d);
         break :dblk @ptrCast([*c]const u8, res);
     } else @ptrCast([*c]const u8, os.getenvZ("PWD") orelse os.getenvZ("HOME") orelse "/");
+    var buf: [64]u8 = undefined;
+    const name = try os.gethostname(&buf);
+    const hostname = try mem.Allocator.dupeZ(allocator, u8, name);
+    defer allocator.free(hostname);
     var opts = gui.Opts {
         .command = cmd,
         .title = title,
         .directory = directory,
+        .hostname = hostname,
     };
 
     const app = c.gtk_application_new("org.hitchhiker-linux.zterm", .G_APPLICATION_FLAGS_NONE) orelse @panic("null app :(");
