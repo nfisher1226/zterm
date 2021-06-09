@@ -264,7 +264,7 @@ fn new_term(command: [*c][*c]c.gchar) *c.GtkWidget {
     c.vte_terminal_spawn_async(
         term_ptr,
         @intToEnum(c.VtePtyFlags, c.VTE_PTY_DEFAULT),
-        null,
+        options.directory,
         command,
         null,
         @intToEnum(c.GSpawnFlags, c.G_SPAWN_DEFAULT),
@@ -419,16 +419,6 @@ fn goto_next_tab() callconv(.C) void {
 fn run_prefs() void {
     if (prefs.run(conf)) |newconf| {
         conf = newconf;
-        //const background = conf.background;
-        //switch (background) {
-        //    .solid_color => std.debug.print("Background: Solid Color\n", .{}),
-        //    .image => |value| {
-        //        std.debug.print("Background Image File = {s}\nImage Style = {s}\n", .{value.file, value.style});
-        //    },
-        //    .transparent => |value| {
-        //        std.debug.print("Background Transparency: {d}\n", .{value});
-        //    },
-        //}
         const bg = conf.background;
         switch (bg) {
             .transparent => |percent| {

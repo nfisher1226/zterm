@@ -8,6 +8,7 @@ const fmt = std.fmt;
 const math = std.math;
 const mem = std.mem;
 const meta = std.meta;
+const stderr = std.io.getStdErr().writer();
 
 pub fn parse_enum(comptime T: type, style: [*c]const u8) ?T {
     const len = mem.len(style);
@@ -80,9 +81,16 @@ pub const Font = union(FontType) {
     fn set(self: Font, term: *c.VteTerminal) void {
         switch (self) {
             .system => c.vte_terminal_set_font(term, null),
-            .custom => |value| {
-                const font = c.pango_font_description_from_string(@ptrCast([*c]const u8, &value));
-                c.vte_terminal_set_font(term, font);
+            .custom => |val| {
+                const font = fmt.allocPrintZ(allocator, "{s}", .{val}) catch |e| {
+                    stderr.print("{s}\n", .{e}) catch {};
+                    c.vte_terminal_set_font(term, null);
+                    return;
+                };
+                defer allocator.free(font);
+                const fontdesc = c.pango_font_description_from_string(font.ptr);
+                const font_str = c.pango_font_description_to_string(fontdesc);
+                c.vte_terminal_set_font(term, fontdesc);
             },
         }
     }
@@ -195,7 +203,7 @@ pub const RGBColor = struct {
         return buf;
     }
 
-    fn to_gdk(self: RGBColor) c.GdkRGBA {
+    pub fn to_gdk(self: RGBColor) c.GdkRGBA {
         return c.GdkRGBA {
             .red = @intToFloat(f64, self.red) / 255.0,
             .green= @intToFloat(f64, self.green) / 255.0,
@@ -236,9 +244,9 @@ pub const Colors = struct {
 
     pub fn default() Colors {
         return Colors {
-            .text_color = RGBColor{ .red = 255, .green = 255, .blue = 255 },
-            .background_color = RGBColor{ .red = 0, .green = 0, .blue = 0 },
-            .black_color = RGBColor{ .red = 0, .green = 0, .blue = 0 },
+            .text_color = RGBColor{ .red = 225, .green = 225, .blue = 225 },
+            .background_color = RGBColor{ .red = 36, .green = 34, .blue = 34 },
+            .black_color = RGBColor{ .red = 36, .green = 34, .blue = 34 },
             .red_color = RGBColor{ .red = 165, .green = 29, .blue = 45 },
             .green_color = RGBColor{ .red = 0, .green = 170, .blue = 0 },
             .brown_color = RGBColor{ .red = 99, .green = 69, .blue = 44 },
@@ -249,11 +257,11 @@ pub const Colors = struct {
             .dark_grey_color = RGBColor{ .red = 85, .green = 85, .blue = 85 },
             .light_red_color = RGBColor{ .red = 255, .green = 85, .blue = 85 },
             .light_green_color = RGBColor{ .red = 85, .green = 255, .blue = 85 },
-            .yellow_color = RGBColor{ .red = 255, .green = 255, .blue = 85 },
+            .yellow_color = RGBColor{ .red = 225, .green = 189, .blue = 0 },
             .light_blue_color = RGBColor{ .red = 85, .green = 85, .blue = 255 },
             .light_magenta_color = RGBColor{ .red = 255, .green = 85, .blue = 255 },
             .light_cyan_color = RGBColor{ .red = 85, .green = 255, .blue = 255 },
-            .white_color = RGBColor{ .red = 255, .green = 255, .blue = 255 },
+            .white_color = RGBColor{ .red = 225, .green = 225, .blue = 225 },
         };
     }
 
