@@ -1,5 +1,5 @@
 # Zterm
-![Zterm icon](data/zterm.zvg)
+![Zterm icon](https://hitchhiker-linux.org/assets/zterm-256.png)
 Zterm is a simple terminal emulator using Vte and Gtk+ writting using the
 [Zig](https://ziglang.org/) programming language. Currently basic functionality
 works including opening and closing terminals in tabs and panes, giving it a
