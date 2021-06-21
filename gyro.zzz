@@ -1,0 +1,23 @@
+deps:
+  mattnite/known-folders: ^0.0.0
+  clap:
+    src:
+      github:
+        user: hejsil
+        repo: zig-clap
+        ref: master
+    root: clap.zig
+  nestedtext:
+    src:
+      github:
+        user: lewisgaul
+        repo: zig-nestedtext
+        ref: main
+    root: src/nestedtext.zig
+  vte:
+    src:
+      github:
+        user: nfisher1226
+        repo: zig-vte
+        ref: odin
+    root: lib.zig

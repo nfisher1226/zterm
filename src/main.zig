@@ -1,9 +1,8 @@
 const std = @import("std");
-const clap = @import("zig-clap");
+const clap = @import("clap");
 const gui = @import("gui.zig");
-const gtk = @import("gtk.zig");
+usingnamespace @import("vte");
 const allocator = std.heap.page_allocator;
-const c = gtk.c;
 const fmt = std.fmt;
 const mem = std.mem;
 const os = std.os;

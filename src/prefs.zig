@@ -1,8 +1,7 @@
 const std = @import("std");
 const config = @import("config.zig");
-const gtk = @import("gtk.zig");
+usingnamespace @import("vte");
 const allocator = std.heap.page_allocator;
-const c = gtk.c;
 const fmt = std.fmt;
 const mem = std.mem;
 const meta = std.meta;
@@ -424,35 +423,35 @@ pub fn run(data: config.Config) ?config.Config {
     widgets = PrefWidgets.init(builder);
     widgets.set_values();
 
-    _ = gtk.g_signal_connect(
+    _ = gtk.signal_connect(
         widgets.custom_command_checkbutton,
         "toggled",
         @ptrCast(c.GCallback, toggle_custom_command),
         null,
     );
 
-    _ = gtk.g_signal_connect(
+    _ = gtk.signal_connect(
         widgets.infinite_scrollback_checkbutton,
         "toggled",
         @ptrCast(c.GCallback, toggle_scrollback),
         null,
     );
 
-    _ = gtk.g_signal_connect(
+    _ = gtk.signal_connect(
         widgets.system_font_checkbutton,
         "toggled",
         @ptrCast(c.GCallback, toggle_font),
         null,
     );
 
-    _ = gtk.g_signal_connect(
+    _ = gtk.signal_connect(
         widgets.background_style_combobox,
         "changed",
         @ptrCast(c.GCallback, toggle_background),
         null,
     );
 
-    _ = gtk.g_signal_connect(
+    _ = gtk.signal_connect(
         widgets.close_button,
         "clicked",
         @ptrCast(c.GCallback, save_and_close),

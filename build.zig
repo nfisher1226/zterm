@@ -1,4 +1,5 @@
 const Builder = @import("std").build.Builder;
+const pkgs = @import("deps.zig").pkgs;
 
 pub fn build(b: *Builder) void {
     const target = b.standardTargetOptions(.{});
@@ -12,10 +13,7 @@ pub fn build(b: *Builder) void {
     exe.linkSystemLibrary("vte-2.91");
     exe.install();
 
-    exe.addPackage(.{
-        .name = "zig-clap",
-        .path = "./lib/zig-clap/clap.zig",
-    });
+    pkgs.addAllTo(exe);
 
     const run_cmd = exe.run();
     run_cmd.step.dependOn(b.getInstallStep());

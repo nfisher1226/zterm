@@ -1,18 +1,33 @@
 const std = @import("std");
 const gui = @import("gui.zig");
-const gtk = @import("gtk.zig");
+usingnamespace @import("vte");
+const known_folders = @import("known-folders");
 const prefs = @import("prefs.zig");
 const allocator = std.heap.page_allocator;
-const c = gtk.c;
 const fmt = std.fmt;
+const path = std.fs.path;
 const math = std.math;
 const mem = std.mem;
 const meta = std.meta;
+const os = std.os;
 const stderr = std.io.getStdErr().writer();
+
+pub const known_folders_config = .{ .xdg_on_mac = true, };
 
 pub fn parse_enum(comptime T: type, style: [*c]const u8) ?T {
     const len = mem.len(style);
     return meta.stringToEnum(T, style[0..len]);
+}
+
+pub fn get_config_file(alloc: *mem.Allocator) ?[]const u8 {
+    const dir = known_folders.getPath(alloc, .local_configuration) catch |e| return null;
+    if (dir) |d| {
+        const file = path.join(allocator, &[_][]const u8{d, "zterm/config.nt"}) catch |e| return null;
+        return file;
+    } else {
+        const file = if (os.getenv("HOME")) |h| path.join(alloc, &[_][]const u8{h, ".config/zterm/config.nt"}) catch |e| return null else null;
+        return file;
+    }
 }
 
 pub const DynamicTitleStyle = enum {
@@ -107,9 +122,9 @@ pub const CursorStyle = enum {
 
     fn set(self: CursorStyle, term: *c.VteTerminal) void {
         switch (self) {
-            .block => c.vte_terminal_set_cursor_shape(term, gtk.cursor_block),
-            .i_beam => c.vte_terminal_set_cursor_shape(term, gtk.cursor_ibeam),
-            .underline => c.vte_terminal_set_cursor_shape(term, gtk.cursor_underline),
+            .block => c.vte_terminal_set_cursor_shape(term, vte.cursor_shape_block),
+            .i_beam => c.vte_terminal_set_cursor_shape(term, vte.cursor_shape_ibeam),
+            .underline => c.vte_terminal_set_cursor_shape(term, vte.cursor_shape_underline),
         }
     }
 };
@@ -128,9 +143,9 @@ pub const Cursor = struct {
     pub fn set(self: Cursor, term: *c.VteTerminal) void {
         self.cursor_style.set(term);
         if (self.cursor_blinks) {
-            c.vte_terminal_set_cursor_blink_mode(term, gtk.cursor_blink_on);
+            c.vte_terminal_set_cursor_blink_mode(term, vte.cursor_blink_on);
         } else {
-            c.vte_terminal_set_cursor_blink_mode(term, gtk.cursor_blink_off);
+            c.vte_terminal_set_cursor_blink_mode(term, vte.cursor_blink_off);
         }
     }
 };

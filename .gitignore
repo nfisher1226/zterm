@@ -2,3 +2,6 @@ zig-out/
 zig-cache/
 gui.glade~
 prefs.glade~
+deps.zig
+.gyro/
+gyro.lock
