@@ -19,5 +19,5 @@ deps:
       github:
         user: nfisher1226
         repo: zig-vte
-        ref: odin
+        ref: loki
     root: lib.zig

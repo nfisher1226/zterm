@@ -30,14 +30,14 @@ pub const Tab = struct {
 
     fn init(command: [*c][*c]c.gchar) Tab {
         var tab = Tab {
-            .box = c.gtk_box_new(gtk.orientation_horizontal, 0),
+            .box = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 0),
             .tab_label = c.gtk_label_new("Zterm"),
-            .close_button = c.gtk_button_new_from_icon_name("window-close", gtk.icon_size_menu),
+            .close_button = c.gtk_button_new_from_icon_name("window-close", c.GTK_ICON_SIZE_MENU),
         };
         const term = new_term(command);
-        const lbox = c.gtk_box_new(gtk.orientation_horizontal, 10);
+        const lbox = c.gtk_box_new(c.GTK_ORIENTATION_HORIZONTAL, 10);
         const lbox_ptr = @ptrCast(*c.GtkBox, lbox);
-        c.gtk_button_set_relief(@ptrCast(*c.GtkButton, tab.close_button), gtk.relief_none);
+        c.gtk_button_set_relief(@ptrCast(*c.GtkButton, tab.close_button), c.GTK_RELIEF_NONE);
         c.gtk_widget_set_has_tooltip(tab.close_button, 1);
         c.gtk_widget_set_tooltip_text(tab.close_button, "Close tab");
         c.gtk_box_pack_start(lbox_ptr, tab.tab_label, 0, 1, 1);
@@ -120,7 +120,6 @@ const Gui = struct {
     fn set_title(self: Gui) void {
         const window_ptr = @ptrCast(*c.GtkWindow, self.window);
         const style = conf.dynamic_title_style;
-        var buf: [64]u8 = undefined;
         const title = switch (style) {
             .replaces_title => fmt.allocPrintZ(allocator, "{s} on {s}", .{options.directory, options.hostname}),
             .before_title => fmt.allocPrintZ(allocator, "{s} on {s} - {s}", .{options.directory, options.hostname, conf.initial_title}),
@@ -198,31 +197,31 @@ const Gui = struct {
         const ctrl_page_down_closure = c.g_cclosure_new(goto_next_tab, null, null);
         const accel_group = c.gtk_accel_group_new();
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_1, gtk.mod1_mask, gtk.accel_locked, tab1_closure);
+            accel_group, c.GDK_KEY_1, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab1_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_2, gtk.mod1_mask, gtk.accel_locked, tab2_closure);
+            accel_group, c.GDK_KEY_2, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab2_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_3, gtk.mod1_mask, gtk.accel_locked, tab3_closure);
+            accel_group, c.GDK_KEY_3, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab3_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_4, gtk.mod1_mask, gtk.accel_locked, tab4_closure);
+            accel_group, c.GDK_KEY_4, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab4_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_5, gtk.mod1_mask, gtk.accel_locked, tab5_closure);
+            accel_group, c.GDK_KEY_5, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab5_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_6, gtk.mod1_mask, gtk.accel_locked, tab6_closure);
+            accel_group, c.GDK_KEY_6, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab6_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_7, gtk.mod1_mask, gtk.accel_locked, tab7_closure);
+            accel_group, c.GDK_KEY_7, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab7_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_8, gtk.mod1_mask, gtk.accel_locked, tab8_closure);
+            accel_group, c.GDK_KEY_8, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab8_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_9, gtk.mod1_mask, gtk.accel_locked, tab9_closure);
+            accel_group, c.GDK_KEY_9, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab9_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_Left, gtk.mod1_mask, gtk.accel_locked, alt_left_closure);
+            accel_group, c.GDK_KEY_Left, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, alt_left_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_Right, gtk.mod1_mask, gtk.accel_locked, alt_right_closure);
+            accel_group, c.GDK_KEY_Right, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, alt_right_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_Page_Up, gtk.ctrl_mask, gtk.accel_locked, ctrl_page_up_closure);
+            accel_group, c.GDK_KEY_Page_Up, c.GDK_CONTROL_MASK, c.GTK_ACCEL_LOCKED, ctrl_page_up_closure);
         c.gtk_accel_group_connect(
-            accel_group, c.GDK_KEY_Page_Down, gtk.ctrl_mask, gtk.accel_locked, ctrl_page_down_closure);
+            accel_group, c.GDK_KEY_Page_Down, c.GDK_CONTROL_MASK, c.GTK_ACCEL_LOCKED, ctrl_page_down_closure);
         c.gtk_window_add_accel_group(@ptrCast(*c.GtkWindow, self.window), accel_group);
     }
 };
@@ -307,11 +306,11 @@ fn new_term(command: [*c][*c]c.gchar) *c.GtkWidget {
     terms.put(@ptrToInt(term), term_ptr) catch {};
     c.vte_terminal_spawn_async(
         term_ptr,
-        @intToEnum(c.VtePtyFlags, c.VTE_PTY_DEFAULT),
+        c.VTE_PTY_DEFAULT,
         options.directory,
         command,
         null,
-        @intToEnum(c.GSpawnFlags, c.G_SPAWN_DEFAULT),
+        c.G_SPAWN_DEFAULT,
         null,
         @intToPtr(?*c_void, @as(c_int, 0)),
         null,
@@ -409,10 +408,10 @@ fn split_tab() void {
 fn rotate_tab() void {
     const tab = gui.get_current_tab();
     const orientation = c.gtk_orientable_get_orientation(@ptrCast(*c.GtkOrientable, tab.box));
-    if (@enumToInt(orientation) == 0) {
-        c.gtk_orientable_set_orientation(@ptrCast(*c.GtkOrientable, tab.box), gtk.orientation_vertical);
+    if (orientation == 0) {
+        c.gtk_orientable_set_orientation(@ptrCast(*c.GtkOrientable, tab.box), c.GTK_ORIENTATION_VERTICAL);
     } else {
-        c.gtk_orientable_set_orientation(@ptrCast(*c.GtkOrientable, tab.box), gtk.orientation_horizontal);
+        c.gtk_orientable_set_orientation(@ptrCast(*c.GtkOrientable, tab.box), c.GTK_ORIENTATION_HORIZONTAL);
     }
 }
 

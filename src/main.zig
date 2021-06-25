@@ -10,7 +10,7 @@ const process = std.process;
 const stderr = std.io.getStdErr().writer();
 const stdout = std.io.getStdOut().writer();
 
-const params = comptime [_]clap.Param(clap.Help){
+const params = [_]clap.Param(clap.Help){
     clap.parseParam("-h, --help                     Display this help and exit.") catch unreachable,
     clap.parseParam("-e, --command <COMMAND>        Command and args to execute.") catch unreachable,
     clap.parseParam("-t, --title <TITLE>            Defines the window title.") catch unreachable,
@@ -44,14 +44,14 @@ pub fn main() !void {
     const name = try os.gethostname(&buf);
     const hostname = try mem.Allocator.dupeZ(allocator, u8, name);
     defer allocator.free(hostname);
-    var opts = gui.Opts {
+    var opts = gui.Opts{
         .command = cmd,
         .title = title,
         .directory = directory,
         .hostname = hostname,
     };
 
-    const app = c.gtk_application_new("org.hitchhiker-linux.zterm", .G_APPLICATION_FLAGS_NONE) orelse @panic("null app :(");
+    const app = c.gtk_application_new("org.hitchhiker-linux.zterm", c.G_APPLICATION_FLAGS_NONE) orelse @panic("null app :(");
     defer c.g_object_unref(app);
 
     _ = c.g_signal_connect_data(
@@ -62,7 +62,7 @@ pub fn main() !void {
         // GCallback created above
         @ptrCast(c.gpointer, &opts),
         null,
-        @intToEnum(c.GConnectFlags, 0),
+        c.G_CONNECT_AFTER,
     );
 
     _ = c.g_application_run(@ptrCast(*c.GApplication, app), 0, null);

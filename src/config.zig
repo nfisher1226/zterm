@@ -122,9 +122,9 @@ pub const CursorStyle = enum {
 
     fn set(self: CursorStyle, term: *c.VteTerminal) void {
         switch (self) {
-            .block => c.vte_terminal_set_cursor_shape(term, vte.cursor_shape_block),
-            .i_beam => c.vte_terminal_set_cursor_shape(term, vte.cursor_shape_ibeam),
-            .underline => c.vte_terminal_set_cursor_shape(term, vte.cursor_shape_underline),
+            .block => c.vte_terminal_set_cursor_shape(term, c.VTE_CURSOR_SHAPE_BLOCK),
+            .i_beam => c.vte_terminal_set_cursor_shape(term, c.VTE_CURSOR_SHAPE_IBEAM),
+            .underline => c.vte_terminal_set_cursor_shape(term, c.VTE_CURSOR_SHAPE_UNDERLINE),
         }
     }
 };
@@ -143,9 +143,9 @@ pub const Cursor = struct {
     pub fn set(self: Cursor, term: *c.VteTerminal) void {
         self.cursor_style.set(term);
         if (self.cursor_blinks) {
-            c.vte_terminal_set_cursor_blink_mode(term, vte.cursor_blink_on);
+            c.vte_terminal_set_cursor_blink_mode(term, c.VTE_CURSOR_BLINK_ON);
         } else {
-            c.vte_terminal_set_cursor_blink_mode(term, vte.cursor_blink_off);
+            c.vte_terminal_set_cursor_blink_mode(term, c.VTE_CURSOR_BLINK_OFF);
         }
     }
 };
