@@ -16,8 +16,5 @@ deps:
     root: src/nestedtext.zig
   vte:
     src:
-      github:
-        user: nfisher1226
-        repo: zig-vte
-        ref: loki
+      local: ../zig-vte
     root: lib.zig

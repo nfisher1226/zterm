@@ -54,7 +54,7 @@ pub const PrefWidgets = struct {
     close_button: *c.GtkWidget,
 
     fn init(builder: *c.GtkBuilder) PrefWidgets {
-        return PrefWidgets {
+        return PrefWidgets{
             .window = gtk.builder_get_widget(builder, "window").?,
             .initial_title_entry = gtk.builder_get_widget(builder, "initial_title_entry").?,
             .dynamic_title_combobox = gtk.builder_get_widget(builder, "dynamic_title_combobox").?,
@@ -266,7 +266,7 @@ pub const PrefWidgets = struct {
         }
         const len = mem.len(val);
         const style = self.get_image_style();
-        return config.BackgroundImage {
+        return config.BackgroundImage{
             .file = val[0..len],
             .style = style,
         };
@@ -346,10 +346,10 @@ pub const PrefWidgets = struct {
         return style;
     }
 
-    fn get_cursor(self:PrefWidgets) config.Cursor {
+    fn get_cursor(self: PrefWidgets) config.Cursor {
         const style = self.get_cursor_style();
         const blinks = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, self.cursor_blinks_checkbutton));
-        return config.Cursor {
+        return config.Cursor{
             .cursor_style = style,
             .cursor_blinks = blinks,
         };
@@ -364,7 +364,7 @@ pub const PrefWidgets = struct {
         const box = @ptrCast(*c.GtkComboBox, self.cursor_style_combobox);
         switch (conf.cursor.cursor_style) {
             .block => _ = c.gtk_combo_box_set_active_id(box, "block"),
-            .i_beam => _ = c.gtk_combo_box_set_active_id(box, "i_beam"),
+            .ibeam => _ = c.gtk_combo_box_set_active_id(box, "ibeam"),
             .underline => _ = c.gtk_combo_box_set_active_id(box, "underline"),
         }
     }
@@ -391,7 +391,7 @@ pub const PrefWidgets = struct {
     }
 
     fn get_config(self: PrefWidgets) config.Config {
-        return config.Config {
+        return config.Config{
             .initial_title = if (self.get_initial_title()) |t| t else "Zterm",
             .dynamic_title_style = self.get_title_style(),
             .custom_command = self.get_custom_command(),
@@ -468,24 +468,24 @@ pub fn run(data: config.Config) ?config.Config {
     }
 }
 
-fn toggle_custom_command(custom_command_checkbutton: *c.GtkCheckButton, data: c.gpointer) void {
+fn toggle_custom_command(custom_command_checkbutton: *c.GtkCheckButton) void {
     const state = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, custom_command_checkbutton));
     gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.custom_command_entry), state);
     gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.custom_command_label), state);
 }
 
-fn toggle_scrollback(infinite_scrollback_checkbutton: *c.GtkCheckButton, data: c.gpointer) void {
+fn toggle_scrollback(infinite_scrollback_checkbutton: *c.GtkCheckButton) void {
     const state = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, infinite_scrollback_checkbutton));
     gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.scrollback_lines_label), !state);
     gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.scrollback_lines_spinbox), !state);
 }
 
-fn toggle_font(system_font_checkbutton: *c.GtkCheckButton, data: c.gpointer) void {
+fn toggle_font(system_font_checkbutton: *c.GtkCheckButton) void {
     const state = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, system_font_checkbutton));
     gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.font_chooser_button), !state);
 }
 
-fn toggle_background(background_combobox: *c.GtkComboBox, data: c.gpointer) void {
+fn toggle_background(background_combobox: *c.GtkComboBox) void {
     const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, background_combobox));
     const style = config.parse_enum(config.BackgroundStyle, id).?;
     switch (style) {
@@ -502,10 +502,9 @@ fn toggle_background(background_combobox: *c.GtkComboBox, data: c.gpointer) void
             gtk.widget_set_visible(widgets.background_style_opacity_box, true);
         },
     }
-
 }
 
-fn save_and_close(b: *c.GtkButton, data: c.gpointer) void {
+fn save_and_close() void {
     conf = widgets.get_config();
     c.gtk_window_close(@ptrCast(*c.GtkWindow, widgets.window));
     c.gtk_widget_destroy(widgets.window);

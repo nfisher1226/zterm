@@ -12,7 +12,9 @@ const meta = std.meta;
 const os = std.os;
 const stderr = std.io.getStdErr().writer();
 
-pub const known_folders_config = .{ .xdg_on_mac = true, };
+pub const known_folders_config = .{
+    .xdg_on_mac = true,
+};
 
 pub fn parse_enum(comptime T: type, style: [*c]const u8) ?T {
     const len = mem.len(style);
@@ -20,13 +22,11 @@ pub fn parse_enum(comptime T: type, style: [*c]const u8) ?T {
 }
 
 pub fn get_config_file(alloc: *mem.Allocator) ?[]const u8 {
-    const dir = known_folders.getPath(alloc, .local_configuration) catch |e| return null;
+    const dir = known_folders.getPath(alloc, .local_configuration) catch return null;
     if (dir) |d| {
-        const file = path.join(allocator, &[_][]const u8{d, "zterm/config.nt"}) catch |e| return null;
-        return file;
+        return path.join(allocator, &[_][]const u8{ d, "zterm/config.nt" }) catch return null;
     } else {
-        const file = if (os.getenv("HOME")) |h| path.join(alloc, &[_][]const u8{h, ".config/zterm/config.nt"}) catch |e| return null else null;
-        return file;
+        return if (os.getenv("HOME")) |h| path.join(alloc, &[_][]const u8{ h, ".config/zterm/config.nt" }) catch return null else null;
     }
 }
 
@@ -70,12 +70,8 @@ pub const Scrollback = union(ScrollbackType) {
 
     pub fn set(self: Scrollback, term: *c.VteTerminal) void {
         switch (self) {
-            .finite => |value| {
-                c.vte_terminal_set_scrollback_lines(term, @floatToInt(c_long, value));
-            },
-            .infinite => {
-                c.vte_terminal_set_scrollback_lines(term, -1);
-            },
+            .finite => |v| c.vte_terminal_set_scrollback_lines(term, @floatToInt(c_long, v)),
+            .infinite => c.vte_terminal_set_scrollback_lines(term, -1),
         }
     }
 };
@@ -96,15 +92,14 @@ pub const Font = union(FontType) {
     fn set(self: Font, term: *c.VteTerminal) void {
         switch (self) {
             .system => c.vte_terminal_set_font(term, null),
-            .custom => |val| {
-                const font = fmt.allocPrintZ(allocator, "{s}", .{val}) catch |e| {
+            .custom => |v| {
+                const font = fmt.allocPrintZ(allocator, "{s}", .{v}) catch |e| {
                     stderr.print("{s}\n", .{e}) catch {};
                     c.vte_terminal_set_font(term, null);
                     return;
                 };
                 defer allocator.free(font);
                 const fontdesc = c.pango_font_description_from_string(font.ptr);
-                const font_str = c.pango_font_description_to_string(fontdesc);
                 c.vte_terminal_set_font(term, fontdesc);
             },
         }
@@ -113,7 +108,7 @@ pub const Font = union(FontType) {
 
 pub const CursorStyle = enum {
     block,
-    i_beam,
+    ibeam,
     underline,
 
     pub fn default() CursorStyle {
@@ -123,7 +118,7 @@ pub const CursorStyle = enum {
     fn set(self: CursorStyle, term: *c.VteTerminal) void {
         switch (self) {
             .block => c.vte_terminal_set_cursor_shape(term, c.VTE_CURSOR_SHAPE_BLOCK),
-            .i_beam => c.vte_terminal_set_cursor_shape(term, c.VTE_CURSOR_SHAPE_IBEAM),
+            .ibeam => c.vte_terminal_set_cursor_shape(term, c.VTE_CURSOR_SHAPE_IBEAM),
             .underline => c.vte_terminal_set_cursor_shape(term, c.VTE_CURSOR_SHAPE_UNDERLINE),
         }
     }
@@ -134,7 +129,7 @@ pub const Cursor = struct {
     cursor_blinks: bool,
 
     pub fn default() Cursor {
-        return Cursor {
+        return Cursor{
             .cursor_style = CursorStyle.default(),
             .cursor_blinks = true,
         };
@@ -184,7 +179,6 @@ pub const Background = union(BackgroundStyle) {
     pub fn default() Background {
         return Background.solid_color;
     }
-
 };
 
 pub const RGBColor = struct {
@@ -193,7 +187,7 @@ pub const RGBColor = struct {
     blue: u8,
 
     pub fn default() RGBColor {
-        return RGBColor {
+        return RGBColor{
             .red = 0,
             .blue = 0,
             .green = 0,
@@ -203,7 +197,7 @@ pub const RGBColor = struct {
     pub fn from_widget(button: *c.GtkColorButton) RGBColor {
         var rgba: c.GdkRGBA = undefined;
         _ = c.gtk_color_button_get_rgba(button, &rgba);
-        return RGBColor {
+        return RGBColor{
             .red = @floatToInt(u8, math.round(rgba.red * 255.0)),
             .green = @floatToInt(u8, math.round(rgba.green * 255.0)),
             .blue = @floatToInt(u8, math.round(rgba.blue * 255.0)),
@@ -211,26 +205,23 @@ pub const RGBColor = struct {
     }
 
     fn to_hex(self: RGBColor) ?[]const u8 {
-        const buf = fmt.allocPrintZ(
-            allocator, "#{x}{x}{x}",
-            .{self.red, self.green, self.blue}
-        ) catch |e| { return null; };
+        const buf = fmt.allocPrintZ(allocator, "#{x}{x}{x}", .{ self.red, self.green, self.blue }) catch return null;
         return buf;
     }
 
     pub fn to_gdk(self: RGBColor) c.GdkRGBA {
-        return c.GdkRGBA {
+        return c.GdkRGBA{
             .red = @intToFloat(f64, self.red) / 255.0,
-            .green= @intToFloat(f64, self.green) / 255.0,
+            .green = @intToFloat(f64, self.green) / 255.0,
             .blue = @intToFloat(f64, self.blue) / 255.0,
             .alpha = 1.0,
         };
     }
 
     fn to_gdk_alpha(self: RGBColor, opacity: f64) c.GdkRGBA {
-        return c.GdkRGBA {
+        return c.GdkRGBA{
             .red = @intToFloat(f64, self.red) / 255.0,
-            .green= @intToFloat(f64, self.green) / 255.0,
+            .green = @intToFloat(f64, self.green) / 255.0,
             .blue = @intToFloat(f64, self.blue) / 255.0,
             .alpha = opacity,
         };
@@ -258,7 +249,7 @@ pub const Colors = struct {
     white_color: RGBColor,
 
     pub fn default() Colors {
-        return Colors {
+        return Colors{
             .text_color = RGBColor{ .red = 225, .green = 225, .blue = 225 },
             .background_color = RGBColor{ .red = 36, .green = 34, .blue = 34 },
             .black_color = RGBColor{ .red = 36, .green = 34, .blue = 34 },
@@ -294,7 +285,7 @@ pub const Colors = struct {
     }
 
     fn to_palette(self: Colors) [16]c.GdkRGBA {
-        return [16]c.GdkRGBA {
+        return [16]c.GdkRGBA{
             self.black_color.to_gdk(),
             self.red_color.to_gdk(),
             self.green_color.to_gdk(),
@@ -326,7 +317,7 @@ pub const Config = struct {
     cursor: Cursor,
 
     pub fn default() Config {
-        return Config {
+        return Config{
             .initial_title = "Zterm",
             .dynamic_title_style = DynamicTitleStyle.default(),
             .custom_command = CustomCommand.default(),

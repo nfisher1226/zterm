@@ -329,7 +329,7 @@
                         <property name="active-id">block</property>
                         <items>
                           <item id="block" translatable="yes">Block</item>
-                          <item id="i_beam" translatable="yes">I-Beam</item>
+                          <item id="ibeam" translatable="yes">I-Beam</item>
                           <item id="underline" translatable="yes">Underline</item>
                         </items>
                       </object>
