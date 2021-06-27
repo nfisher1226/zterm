@@ -17,9 +17,9 @@ var tabs: hashmap(u64, Tab) = undefined;
 var terms: hashmap(u64, *c.VteTerminal) = undefined;
 
 pub const Opts = struct {
-    command: [*c]const u8,
+    command: [:0]const u8,
     title: [*c]const u8,
-    directory: [*c]const u8,
+    directory: [:0]const u8,
     hostname: [*c]const u8,
 };
 
@@ -28,7 +28,7 @@ pub const Tab = struct {
     tab_label: gtk.Label,
     close_button: gtk.Button,
 
-    fn init(command: [*c][*c]c.gchar) Tab {
+    fn init(command: [:0]const u8) Tab {
         var tab = Tab{
             .box = gtk.Box.new(.horizontal, 0),
             .tab_label = gtk.Label.new("Zterm"),
@@ -45,7 +45,7 @@ pub const Tab = struct {
         lbox.as_widget().show_all();
 
         tab.box.set_homogeneous(true);
-        tab.box.pack_start(gtk.Widget{ .ptr = @ptrCast(*c.GtkWidget, term) }, true, true, 1);
+        tab.box.pack_start(term.as_widget(), true, true, 1);
         tab.box.as_widget().show_all();
         const notebook_ptr = @ptrCast(*c.GtkNotebook, gui.notebook);
         _ = c.gtk_notebook_append_page(notebook_ptr, tab.box.as_widget().ptr, 0);
@@ -241,12 +241,7 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     const window_ptr = @ptrCast(*c.GtkWindow, gui.window);
     c.gtk_window_set_title(window_ptr, options.title);
 
-    const tab = Tab.init(
-        @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
-            c.g_strdup(options.command),
-            null,
-        })),
-    );
+    const tab = Tab.init(options.command);
     tabs.putNoClobber(@ptrToInt(tab.box.ptr), tab) catch |e| {
         stderr.print("{}\n", .{e}) catch unreachable;
     };
@@ -266,39 +261,19 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
 }
 
 fn new_tab_callback() void {
-    const tab = Tab.init(
-        @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
-            c.g_strdup(options.command),
-            null,
-        })),
-    );
+    const tab = Tab.init(options.command);
     tabs.putNoClobber(@ptrToInt(tab.box.ptr), tab) catch |e| {
         stderr.print("{}\n", .{e}) catch unreachable;
     };
 }
 
-fn new_term(command: [*c][*c]c.gchar) *c.GtkWidget {
-    const term = c.vte_terminal_new();
-    const term_ptr = @ptrCast([*c]c.VteTerminal, term);
-    terms.put(@ptrToInt(term), term_ptr) catch {};
-    c.vte_terminal_spawn_async(
-        term_ptr,
-        c.VTE_PTY_DEFAULT,
-        options.directory,
-        command,
-        null,
-        c.G_SPAWN_DEFAULT,
-        null,
-        @intToPtr(?*c_void, @as(c_int, 0)),
-        null,
-        -1,
-        null,
-        null,
-        @intToPtr(?*c_void, @as(c_int, 0)),
-    );
-    conf.set(term_ptr);
+fn new_term(command: [:0]const u8) vte.Terminal {
+    const term = vte.Terminal.new();
+    terms.put(@ptrToInt(term.ptr), term.ptr) catch {};
+    term.spawn_async(.default, options.directory, command, null, .default, null, -1, null);
+    conf.set(term.ptr);
     _ = gtk.signal_connect(
-        term,
+        term.ptr,
         "child-exited",
         @ptrCast(c.GCallback, close_term_callback),
         null,
@@ -369,13 +344,9 @@ fn select_page_callback() void {
 
 fn split_tab() void {
     var tab = gui.get_current_tab();
-    const command = @ptrCast([*c][*c]c.gchar, &([2][*c]c.gchar{
-        c.g_strdup(options.command),
-        null,
-    }));
-    const term = new_term(command);
-    c.gtk_widget_show(term);
-    tab.box.pack_start(gtk.Widget{ .ptr = @ptrCast(*c.GtkWidget, term) }, true, true, 1);
+    const term = new_term(options.command);
+    term.as_widget().show();
+    tab.box.pack_start(term.as_widget(), true, true, 1);
 }
 
 fn rotate_tab() void {

@@ -28,26 +28,20 @@ pub fn main() !void {
         usage(0);
     }
 
-    const cmd: [*c]const u8 = if (args.option("--command")) |e| eblk: {
-        const res = try mem.Allocator.dupeZ(allocator, u8, e);
-        break :eblk @ptrCast([*c]const u8, res);
-    } else @ptrCast([*c]const u8, os.getenvZ("SHELL") orelse "/bin/sh");
+    const cmd = if (args.option("--command")) |e| e else os.getenvZ("SHELL") orelse "/bin/sh";
     const title: [*c]const u8 = if (args.option("--title")) |t| tblk: {
         const res = try mem.Allocator.dupeZ(allocator, u8, t);
         break :tblk @ptrCast([*c]const u8, res);
     } else @ptrCast([*c]const u8, "Zterm");
-    const directory: [*c]const u8 = if (args.option("--working-directory")) |d| dblk: {
-        const res = try mem.Allocator.dupeZ(allocator, u8, d);
-        break :dblk @ptrCast([*c]const u8, res);
-    } else @ptrCast([*c]const u8, os.getenvZ("PWD") orelse os.getenvZ("HOME") orelse "/");
+    const directory = if (args.option("--working-directory")) |d| d else os.getenv("PWD") orelse os.getenv("HOME") orelse "/";
     var buf: [64]u8 = undefined;
     const name = try os.gethostname(&buf);
     const hostname = try mem.Allocator.dupeZ(allocator, u8, name);
     defer allocator.free(hostname);
     var opts = gui.Opts{
-        .command = cmd,
+        .command = try fmt.allocPrintZ(allocator, "{s}", .{cmd}),
         .title = title,
-        .directory = directory,
+        .directory = try fmt.allocPrintZ(allocator, "{s}", .{directory}),
         .hostname = hostname,
     };
 
