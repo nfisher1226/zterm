@@ -60,6 +60,37 @@ pub const Tab = struct {
 
         return tab;
     }
+
+    fn next_pane(self: Tab) void {
+        const kids = self.box.as_container().get_children(allocator).?;
+        defer kids.deinit();
+        const len = kids.items.len;
+        if (len > 0) {
+            var next: usize = 0;
+            for (kids.items) |child, index| {
+                if (child.has_focus()) {
+                    if (index < len - 1) {
+                        next = index + 1;
+                    } else next = 0;
+                }
+            }
+            kids.items[next].grab_focus();
+        }
+    }
+
+    fn prev_pane(self: Tab) void {
+        const kids = self.box.as_container().get_children(allocator).?;
+        var prev: usize = 0;
+        const len = kids.items.len;
+        for (kids.items) |child, index| {
+            if (child.has_focus()) {
+                if (index > 0) {
+                    prev = index - 1;
+                } else prev = len - 1;
+            }
+        }
+        kids.items[prev].grab_focus();
+    }
 };
 
 const Gui = struct {
@@ -187,6 +218,8 @@ const Gui = struct {
         const alt_right_closure = c.g_cclosure_new(goto_next_tab, null, null);
         const ctrl_page_up_closure = c.g_cclosure_new(goto_prev_tab, null, null);
         const ctrl_page_down_closure = c.g_cclosure_new(goto_next_tab, null, null);
+        const alt_up_closure = c.g_cclosure_new(goto_prev_pane, null, null);
+        const alt_down_closure = c.g_cclosure_new(goto_next_pane, null, null);
         const accel_group = c.gtk_accel_group_new();
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_1, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab1_closure);
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_2, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab2_closure);
@@ -201,6 +234,8 @@ const Gui = struct {
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Right, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, alt_right_closure);
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Page_Up, c.GDK_CONTROL_MASK, c.GTK_ACCEL_LOCKED, ctrl_page_up_closure);
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Page_Down, c.GDK_CONTROL_MASK, c.GTK_ACCEL_LOCKED, ctrl_page_down_closure);
+        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Up, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, alt_up_closure);
+        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Down, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, alt_down_closure);
         c.gtk_window_add_accel_group(@ptrCast(*c.GtkWindow, self.window), accel_group);
     }
 };
@@ -401,6 +436,16 @@ fn goto_prev_tab() callconv(.C) void {
 
 fn goto_next_tab() callconv(.C) void {
     gui.next_tab();
+}
+
+fn goto_next_pane() callconv(.C) void {
+    const tab = gui.get_current_tab();
+    tab.next_pane();
+}
+
+fn goto_prev_pane() callconv(.C) void {
+    const tab = gui.get_current_tab();
+    tab.prev_pane();
 }
 
 fn run_prefs() void {

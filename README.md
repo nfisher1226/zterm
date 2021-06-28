@@ -11,12 +11,15 @@ However, it is possible to set many aspects of the program's behavior at runtime
 such as font, colors, scrollback lines etc.
 
 ## Building
-You will need the Zig compiler, version 0.8 or above, available from
-[ziglang.org](https://ziglang.org). You will also need the Gtk-3.x and vte
-libraries plus development headers installed on your system. Building is
-accomplished via the zig build system.
+You will need the Zig compiler, version 0.9.0-dev.256+0134cb021 or above,
+available from [ziglang.org](https://ziglang.org). You will also need
+the Gtk-3.x and vte libraries plus development headers installed on your
+system.
+
+Zterm now uses the [Gyro](https://github.com/mattnite/gyro) package
+manager to build and manage dependencies. To build the package:
 ```Bash
-zig build -Drelease-safe=true
+gyro build -Drelease-safe=true
 ```
 At present there is no installation script, simply copy zig-out/bin/zterm to
 somewhere in your path.
@@ -35,6 +38,8 @@ install -sv zig-out/bin/zterm <directory in your path>
 | Ctrl/PageUp | Previous Tab |
 | Alt/RightArrow | Next Tab |
 | Ctrl/PageDown | Next Tab |
+| Alt/UpArrow | Next Pane |
+| Alt/DownArrow | Previous Pane |
 | Ctrl/Shift/Q | Quit |
 
 ## Command line options
