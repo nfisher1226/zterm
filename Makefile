@@ -6,7 +6,6 @@ VPATH         += zig-out/bin
 VPATH         += data
 SRCS          += build.zig
 SRCS          += config.zig
-SRCS          += gtk.zig
 SRCS          += gui.zig
 SRCS          += main.zig
 SRCS          += prefs.zig
@@ -21,7 +20,7 @@ INSTALL_OBJS  += $(ICONDIR)/$(PROGNAME).svg
 all: $(PROGNAME)
 
 $(PROGNAME): $(SRCS)
-	zig build -Drelease-safe=true
+	gyro build -Drelease-safe=true
 
 install: $(INSTALL_OBJS)
 
