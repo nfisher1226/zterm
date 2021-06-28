@@ -62,34 +62,37 @@ pub const Tab = struct {
     }
 
     fn next_pane(self: Tab) void {
-        const kids = self.box.as_container().get_children(allocator).?;
-        defer kids.deinit();
-        const len = kids.items.len;
-        if (len > 0) {
-            var next: usize = 0;
-            for (kids.items) |child, index| {
-                if (child.has_focus()) {
-                    if (index < len - 1) {
-                        next = index + 1;
-                    } else next = 0;
+        if (self.box.as_container().get_children(allocator)) |kids| {
+            defer kids.deinit();
+            if (kids.items.len > 0) {
+                var next: usize = 0;
+                for (kids.items) |child, index| {
+                    if (child.has_focus()) {
+                        if (index < kids.items.len - 1) {
+                            next = index + 1;
+                        } else next = 0;
+                    }
                 }
+                kids.items[next].grab_focus();
             }
-            kids.items[next].grab_focus();
         }
     }
 
     fn prev_pane(self: Tab) void {
-        const kids = self.box.as_container().get_children(allocator).?;
-        var prev: usize = 0;
-        const len = kids.items.len;
-        for (kids.items) |child, index| {
-            if (child.has_focus()) {
-                if (index > 0) {
-                    prev = index - 1;
-                } else prev = len - 1;
+        if (self.box.as_container().get_children(allocator)) |kids| {
+            defer kids.deinit();
+            if (kids.items.len > 0) {
+                var prev: usize = 0;
+                for (kids.items) |child, index| {
+                    if (child.has_focus()) {
+                        if (index > 0) {
+                            prev = index - 1;
+                        } else prev = kids.items.len - 1;
+                    }
+                }
+                kids.items[prev].grab_focus();
             }
         }
-        kids.items[prev].grab_focus();
     }
 };
 

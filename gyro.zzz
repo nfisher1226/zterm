@@ -1,5 +1,11 @@
 deps:
-  mattnite/known-folders: ^0.0.0
+  known-folders:
+    src:
+      github:
+        user: nfisher1226
+        repo: known-folders
+        ref: master
+    root: known-folders.zig
   clap:
     src:
       github:
