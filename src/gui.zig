@@ -18,9 +18,9 @@ var terms: hashmap(u64, *c.VteTerminal) = undefined;
 
 pub const Opts = struct {
     command: [:0]const u8,
-    title: [*c]const u8,
+    title: [:0]const u8,
     directory: [:0]const u8,
-    hostname: [*c]const u8,
+    hostname: [:0]const u8,
 };
 
 pub const Tab = struct {
@@ -47,16 +47,10 @@ pub const Tab = struct {
         tab.box.set_homogeneous(true);
         tab.box.pack_start(term.as_widget(), true, true, 1);
         tab.box.as_widget().show_all();
-        const notebook_ptr = @ptrCast(*c.GtkNotebook, gui.notebook);
-        _ = c.gtk_notebook_append_page(notebook_ptr, tab.box.as_widget().ptr, 0);
-        c.gtk_notebook_set_tab_label(notebook_ptr, tab.box.as_widget().ptr, lbox.as_widget().ptr);
+        gui.notebook.append_page(tab.box.as_widget(), lbox.as_widget());
+        gui.notebook.set_tab_label(tab.box.as_widget(), lbox.as_widget());
 
-        _ = gtk.signal_connect(
-            tab.close_button.ptr,
-            "clicked",
-            @ptrCast(c.GCallback, close_tab_by_button),
-            @ptrCast(c.gpointer, tab.box.ptr),
-        );
+        tab.close_button.connect_clicked(@ptrCast(c.GCallback, close_tab_by_button), @ptrCast(c.gpointer, tab.box.ptr));
 
         return tab;
     }
@@ -97,8 +91,8 @@ pub const Tab = struct {
 };
 
 const Gui = struct {
-    window: *c.GtkWidget,
-    notebook: *c.GtkWidget,
+    window: gtk.Window,
+    notebook: gtk.Notebook,
     new_tab: *c.GtkWidget,
     split_view: *c.GtkWidget,
     rotate_view: *c.GtkWidget,
@@ -106,54 +100,50 @@ const Gui = struct {
     close_tab: *c.GtkWidget,
     quit_app: *c.GtkWidget,
 
-    fn init(builder: *c.GtkBuilder) Gui {
+    fn init(builder: gtk.Builder) Gui {
         return Gui{
-            .window = gtk.builder_get_widget(builder, "window").?,
-            .notebook = gtk.builder_get_widget(builder, "notebook").?,
-            .new_tab = gtk.builder_get_widget(builder, "new_tab").?,
-            .split_view = gtk.builder_get_widget(builder, "split_view").?,
-            .rotate_view = gtk.builder_get_widget(builder, "rotate_view").?,
-            .preferences = gtk.builder_get_widget(builder, "preferences").?,
-            .close_tab = gtk.builder_get_widget(builder, "close_tab").?,
-            .quit_app = gtk.builder_get_widget(builder, "quit_app").?,
+            .window = builder.get_widget("window").?.to_window().?,
+            .notebook = builder.get_widget("notebook").?.to_notebook().?,
+            .new_tab = @ptrCast(*c.GtkWidget, builder.get_widget("new_tab").?.ptr),
+            .split_view = @ptrCast(*c.GtkWidget, builder.get_widget("split_view").?.ptr),
+            .rotate_view = @ptrCast(*c.GtkWidget, builder.get_widget("rotate_view").?.ptr),
+            .preferences = @ptrCast(*c.GtkWidget, builder.get_widget("preferences").?.ptr),
+            .close_tab = @ptrCast(*c.GtkWidget, builder.get_widget("close_tab").?.ptr),
+            .quit_app = @ptrCast(*c.GtkWidget, builder.get_widget("quit_app").?.ptr),
         };
     }
 
     fn get_current_tab(self: Gui) Tab {
-        const tab_num = c.gtk_notebook_get_current_page(@ptrCast(*c.GtkNotebook, self.notebook));
-        const box_widget = c.gtk_notebook_get_nth_page(@ptrCast(*c.GtkNotebook, self.notebook), tab_num);
-        const tab = if (tabs.get(@ptrToInt(box_widget))) |t| t else unreachable;
-        return tab;
+        const num = self.notebook.get_current_page();
+        const box = self.notebook.get_nth_page(num).?;
+        return if (tabs.get(@ptrToInt(box.ptr))) |t| t else unreachable;
     }
 
     fn nth_tab(self: Gui, num: c_int) void {
-        c.gtk_notebook_set_current_page(@ptrCast(*c.GtkNotebook, self.notebook), num);
+        self.notebook.set_current_page(num);
     }
 
     fn prev_tab(self: Gui) void {
-        const nb_ptr = @ptrCast(*c.GtkNotebook, self.notebook);
-        const pages = c.gtk_notebook_get_n_pages(nb_ptr);
-        const page = c.gtk_notebook_get_current_page(nb_ptr);
+        const page = self.notebook.get_current_page();
         if (page > 0) {
-            c.gtk_notebook_prev_page(nb_ptr);
+            self.notebook.prev_page();
         } else {
-            c.gtk_notebook_set_current_page(nb_ptr, pages - 1);
+            const pages = self.notebook.get_n_pages();
+            self.notebook.set_current_page(pages - 1);
         }
     }
 
     fn next_tab(self: Gui) void {
-        const nb_ptr = @ptrCast(*c.GtkNotebook, self.notebook);
-        const pages = c.gtk_notebook_get_n_pages(nb_ptr);
-        const page = c.gtk_notebook_get_current_page(nb_ptr);
+        const pages = self.notebook.get_n_pages();
+        const page = self.notebook.get_current_page();
         if (page < pages - 1) {
-            c.gtk_notebook_next_page(nb_ptr);
+            self.notebook.next_page();
         } else {
-            c.gtk_notebook_set_current_page(nb_ptr, 0);
+            self.notebook.set_current_page(0);
         }
     }
 
     fn set_title(self: Gui) void {
-        const window_ptr = @ptrCast(*c.GtkWindow, self.window);
         const style = conf.dynamic_title_style;
         const title = switch (style) {
             .replaces_title => fmt.allocPrintZ(allocator, "{s} on {s}", .{ options.directory, options.hostname }),
@@ -162,7 +152,7 @@ const Gui = struct {
             .not_displayed => fmt.allocPrintZ(allocator, "{s}", .{conf.initial_title}),
         } catch return;
         defer allocator.free(title);
-        c.gtk_window_set_title(window_ptr, title.ptr);
+        self.window.set_title(title);
     }
 
     fn set_background(self: Gui) void {
@@ -170,10 +160,10 @@ const Gui = struct {
         switch (bg) {
             .transparent => |percent| {
                 const opacity = percent / 100.0;
-                c.gtk_widget_set_opacity(self.window, opacity);
+                self.window.as_widget().set_opacity(opacity);
             },
             .solid_color, .image => {
-                c.gtk_widget_set_opacity(self.window, 1.0);
+                self.window.as_widget().set_opacity(1.0);
             },
         }
         var iter = terms.valueIterator();
@@ -189,22 +179,14 @@ const Gui = struct {
 
     fn connect_signals(self: Gui) void {
         _ = gtk.signal_connect(self.new_tab, "activate", @ptrCast(c.GCallback, new_tab_callback), null);
-
         _ = gtk.signal_connect(self.split_view, "activate", @ptrCast(c.GCallback, split_tab), null);
-
         _ = gtk.signal_connect(self.rotate_view, "activate", @ptrCast(c.GCallback, rotate_tab), null);
-
-        _ = gtk.signal_connect(self.notebook, "page-removed", @ptrCast(c.GCallback, page_removed_callback), null);
-
-        _ = gtk.signal_connect(self.notebook, "select-page", @ptrCast(c.GCallback, select_page_callback), null);
-
+        self.notebook.connect_page_removed(@ptrCast(c.GCallback, page_removed_callback), null);
+        self.notebook.connect_select_page(@ptrCast(c.GCallback, select_page_callback), null);
         _ = gtk.signal_connect(self.preferences, "activate", @ptrCast(c.GCallback, run_prefs), null);
-
         _ = gtk.signal_connect(self.close_tab, "activate", @ptrCast(c.GCallback, close_current_tab), null);
-
         _ = gtk.signal_connect(self.quit_app, "activate", @ptrCast(c.GCallback, quit_callback), null);
-
-        _ = gtk.signal_connect(self.window, "delete-event", @ptrCast(c.GCallback, quit_callback), null);
+        self.window.as_widget().connect("delete-event", @ptrCast(c.GCallback, quit_callback), null);
     }
 
     fn connect_accels(self: Gui) void {
@@ -239,7 +221,7 @@ const Gui = struct {
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Page_Down, c.GDK_CONTROL_MASK, c.GTK_ACCEL_LOCKED, ctrl_page_down_closure);
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Up, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, alt_up_closure);
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Down, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, alt_down_closure);
-        c.gtk_window_add_accel_group(@ptrCast(*c.GtkWindow, self.window), accel_group);
+        c.gtk_window_add_accel_group(@ptrCast(*c.GtkWindow, self.window.ptr), accel_group);
     }
 };
 
@@ -259,25 +241,23 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
         defer allocator.free(f);
     }
 
-    const builder = c.gtk_builder_new();
+    const builder = gtk.Builder.new();
     const glade_str = @embedFile("gui.glade");
-    var ret = c.gtk_builder_add_from_string(builder, glade_str, glade_str.len, @intToPtr([*c][*c]c._GError, 0));
-    if (ret == 0) {
+    if (c.gtk_builder_add_from_string(builder.ptr, glade_str, glade_str.len, @intToPtr([*c][*c]c._GError, 0)) == 0) {
         stderr.print("builder file fail\n", .{}) catch unreachable;
         std.process.exit(1);
     }
-    c.gtk_builder_set_application(builder, application);
+    c.gtk_builder_set_application(builder.ptr, application);
 
     gui = Gui.init(builder);
     // In order to support transparency, we have to make the entire window
     // transparent, but we want to prevent the titlebar going transparent as well.
     // These three settings are a hack which achieves this.
-    const screen = c.gtk_widget_get_screen(gui.window);
+    const screen = gui.window.as_widget().get_screen();
     const visual = c.gdk_screen_get_rgba_visual(screen);
-    c.gtk_widget_set_visual(gui.window, visual);
+    if (visual) |v| gui.window.as_widget().set_visual(v);
 
-    const window_ptr = @ptrCast(*c.GtkWindow, gui.window);
-    c.gtk_window_set_title(window_ptr, options.title);
+    gui.window.set_title(options.title);
 
     const tab = Tab.init(options.command);
     tabs.putNoClobber(@ptrToInt(tab.box.ptr), tab) catch |e| {
@@ -288,7 +268,7 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     const kids = c.gtk_container_get_children(@ptrCast(*c.GtkContainer, tab.box.ptr));
     const term = c.g_list_nth_data(kids, 0);
     const term_ptr = @ptrCast(*c.GtkWidget, @alignCast(8, term));
-    c.gtk_widget_show_all(gui.window);
+    gui.window.as_widget().show_all();
     c.gtk_widget_grab_focus(term_ptr);
 
     gui.connect_signals();
@@ -327,20 +307,24 @@ fn close_tab_by_button(_: *c.GtkButton, box: c.gpointer) void {
 
 fn close_tab_by_ref(key: u64) void {
     if (tabs.get(key)) |tab| {
-        const num = c.gtk_notebook_page_num(@ptrCast(*c.GtkNotebook, gui.notebook), tab.box.as_widget().ptr);
+        const num = gui.notebook.page_num(tab.box.as_widget());
         // if num < 0 tab is already closed
-        if (num >= 0) {
-            c.gtk_notebook_remove_page(@ptrCast(*c.GtkNotebook, gui.notebook), num);
-            _ = tabs.remove(key);
+        if (num) |n| {
+            if (n >= 0) {
+                gui.notebook.remove_page(n);
+                _ = tabs.remove(key);
+            }
         }
     }
 }
 
 fn close_current_tab() void {
-    const num = c.gtk_notebook_get_current_page(@ptrCast(*c.GtkNotebook, gui.notebook));
-    const box = c.gtk_notebook_get_nth_page(@ptrCast(*c.GtkNotebook, gui.notebook), num);
-    const key = @ptrToInt(box);
-    close_tab_by_ref(key);
+    const num = gui.notebook.get_current_page();
+    const box = gui.notebook.get_nth_page(num);
+    if (box) |b| {
+        const key = @ptrToInt(b.ptr);
+        close_tab_by_ref(key);
+    }
 }
 
 fn close_term_callback(term: *c.VteTerminal) void {
@@ -364,7 +348,7 @@ fn close_term_callback(term: *c.VteTerminal) void {
 }
 
 fn page_removed_callback() void {
-    const pages = c.gtk_notebook_get_n_pages(@ptrCast(*c.GtkNotebook, gui.notebook));
+    const pages = gui.notebook.get_n_pages();
     if (pages == 0) {
         c.gtk_main_quit();
     } else {

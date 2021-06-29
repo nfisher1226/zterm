@@ -29,21 +29,20 @@ pub fn main() !void {
     }
 
     const cmd = if (args.option("--command")) |e| e else os.getenvZ("SHELL") orelse "/bin/sh";
-    const title: [*c]const u8 = if (args.option("--title")) |t| tblk: {
-        const res = try mem.Allocator.dupeZ(allocator, u8, t);
-        break :tblk @ptrCast([*c]const u8, res);
-    } else @ptrCast([*c]const u8, "Zterm");
+    const title = if (args.option("--title")) |t| t else "Zterm";
     const directory = if (args.option("--working-directory")) |d| d else os.getenv("PWD") orelse os.getenv("HOME") orelse "/";
     var buf: [64]u8 = undefined;
-    const name = try os.gethostname(&buf);
-    const hostname = try mem.Allocator.dupeZ(allocator, u8, name);
-    defer allocator.free(hostname);
+    const hostname = try os.gethostname(&buf);
     var opts = gui.Opts{
         .command = try fmt.allocPrintZ(allocator, "{s}", .{cmd}),
-        .title = title,
+        .title = try fmt.allocPrintZ(allocator, "{s}", .{title}),
         .directory = try fmt.allocPrintZ(allocator, "{s}", .{directory}),
-        .hostname = hostname,
+        .hostname = try fmt.allocPrintZ(allocator, "{s}", .{hostname}),
     };
+    defer allocator.free(opts.command);
+    defer allocator.free(opts.title);
+    defer allocator.free(opts.directory);
+    defer allocator.free(opts.hostname);
 
     const app = c.gtk_application_new("org.hitchhiker-linux.zterm", c.G_APPLICATION_FLAGS_NONE) orelse @panic("null app :(");
     defer c.g_object_unref(app);
@@ -63,9 +62,9 @@ pub fn main() !void {
 }
 
 fn usage(status: u8) void {
-    stderr.print("Usage: {s} ", .{"zterm"}) catch unreachable;
-    clap.usage(stderr, &params) catch unreachable;
-    stderr.print("\nFlags: \n", .{}) catch unreachable;
-    clap.help(stderr, &params) catch unreachable;
+    stderr.print("Usage: {s} ", .{"zterm"}) catch {};
+    clap.usage(stderr, &params) catch {};
+    stderr.print("\nFlags: \n", .{}) catch {};
+    clap.help(stderr, &params) catch {};
     process.exit(status);
 }
