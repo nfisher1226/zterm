@@ -88,28 +88,50 @@ pub const Tab = struct {
             }
         }
     }
+
+    fn rotate(self: Tab) void {
+        const orientable = self.box.as_orientable();
+        const orientation = orientable.get_orientation();
+        switch (orientation) {
+            .horizontal => orientable.set_orientation(.vertical),
+            .vertical => orientable.set_orientation(.horizontal),
+        }
+    }
+
+    fn split(self: Tab) void {
+        const term = new_term(options.command);
+        term.as_widget().show();
+        self.box.pack_start(term.as_widget(), true, true, 1);
+    }
+
+    fn select_page(self: Tab) void {
+        if (self.box.as_container().get_children(allocator)) |kids| {
+            defer kids.deinit();
+            kids.items[0].grab_focus();
+        }
+    }
 };
 
 const Gui = struct {
     window: gtk.Window,
     notebook: gtk.Notebook,
-    new_tab: *c.GtkWidget,
-    split_view: *c.GtkWidget,
-    rotate_view: *c.GtkWidget,
-    preferences: *c.GtkWidget,
-    close_tab: *c.GtkWidget,
-    quit_app: *c.GtkWidget,
+    new_tab: gtk.MenuItem,
+    split_view: gtk.MenuItem,
+    rotate_view: gtk.MenuItem,
+    preferences: gtk.MenuItem,
+    close_tab: gtk.MenuItem,
+    quit_app: gtk.MenuItem,
 
     fn init(builder: gtk.Builder) Gui {
         return Gui{
             .window = builder.get_widget("window").?.to_window().?,
             .notebook = builder.get_widget("notebook").?.to_notebook().?,
-            .new_tab = @ptrCast(*c.GtkWidget, builder.get_widget("new_tab").?.ptr),
-            .split_view = @ptrCast(*c.GtkWidget, builder.get_widget("split_view").?.ptr),
-            .rotate_view = @ptrCast(*c.GtkWidget, builder.get_widget("rotate_view").?.ptr),
-            .preferences = @ptrCast(*c.GtkWidget, builder.get_widget("preferences").?.ptr),
-            .close_tab = @ptrCast(*c.GtkWidget, builder.get_widget("close_tab").?.ptr),
-            .quit_app = @ptrCast(*c.GtkWidget, builder.get_widget("quit_app").?.ptr),
+            .new_tab = builder.get_widget("new_tab").?.to_menu_item().?,
+            .split_view = builder.get_widget("split_view").?.to_menu_item().?,
+            .rotate_view = builder.get_widget("rotate_view").?.to_menu_item().?,
+            .preferences = builder.get_widget("preferences").?.to_menu_item().?,
+            .close_tab = builder.get_widget("close_tab").?.to_menu_item().?,
+            .quit_app = builder.get_widget("quit_app").?.to_menu_item().?,
         };
     }
 
@@ -177,16 +199,25 @@ const Gui = struct {
         self.set_background();
     }
 
+    fn page_removed(self: Gui) void {
+        const pages = self.notebook.get_n_pages();
+        if (pages == 0) {
+            c.gtk_main_quit();
+        } else {
+            select_page_callback();
+        }
+    }
+
     fn connect_signals(self: Gui) void {
-        _ = gtk.signal_connect(self.new_tab, "activate", @ptrCast(c.GCallback, new_tab_callback), null);
-        _ = gtk.signal_connect(self.split_view, "activate", @ptrCast(c.GCallback, split_tab), null);
-        _ = gtk.signal_connect(self.rotate_view, "activate", @ptrCast(c.GCallback, rotate_tab), null);
+        self.new_tab.connect_activate(@ptrCast(c.GCallback, new_tab_callback), null);
+        self.split_view.connect_activate(@ptrCast(c.GCallback, split_tab), null);
+        self.rotate_view.connect_activate(@ptrCast(c.GCallback, rotate_tab), null);
         self.notebook.connect_page_removed(@ptrCast(c.GCallback, page_removed_callback), null);
         self.notebook.connect_select_page(@ptrCast(c.GCallback, select_page_callback), null);
-        _ = gtk.signal_connect(self.preferences, "activate", @ptrCast(c.GCallback, run_prefs), null);
-        _ = gtk.signal_connect(self.close_tab, "activate", @ptrCast(c.GCallback, close_current_tab), null);
-        _ = gtk.signal_connect(self.quit_app, "activate", @ptrCast(c.GCallback, quit_callback), null);
-        self.window.as_widget().connect("delete-event", @ptrCast(c.GCallback, quit_callback), null);
+        self.preferences.connect_activate(@ptrCast(c.GCallback, run_prefs), null);
+        self.close_tab.connect_activate(@ptrCast(c.GCallback, close_current_tab), null);
+        self.quit_app.connect_activate(@ptrCast(c.GCallback, c.gtk_main_quit), null);
+        self.window.as_widget().connect("delete-event", @ptrCast(c.GCallback, c.gtk_main_quit), null);
     }
 
     fn connect_accels(self: Gui) void {
@@ -308,8 +339,8 @@ fn close_tab_by_button(_: *c.GtkButton, box: c.gpointer) void {
 fn close_tab_by_ref(key: u64) void {
     if (tabs.get(key)) |tab| {
         const num = gui.notebook.page_num(tab.box.as_widget());
-        // if num < 0 tab is already closed
         if (num) |n| {
+            // if num < 0 tab is already closed
             if (n >= 0) {
                 gui.notebook.remove_page(n);
                 _ = tabs.remove(key);
@@ -348,37 +379,19 @@ fn close_term_callback(term: *c.VteTerminal) void {
 }
 
 fn page_removed_callback() void {
-    const pages = gui.notebook.get_n_pages();
-    if (pages == 0) {
-        c.gtk_main_quit();
-    } else {
-        select_page_callback();
-    }
+    gui.page_removed();
 }
 
 fn select_page_callback() void {
-    const tab = gui.get_current_tab();
-    const kids = c.gtk_container_get_children(@ptrCast(*c.GtkContainer, tab.box.ptr));
-    const first = c.g_list_nth_data(kids, 0);
-    const first_ptr = @ptrCast(*c.GtkWidget, @alignCast(8, first));
-    c.gtk_widget_grab_focus(first_ptr);
+    gui.get_current_tab().select_page();
 }
 
 fn split_tab() void {
-    var tab = gui.get_current_tab();
-    const term = new_term(options.command);
-    term.as_widget().show();
-    tab.box.pack_start(term.as_widget(), true, true, 1);
+    gui.get_current_tab().split();
 }
 
 fn rotate_tab() void {
-    const tab = gui.get_current_tab();
-    const orientable = tab.box.as_orientable();
-    const orientation = orientable.get_orientation();
-    switch (orientation) {
-        .horizontal => orientable.set_orientation(.vertical),
-        .vertical => orientable.set_orientation(.horizontal),
-    }
+    gui.get_current_tab().rotate();
 }
 
 fn goto_tab_1() callconv(.C) void {
@@ -426,13 +439,11 @@ fn goto_next_tab() callconv(.C) void {
 }
 
 fn goto_next_pane() callconv(.C) void {
-    const tab = gui.get_current_tab();
-    tab.next_pane();
+    gui.get_current_tab().next_pane();
 }
 
 fn goto_prev_pane() callconv(.C) void {
-    const tab = gui.get_current_tab();
-    tab.prev_pane();
+    gui.get_current_tab().prev_pane();
 }
 
 fn run_prefs() void {
@@ -440,8 +451,4 @@ fn run_prefs() void {
         conf = newconf;
         gui.apply_settings();
     }
-}
-
-pub fn quit_callback() void {
-    c.gtk_main_quit();
 }
