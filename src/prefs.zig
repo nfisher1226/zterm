@@ -11,6 +11,81 @@ const stdout = std.io.getStdOut().writer();
 var widgets: PrefWidgets = undefined;
 var conf = config.Config.default();
 
+pub const ColorButtons = struct {
+    text_color: gtk.ColorButton,
+    background_color: gtk.ColorButton,
+    black_color: gtk.ColorButton,
+    red_color: gtk.ColorButton,
+    green_color: gtk.ColorButton,
+    brown_color: gtk.ColorButton,
+    blue_color: gtk.ColorButton,
+    magenta_color: gtk.ColorButton,
+    cyan_color: gtk.ColorButton,
+    light_grey_color: gtk.ColorButton,
+    dark_grey_color: gtk.ColorButton,
+    light_red_color: gtk.ColorButton,
+    light_green_color: gtk.ColorButton,
+    yellow_color: gtk.ColorButton,
+    light_blue_color: gtk.ColorButton,
+    light_magenta_color: gtk.ColorButton,
+    light_cyan_color: gtk.ColorButton,
+    white_color: gtk.ColorButton,
+
+    fn init(builder: gtk.Builder) ?ColorButtons {
+        //var buttons: ColorButtons = undefined;
+        //inline for (meta.fields(ColorButtons)) |color| {
+        //    const color_name = fmt.allocPrintZ(allocator, "{s}", .{color.name}) catch return null;
+        //    defer allocator.free(color_name);
+        //    if (builder.get_widget(color_name)) |widget| {
+        //        if (widget.to_color_button()) |b| {
+        //            @field(buttons, color.name) = b;
+        //        } else return null;
+        //    } else return null;
+        //}
+        //return buttons;
+        return ColorButtons{
+            .text_color = builder.get_widget("text_color").?.to_color_button().?,
+            .background_color = builder.get_widget("background_color").?.to_color_button().?,
+            .black_color = builder.get_widget("black_color").?.to_color_button().?,
+            .red_color = builder.get_widget("red_color").?.to_color_button().?,
+            .green_color = builder.get_widget("green_color").?.to_color_button().?,
+            .brown_color = builder.get_widget("brown_color").?.to_color_button().?,
+            .blue_color = builder.get_widget("blue_color").?.to_color_button().?,
+            .magenta_color = builder.get_widget("magenta_color").?.to_color_button().?,
+            .cyan_color = builder.get_widget("cyan_color").?.to_color_button().?,
+            .light_grey_color = builder.get_widget("light_grey_color").?.to_color_button().?,
+            .dark_grey_color = builder.get_widget("dark_grey_color").?.to_color_button().?,
+            .light_red_color = builder.get_widget("light_red_color").?.to_color_button().?,
+            .light_green_color = builder.get_widget("light_green_color").?.to_color_button().?,
+            .yellow_color = builder.get_widget("yellow_color").?.to_color_button().?,
+            .light_blue_color = builder.get_widget("light_blue_color").?.to_color_button().?,
+            .light_magenta_color = builder.get_widget("light_magenta_color").?.to_color_button().?,
+            .light_cyan_color = builder.get_widget("light_cyan_color").?.to_color_button().?,
+            .white_color = builder.get_widget("white_color").?.to_color_button().?,
+        };
+    }
+
+    fn get_colors(self: ColorButtons) config.Colors {
+        var colors = config.Colors.default();
+        inline for (meta.fields(config.Colors)) |color| {
+            const button = @field(self, color.name);
+            const value = config.RGBColor.from_widget(button);
+            @field(colors, color.name) = value;
+        }
+        return colors;
+    }
+
+    fn set_colors(self: ColorButtons) void {
+        const colors = conf.colors;
+        inline for (meta.fields(config.Colors)) |color| {
+            const button = @field(self, color.name);
+            const rgb = @field(colors, color.name);
+            const gdk_rgba = rgb.to_gdk();
+            button.as_color_chooser().set_rgba(gdk_rgba);
+        }
+    }
+};
+
 pub const PrefWidgets = struct {
     window: *c.GtkWidget,
     initial_title_entry: *c.GtkWidget,
@@ -24,24 +99,6 @@ pub const PrefWidgets = struct {
     scrollback_lines_label: *c.GtkWidget,
     scrollback_lines_spinbox: *c.GtkWidget,
     scrollback_lines_adjustment: *c.GtkAdjustment,
-    text_color: *c.GtkWidget,
-    background_color: *c.GtkWidget,
-    black_color: *c.GtkWidget,
-    red_color: *c.GtkWidget,
-    green_color: *c.GtkWidget,
-    brown_color: *c.GtkWidget,
-    blue_color: *c.GtkWidget,
-    magenta_color: *c.GtkWidget,
-    cyan_color: *c.GtkWidget,
-    light_grey_color: *c.GtkWidget,
-    dark_grey_color: *c.GtkWidget,
-    light_red_color: *c.GtkWidget,
-    light_green_color: *c.GtkWidget,
-    yellow_color: *c.GtkWidget,
-    light_blue_color: *c.GtkWidget,
-    light_magenta_color: *c.GtkWidget,
-    light_cyan_color: *c.GtkWidget,
-    white_color: *c.GtkWidget,
     system_font_checkbutton: *c.GtkWidget,
     font_chooser_button: *c.GtkWidget,
     background_style_combobox: *c.GtkWidget,
@@ -52,49 +109,33 @@ pub const PrefWidgets = struct {
     background_style_opacity_scale: *c.GtkWidget,
     background_opacity_adjustment: *c.GtkAdjustment,
     close_button: *c.GtkWidget,
+    color_buttons: ColorButtons,
 
-    fn init(builder: *c.GtkBuilder) PrefWidgets {
+    fn init(builder: gtk.Builder) PrefWidgets {
         return PrefWidgets{
-            .window = gtk.builder_get_widget(builder, "window").?,
-            .initial_title_entry = gtk.builder_get_widget(builder, "initial_title_entry").?,
-            .dynamic_title_combobox = gtk.builder_get_widget(builder, "dynamic_title_combobox").?,
-            .custom_command_checkbutton = gtk.builder_get_widget(builder, "custom_command_checkbutton").?,
-            .custom_command_label = gtk.builder_get_widget(builder, "custom_command_label").?,
-            .custom_command_entry = gtk.builder_get_widget(builder, "custom_command_entry").?,
-            .cursor_style_combobox = gtk.builder_get_widget(builder, "cursor_style_combobox").?,
-            .cursor_blinks_checkbutton = gtk.builder_get_widget(builder, "cursor_blinks_checkbutton").?,
-            .infinite_scrollback_checkbutton = gtk.builder_get_widget(builder, "infinite_scrollback_checkbutton").?,
-            .scrollback_lines_label = gtk.builder_get_widget(builder, "scrollback_lines_label").?,
-            .scrollback_lines_spinbox = gtk.builder_get_widget(builder, "scrollback_lines_spinbox").?,
-            .scrollback_lines_adjustment = gtk.builder_get_adjustment(builder, "scollback_lines_adjustment").?,
-            .text_color = gtk.builder_get_widget(builder, "text_color").?,
-            .background_color = gtk.builder_get_widget(builder, "background_color").?,
-            .black_color = gtk.builder_get_widget(builder, "black_color").?,
-            .red_color = gtk.builder_get_widget(builder, "red_color").?,
-            .green_color = gtk.builder_get_widget(builder, "green_color").?,
-            .brown_color = gtk.builder_get_widget(builder, "brown_color").?,
-            .blue_color = gtk.builder_get_widget(builder, "blue_color").?,
-            .magenta_color = gtk.builder_get_widget(builder, "magenta_color").?,
-            .cyan_color = gtk.builder_get_widget(builder, "cyan_color").?,
-            .light_grey_color = gtk.builder_get_widget(builder, "light_grey_color").?,
-            .dark_grey_color = gtk.builder_get_widget(builder, "dark_grey_color").?,
-            .light_red_color = gtk.builder_get_widget(builder, "light_red_color").?,
-            .light_green_color = gtk.builder_get_widget(builder, "light_green_color").?,
-            .yellow_color = gtk.builder_get_widget(builder, "yellow_color").?,
-            .light_blue_color = gtk.builder_get_widget(builder, "light_blue_color").?,
-            .light_magenta_color = gtk.builder_get_widget(builder, "light_magenta_color").?,
-            .light_cyan_color = gtk.builder_get_widget(builder, "light_cyan_color").?,
-            .white_color = gtk.builder_get_widget(builder, "white_color").?,
-            .system_font_checkbutton = gtk.builder_get_widget(builder, "system_font_checkbutton").?,
-            .font_chooser_button = gtk.builder_get_widget(builder, "font_chooser_button").?,
-            .background_style_combobox = gtk.builder_get_widget(builder, "background_style_combobox").?,
-            .background_image_grid = gtk.builder_get_widget(builder, "background_image_grid").?,
-            .background_image_file_button = gtk.builder_get_widget(builder, "background_image_file_button").?,
-            .background_image_style_combobox = gtk.builder_get_widget(builder, "background_image_style_combobox").?,
-            .background_style_opacity_box = gtk.builder_get_widget(builder, "background_style_opacity_box").?,
-            .background_style_opacity_scale = gtk.builder_get_widget(builder, "background_style_opacity_scale").?,
-            .background_opacity_adjustment = gtk.builder_get_adjustment(builder, "background_opacity_adjustment").?,
-            .close_button = gtk.builder_get_widget(builder, "close_button").?,
+            .window = builder.get_widget("window").?.ptr,
+            .initial_title_entry = builder.get_widget("initial_title_entry").?.ptr,
+            .dynamic_title_combobox = builder.get_widget("dynamic_title_combobox").?.ptr,
+            .custom_command_checkbutton = builder.get_widget("custom_command_checkbutton").?.ptr,
+            .custom_command_label = builder.get_widget("custom_command_label").?.ptr,
+            .custom_command_entry = builder.get_widget("custom_command_entry").?.ptr,
+            .cursor_style_combobox = builder.get_widget("cursor_style_combobox").?.ptr,
+            .cursor_blinks_checkbutton = builder.get_widget("cursor_blinks_checkbutton").?.ptr,
+            .infinite_scrollback_checkbutton = builder.get_widget("infinite_scrollback_checkbutton").?.ptr,
+            .scrollback_lines_label = builder.get_widget("scrollback_lines_label").?.ptr,
+            .scrollback_lines_spinbox = builder.get_widget("scrollback_lines_spinbox").?.ptr,
+            .scrollback_lines_adjustment = builder.get_adjustment("scollback_lines_adjustment").?.ptr,
+            .system_font_checkbutton = builder.get_widget("system_font_checkbutton").?.ptr,
+            .font_chooser_button = builder.get_widget("font_chooser_button").?.ptr,
+            .background_style_combobox = builder.get_widget("background_style_combobox").?.ptr,
+            .background_image_grid = builder.get_widget("background_image_grid").?.ptr,
+            .background_image_file_button = builder.get_widget("background_image_file_button").?.ptr,
+            .background_image_style_combobox = builder.get_widget("background_image_style_combobox").?.ptr,
+            .background_style_opacity_box = builder.get_widget("background_style_opacity_box").?.ptr,
+            .background_style_opacity_scale = builder.get_widget("background_style_opacity_scale").?.ptr,
+            .background_opacity_adjustment = builder.get_adjustment("background_opacity_adjustment").?.ptr,
+            .close_button = builder.get_widget("close_button").?.ptr,
+            .color_buttons = ColorButtons.init(builder).?,
         };
     }
 
@@ -369,27 +410,6 @@ pub const PrefWidgets = struct {
         }
     }
 
-    fn get_colors(self: PrefWidgets) config.Colors {
-        var colors = config.Colors.default();
-        inline for (meta.fields(config.Colors)) |color| {
-            const widget = @field(self, color.name);
-            const value = config.RGBColor.from_widget(@ptrCast(*c.GtkColorButton, widget));
-            @field(colors, color.name) = value;
-        }
-        return colors;
-    }
-
-    fn set_colors(self: PrefWidgets) void {
-        const colors = conf.colors;
-        inline for (meta.fields(config.Colors)) |color| {
-            const widget = @field(self, color.name);
-            const button = @ptrCast(*c.GtkColorChooser, widget);
-            const rgb = @field(colors, color.name);
-            const gdk_rgba = rgb.to_gdk();
-            c.gtk_color_chooser_set_rgba(button, &gdk_rgba);
-        }
-    }
-
     fn get_config(self: PrefWidgets) config.Config {
         return config.Config{
             .initial_title = if (self.get_initial_title()) |t| t else "Zterm",
@@ -398,7 +418,7 @@ pub const PrefWidgets = struct {
             .scrollback = self.get_scrollback(),
             .font = self.get_font(),
             .background = self.get_background(),
-            .colors = self.get_colors(),
+            .colors = self.color_buttons.get_colors(),
             .cursor = self.get_cursor(),
         };
     }
@@ -409,17 +429,19 @@ pub const PrefWidgets = struct {
         self.set_custom_command();
         self.set_scrollback();
         self.set_background();
-        self.set_colors();
+        self.color_buttons.set_colors();
         self.set_font();
         self.set_cursor();
     }
 };
 
 pub fn run(data: config.Config) ?config.Config {
-    const builder = c.gtk_builder_new();
+    const builder = gtk.Builder.new();
     conf = data;
-    const glade_str = @embedFile("prefs.glade");
-    _ = c.gtk_builder_add_from_string(builder, glade_str, glade_str.len, @intToPtr([*c][*c]c._GError, 0));
+    builder.add_from_string(@embedFile("prefs.glade")) catch |e| {
+        stderr.print("{s}\n", .{e}) catch {};
+        return null;
+    };
     widgets = PrefWidgets.init(builder);
     widgets.set_values();
 

@@ -194,9 +194,8 @@ pub const RGBColor = struct {
         };
     }
 
-    pub fn from_widget(button: *c.GtkColorButton) RGBColor {
-        var rgba: c.GdkRGBA = undefined;
-        _ = c.gtk_color_button_get_rgba(button, &rgba);
+    pub fn from_widget(button: gtk.ColorButton) RGBColor {
+        const rgba = button.as_color_chooser().get_rgba();
         return RGBColor{
             .red = @floatToInt(u8, math.round(rgba.red * 255.0)),
             .green = @floatToInt(u8, math.round(rgba.green * 255.0)),
