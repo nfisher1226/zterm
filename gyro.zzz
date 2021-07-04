@@ -9,7 +9,7 @@ deps:
   clap:
     src:
       github:
-        user: hejsil
+        user: Hejsil
         repo: zig-clap
         ref: master
     root: clap.zig
@@ -22,8 +22,5 @@ deps:
     root: src/nestedtext.zig
   vte:
     src:
-      github:
-        user: nfisher1226
-        repo: zig-vte
-        ref: loki
-    root: lib.zig
+      url: "https://gitlab.com/jeang3nie/zig-vte/-/archive/loki/zig-vte-loki.tar.gz"
+    root: zig-vte-loki/lib.zig

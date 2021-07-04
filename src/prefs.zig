@@ -87,8 +87,8 @@ pub const ColorButtons = struct {
 };
 
 pub const PrefWidgets = struct {
-    window: *c.GtkWidget,
-    initial_title_entry: *c.GtkWidget,
+    window: gtk.Window,
+    initial_title_entry: gtk.Entry,
     dynamic_title_combobox: *c.GtkWidget,
     custom_command_checkbutton: *c.GtkWidget,
     custom_command_label: *c.GtkWidget,
@@ -108,13 +108,13 @@ pub const PrefWidgets = struct {
     background_style_opacity_box: *c.GtkWidget,
     background_style_opacity_scale: *c.GtkWidget,
     background_opacity_adjustment: *c.GtkAdjustment,
-    close_button: *c.GtkWidget,
+    close_button: gtk.Button,
     color_buttons: ColorButtons,
 
     fn init(builder: gtk.Builder) PrefWidgets {
         return PrefWidgets{
-            .window = builder.get_widget("window").?.ptr,
-            .initial_title_entry = builder.get_widget("initial_title_entry").?.ptr,
+            .window = builder.get_widget("window").?.to_window().?,
+            .initial_title_entry = builder.get_widget("initial_title_entry").?.to_entry().?,
             .dynamic_title_combobox = builder.get_widget("dynamic_title_combobox").?.ptr,
             .custom_command_checkbutton = builder.get_widget("custom_command_checkbutton").?.ptr,
             .custom_command_label = builder.get_widget("custom_command_label").?.ptr,
@@ -134,22 +134,16 @@ pub const PrefWidgets = struct {
             .background_style_opacity_box = builder.get_widget("background_style_opacity_box").?.ptr,
             .background_style_opacity_scale = builder.get_widget("background_style_opacity_scale").?.ptr,
             .background_opacity_adjustment = builder.get_adjustment("background_opacity_adjustment").?.ptr,
-            .close_button = builder.get_widget("close_button").?.ptr,
+            .close_button = builder.get_widget("close_button").?.to_button().?,
             .color_buttons = ColorButtons.init(builder).?,
         };
     }
 
-    fn get_initial_title(self: PrefWidgets) ?[]const u8 {
-        const val = c.gtk_entry_get_text(@ptrCast(*c.GtkEntry, self.initial_title_entry));
-        const title = fmt.allocPrint(allocator, "{s}", .{val}) catch return null;
-        return title;
-    }
-
     fn set_initial_title(self: PrefWidgets) void {
-        const buf = c.gtk_entry_get_buffer(@ptrCast(*c.GtkEntry, self.initial_title_entry));
+        const buf = self.initial_title_entry.get_buffer();
         const title = fmt.allocPrintZ(allocator, "{s}", .{conf.initial_title}) catch return;
         defer allocator.free(title);
-        c.gtk_entry_buffer_set_text(buf, title, -1);
+        buf.set_text(title, -1);
     }
 
     fn get_title_style(self: PrefWidgets) config.DynamicTitleStyle {
@@ -412,7 +406,7 @@ pub const PrefWidgets = struct {
 
     fn get_config(self: PrefWidgets) config.Config {
         return config.Config{
-            .initial_title = if (self.get_initial_title()) |t| t else "Zterm",
+            .initial_title = if (self.initial_title_entry.get_text(allocator)) |t| t else "Zterm",
             .dynamic_title_style = self.get_title_style(),
             .custom_command = self.get_custom_command(),
             .scrollback = self.get_scrollback(),
@@ -473,19 +467,14 @@ pub fn run(data: config.Config) ?config.Config {
         null,
     );
 
-    _ = gtk.signal_connect(
-        widgets.close_button,
-        "clicked",
-        @ptrCast(c.GCallback, save_and_close),
-        null,
-    );
+    widgets.close_button.connect_clicked(@ptrCast(c.GCallback, save_and_close), null);
 
-    const res = c.gtk_dialog_run(@ptrCast(*c.GtkDialog, widgets.window));
+    const res = c.gtk_dialog_run(@ptrCast(*c.GtkDialog, widgets.window.ptr));
     if (res == -1) {
         return conf;
     } else {
-        c.gtk_window_close(@ptrCast(*c.GtkWindow, widgets.window));
-        c.gtk_widget_destroy(widgets.window);
+        widgets.window.close();
+        widgets.window.as_widget().destroy();
         return null;
     }
 }
@@ -528,6 +517,6 @@ fn toggle_background(background_combobox: *c.GtkComboBox) void {
 
 fn save_and_close() void {
     conf = widgets.get_config();
-    c.gtk_window_close(@ptrCast(*c.GtkWindow, widgets.window));
-    c.gtk_widget_destroy(widgets.window);
+    widgets.window.close();
+    widgets.window.as_widget().destroy();
 }

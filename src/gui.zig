@@ -1,6 +1,6 @@
+usingnamespace @import("vte");
 const std = @import("std");
 const config = @import("config.zig");
-usingnamespace @import("vte");
 const prefs = @import("prefs.zig");
 const allocator = std.heap.page_allocator;
 const fmt = std.fmt;
