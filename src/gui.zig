@@ -10,7 +10,7 @@ const os = std.os;
 const stderr = std.io.getStdErr().writer();
 const stdout = std.io.getStdOut().writer();
 
-var conf = config.Config.default();
+var conf: config.Config = undefined;
 var gui: Gui = undefined;
 var options: Opts = undefined;
 var tabs: hashmap(u64, Tab) = undefined;
@@ -21,6 +21,7 @@ pub const Opts = struct {
     title: [:0]const u8,
     directory: [:0]const u8,
     hostname: [:0]const u8,
+    config_dir: []const u8,
 };
 
 pub const Tab = struct {
@@ -266,11 +267,8 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     terms = hashmap(u64, *c.VteTerminal).init(allocator);
     defer terms.deinit();
 
-    const config_file = config.get_config_file(allocator);
-    if (config_file) |f| {
-        std.debug.print("{s}\n", .{f});
-        defer allocator.free(f);
-    }
+    conf = if (config.Config.fromFile(options.config_dir)) |cfg| cfg else config.Config.default();
+    //conf = config.Config.default();
 
     const builder = gtk.Builder.new();
     const glade_str = @embedFile("gui.glade");
@@ -450,5 +448,6 @@ fn run_prefs() void {
     if (prefs.run(conf)) |newconf| {
         conf = newconf;
         gui.apply_settings();
+        conf.save(options.config_dir);
     }
 }

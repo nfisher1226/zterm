@@ -90,24 +90,24 @@ pub const PrefWidgets = struct {
     window: gtk.Window,
     initial_title_entry: gtk.Entry,
     dynamic_title_combobox: *c.GtkWidget,
-    custom_command_checkbutton: *c.GtkWidget,
-    custom_command_label: *c.GtkWidget,
-    custom_command_entry: *c.GtkWidget,
+    custom_command_checkbutton: gtk.CheckButton,
+    custom_command_label: gtk.Widget,
+    custom_command_entry: gtk.Entry,
     cursor_style_combobox: *c.GtkWidget,
-    cursor_blinks_checkbutton: *c.GtkWidget,
-    infinite_scrollback_checkbutton: *c.GtkWidget,
-    scrollback_lines_label: *c.GtkWidget,
+    cursor_blinks_checkbutton: gtk.CheckButton,
+    infinite_scrollback_checkbutton: gtk.CheckButton,
+    scrollback_lines_label: gtk.Widget,
     scrollback_lines_spinbox: *c.GtkWidget,
     scrollback_lines_adjustment: *c.GtkAdjustment,
-    system_font_checkbutton: *c.GtkWidget,
+    system_font_checkbutton: gtk.CheckButton,
     font_chooser_button: *c.GtkWidget,
     background_style_combobox: *c.GtkWidget,
-    background_image_grid: *c.GtkWidget,
+    background_image_grid: gtk.Widget,
     background_image_file_button: *c.GtkWidget,
     background_image_style_combobox: *c.GtkWidget,
-    background_style_opacity_box: *c.GtkWidget,
-    background_style_opacity_scale: *c.GtkWidget,
-    background_opacity_adjustment: *c.GtkAdjustment,
+    background_style_opacity_box: gtk.Widget,
+    background_style_opacity_scale: gtk.Scale,
+    background_opacity_adjustment: gtk.Adjustment,
     close_button: gtk.Button,
     color_buttons: ColorButtons,
 
@@ -116,24 +116,30 @@ pub const PrefWidgets = struct {
             .window = builder.get_widget("window").?.to_window().?,
             .initial_title_entry = builder.get_widget("initial_title_entry").?.to_entry().?,
             .dynamic_title_combobox = builder.get_widget("dynamic_title_combobox").?.ptr,
-            .custom_command_checkbutton = builder.get_widget("custom_command_checkbutton").?.ptr,
-            .custom_command_label = builder.get_widget("custom_command_label").?.ptr,
-            .custom_command_entry = builder.get_widget("custom_command_entry").?.ptr,
+            .custom_command_checkbutton = builder
+                .get_widget("custom_command_checkbutton").?.to_check_button().?,
+            .custom_command_label = builder.get_widget("custom_command_label").?,
+            .custom_command_entry = builder.get_widget("custom_command_entry").?.to_entry().?,
             .cursor_style_combobox = builder.get_widget("cursor_style_combobox").?.ptr,
-            .cursor_blinks_checkbutton = builder.get_widget("cursor_blinks_checkbutton").?.ptr,
-            .infinite_scrollback_checkbutton = builder.get_widget("infinite_scrollback_checkbutton").?.ptr,
-            .scrollback_lines_label = builder.get_widget("scrollback_lines_label").?.ptr,
+            .cursor_blinks_checkbutton = builder
+                .get_widget("cursor_blinks_checkbutton").?.to_check_button().?,
+            .infinite_scrollback_checkbutton = builder
+                .get_widget("infinite_scrollback_checkbutton").?.to_check_button().?,
+            .scrollback_lines_label = builder.get_widget("scrollback_lines_label").?,
             .scrollback_lines_spinbox = builder.get_widget("scrollback_lines_spinbox").?.ptr,
             .scrollback_lines_adjustment = builder.get_adjustment("scollback_lines_adjustment").?.ptr,
-            .system_font_checkbutton = builder.get_widget("system_font_checkbutton").?.ptr,
+            .system_font_checkbutton = builder
+                .get_widget("system_font_checkbutton").?.to_check_button().?,
             .font_chooser_button = builder.get_widget("font_chooser_button").?.ptr,
             .background_style_combobox = builder.get_widget("background_style_combobox").?.ptr,
-            .background_image_grid = builder.get_widget("background_image_grid").?.ptr,
+            .background_image_grid = builder.get_widget("background_image_grid").?,
             .background_image_file_button = builder.get_widget("background_image_file_button").?.ptr,
             .background_image_style_combobox = builder.get_widget("background_image_style_combobox").?.ptr,
-            .background_style_opacity_box = builder.get_widget("background_style_opacity_box").?.ptr,
-            .background_style_opacity_scale = builder.get_widget("background_style_opacity_scale").?.ptr,
-            .background_opacity_adjustment = builder.get_adjustment("background_opacity_adjustment").?.ptr,
+            .background_style_opacity_box = builder.get_widget("background_style_opacity_box").?,
+            .background_style_opacity_scale = builder
+                .get_widget("background_style_opacity_scale").?.to_scale().?,
+            .background_opacity_adjustment = builder
+                .get_adjustment("background_opacity_adjustment").?,
             .close_button = builder.get_widget("close_button").?.to_button().?,
             .color_buttons = ColorButtons.init(builder).?,
         };
@@ -163,14 +169,10 @@ pub const PrefWidgets = struct {
     }
 
     fn get_custom_command(self: PrefWidgets) config.CustomCommand {
-        const is_custom = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, self.custom_command_checkbutton));
+        const is_custom = self.custom_command_checkbutton.as_toggle_button().get_active();
         if (is_custom) {
-            const val = c.gtk_entry_get_text(@ptrCast(*c.GtkEntry, self.custom_command_entry));
-            const cmd = fmt.allocPrint(allocator, "{s}", .{val}) catch |e| {
-                stderr.print("{s}\n", .{e}) catch {};
-                return .none;
-            };
-            return config.CustomCommand{ .command = cmd };
+            const val = self.custom_command_entry.get_text(allocator);
+            return if (val) |v| config.CustomCommand{ .command = v } else .none;
         } else {
             return .none;
         }
@@ -178,34 +180,31 @@ pub const PrefWidgets = struct {
 
     fn set_custom_command(self: PrefWidgets) void {
         const command = conf.custom_command;
-        const toggle = @ptrCast(*c.GtkToggleButton, self.custom_command_checkbutton);
-        const entry = @ptrCast(*c.GtkEntry, self.custom_command_entry);
-        const buf = c.gtk_entry_get_buffer(entry);
+        const buf = self.custom_command_entry.get_buffer();
         switch (command) {
             .command => |val| {
-                c.gtk_toggle_button_set_active(toggle, 1);
-                c.gtk_widget_set_sensitive(self.custom_command_entry, 1);
-                c.gtk_widget_set_sensitive(self.custom_command_label, 1);
+                self.custom_command_checkbutton.as_toggle_button().set_active(true);
+                self.custom_command_entry.as_widget().set_sensitive(true);
+                self.custom_command_label.set_sensitive(true);
                 const cmd = fmt.allocPrintZ(allocator, "{s}", .{val}) catch |e| {
                     stderr.print("{s}\n", .{e}) catch {};
                     return;
                 };
                 defer allocator.free(cmd);
-                c.gtk_entry_buffer_set_text(buf, cmd, -1);
+                buf.set_text(cmd, -1);
             },
             .none => {
-                c.gtk_toggle_button_set_active(toggle, 0);
-                c.gtk_widget_set_sensitive(self.custom_command_entry, 0);
-                c.gtk_widget_set_sensitive(self.custom_command_label, 0);
+                self.custom_command_checkbutton.as_toggle_button().set_active(false);
+                self.custom_command_entry.as_widget().set_sensitive(false);
+                self.custom_command_label.set_sensitive(false);
             },
         }
     }
 
     fn get_scrollback(self: PrefWidgets) config.Scrollback {
-        const toggle = @ptrCast(*c.GtkToggleButton, self.infinite_scrollback_checkbutton);
+        const toggle = self.infinite_scrollback_checkbutton.as_toggle_button();
         const spin = @ptrCast(*c.GtkSpinButton, self.scrollback_lines_spinbox);
-        const is_infinite = gtk.toggle_button_get_active(toggle);
-        if (is_infinite) {
+        if (toggle.get_active()) {
             return config.Scrollback.infinite;
         } else {
             const val = c.gtk_spin_button_get_value(spin);
@@ -215,14 +214,14 @@ pub const PrefWidgets = struct {
 
     fn set_scrollback(self: PrefWidgets) void {
         const scrollback = conf.scrollback;
-        const toggle = @ptrCast(*c.GtkToggleButton, self.infinite_scrollback_checkbutton);
+        const toggle = self.infinite_scrollback_checkbutton.as_toggle_button();
         switch (scrollback) {
             .infinite => {
-                c.gtk_toggle_button_set_active(toggle, 1);
+                toggle.set_active(true);
                 c.gtk_widget_set_sensitive(self.scrollback_lines_spinbox, 0);
             },
             .finite => |value| {
-                c.gtk_toggle_button_set_active(toggle, 0);
+                toggle.set_active(false);
                 c.gtk_widget_set_sensitive(self.scrollback_lines_spinbox, 1);
                 c.gtk_adjustment_set_value(self.scrollback_lines_adjustment, value);
             },
@@ -230,9 +229,9 @@ pub const PrefWidgets = struct {
     }
 
     fn get_font(self: PrefWidgets) config.Font {
-        const toggle = @ptrCast(*c.GtkToggleButton, self.system_font_checkbutton);
+        const toggle = self.system_font_checkbutton.as_toggle_button();
         const chooser = @ptrCast(*c.GtkFontChooser, self.font_chooser_button);
-        if (gtk.toggle_button_get_active(toggle)) {
+        if (toggle.get_active()) {
             return .system;
         } else {
             const val = c.gtk_font_chooser_get_font(chooser);
@@ -245,23 +244,23 @@ pub const PrefWidgets = struct {
     }
 
     fn set_font(self: PrefWidgets) void {
-        const toggle = @ptrCast(*c.GtkToggleButton, self.system_font_checkbutton);
+        const toggle = self.system_font_checkbutton.as_toggle_button();
         const chooser = @ptrCast(*c.GtkFontChooser, self.font_chooser_button);
         const font = conf.font;
         switch (font) {
             .system => {
-                c.gtk_toggle_button_set_active(toggle, 1);
+                toggle.set_active(true);
                 c.gtk_widget_set_sensitive(self.font_chooser_button, 0);
             },
             .custom => |val| {
                 const fontname = fmt.allocPrintZ(allocator, "{s}", .{val}) catch |e| {
                     stderr.print("{s}\n", .{e}) catch {};
-                    c.gtk_toggle_button_set_active(toggle, 1);
+                    toggle.set_active(true);
                     c.gtk_widget_set_sensitive(self.font_chooser_button, 0);
                     return;
                 };
                 defer allocator.free(fontname);
-                c.gtk_toggle_button_set_active(toggle, 0);
+                toggle.set_active(false);
                 c.gtk_widget_set_sensitive(self.font_chooser_button, 1);
                 c.gtk_font_chooser_set_font(chooser, fontname);
             },
@@ -333,30 +332,30 @@ pub const PrefWidgets = struct {
                 }
             },
             .transparent => {
-                const val = c.gtk_range_get_value(@ptrCast(*c.GtkRange, self.background_style_opacity_scale));
+                const val = self.background_opacity_adjustment.get_value();
                 return config.Background{ .transparent = val };
             },
         }
     }
 
     fn set_transparency(self: PrefWidgets, percent: f64) void {
-        c.gtk_adjustment_set_value(self.background_opacity_adjustment, percent);
+        self.background_opacity_adjustment.set_value(percent);
     }
 
     fn set_background(self: PrefWidgets) void {
         const bg = conf.background;
         switch (bg) {
             .solid_color => {
-                c.gtk_widget_hide(self.background_image_grid);
-                c.gtk_widget_hide(self.background_style_opacity_box);
+                self.background_image_grid.hide();
+                self.background_style_opacity_box.hide();
                 _ = c.gtk_combo_box_set_active_id(
                     @ptrCast(*c.GtkComboBox, self.background_style_combobox),
                     "solid_color",
                 );
             },
             .image => |img| {
-                c.gtk_widget_show_all(self.background_image_grid);
-                c.gtk_widget_hide(self.background_style_opacity_box);
+                self.background_image_grid.show_all();
+                self.background_style_opacity_box.hide();
                 _ = c.gtk_combo_box_set_active_id(
                     @ptrCast(*c.GtkComboBox, self.background_style_combobox),
                     "image",
@@ -364,8 +363,8 @@ pub const PrefWidgets = struct {
                 self.set_background_image(img);
             },
             .transparent => |percent| {
-                c.gtk_widget_hide(self.background_image_grid);
-                c.gtk_widget_show_all(self.background_style_opacity_box);
+                self.background_image_grid.hide();
+                self.background_style_opacity_box.show_all();
                 _ = c.gtk_combo_box_set_active_id(
                     @ptrCast(*c.GtkComboBox, self.background_style_combobox),
                     "transparent",
@@ -383,7 +382,7 @@ pub const PrefWidgets = struct {
 
     fn get_cursor(self: PrefWidgets) config.Cursor {
         const style = self.get_cursor_style();
-        const blinks = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, self.cursor_blinks_checkbutton));
+        const blinks = self.cursor_blinks_checkbutton.as_toggle_button().get_active();
         return config.Cursor{
             .cursor_style = style,
             .cursor_blinks = blinks,
@@ -392,9 +391,9 @@ pub const PrefWidgets = struct {
 
     fn set_cursor(self: PrefWidgets) void {
         if (conf.cursor.cursor_blinks) {
-            c.gtk_toggle_button_set_active(@ptrCast(*c.GtkToggleButton, self.cursor_blinks_checkbutton), 1);
+            self.cursor_blinks_checkbutton.as_toggle_button().set_active(true);
         } else {
-            c.gtk_toggle_button_set_active(@ptrCast(*c.GtkToggleButton, self.cursor_blinks_checkbutton), 0);
+            self.cursor_blinks_checkbutton.as_toggle_button().set_active(false);
         }
         const box = @ptrCast(*c.GtkComboBox, self.cursor_style_combobox);
         switch (conf.cursor.cursor_style) {
@@ -439,23 +438,17 @@ pub fn run(data: config.Config) ?config.Config {
     widgets = PrefWidgets.init(builder);
     widgets.set_values();
 
-    _ = gtk.signal_connect(
-        widgets.custom_command_checkbutton,
-        "toggled",
+    widgets.custom_command_checkbutton.as_toggle_button().connect_toggled(
         @ptrCast(c.GCallback, toggle_custom_command),
         null,
     );
 
-    _ = gtk.signal_connect(
-        widgets.infinite_scrollback_checkbutton,
-        "toggled",
+    widgets.infinite_scrollback_checkbutton.as_toggle_button().connect_toggled(
         @ptrCast(c.GCallback, toggle_scrollback),
         null,
     );
 
-    _ = gtk.signal_connect(
-        widgets.system_font_checkbutton,
-        "toggled",
+    widgets.system_font_checkbutton.as_toggle_button().connect_toggled(
         @ptrCast(c.GCallback, toggle_font),
         null,
     );
@@ -481,13 +474,13 @@ pub fn run(data: config.Config) ?config.Config {
 
 fn toggle_custom_command(custom_command_checkbutton: *c.GtkCheckButton) void {
     const state = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, custom_command_checkbutton));
-    gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.custom_command_entry), state);
-    gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.custom_command_label), state);
+    widgets.custom_command_entry.as_widget().set_sensitive(state);
+    widgets.custom_command_label.set_sensitive(state);
 }
 
 fn toggle_scrollback(infinite_scrollback_checkbutton: *c.GtkCheckButton) void {
     const state = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, infinite_scrollback_checkbutton));
-    gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.scrollback_lines_label), !state);
+    widgets.scrollback_lines_label.set_sensitive(!state);
     gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.scrollback_lines_spinbox), !state);
 }
 
@@ -501,16 +494,16 @@ fn toggle_background(background_combobox: *c.GtkComboBox) void {
     const style = config.parse_enum(config.BackgroundStyle, id).?;
     switch (style) {
         .solid_color => {
-            gtk.widget_set_visible(widgets.background_image_grid, false);
-            gtk.widget_set_visible(widgets.background_style_opacity_box, false);
+            widgets.background_image_grid.set_visible(false);
+            widgets.background_style_opacity_box.set_visible(false);
         },
         .image => {
-            gtk.widget_set_visible(widgets.background_image_grid, true);
-            gtk.widget_set_visible(widgets.background_style_opacity_box, false);
+            widgets.background_image_grid.set_visible(true);
+           widgets.background_style_opacity_box.set_visible(false);
         },
         .transparent => {
-            gtk.widget_set_visible(widgets.background_image_grid, false);
-            gtk.widget_set_visible(widgets.background_style_opacity_box, true);
+            widgets.background_image_grid.set_visible(false);
+            widgets.background_style_opacity_box.set_visible(true);
         },
     }
 }

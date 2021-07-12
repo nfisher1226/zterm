@@ -1,5 +1,6 @@
 const std = @import("std");
 const clap = @import("clap");
+const config = @import("config.zig");
 const gui = @import("gui.zig");
 usingnamespace @import("vte");
 const allocator = std.heap.page_allocator;
@@ -38,6 +39,7 @@ pub fn main() !void {
         .title = try fmt.allocPrintZ(allocator, "{s}", .{title}),
         .directory = try fmt.allocPrintZ(allocator, "{s}", .{directory}),
         .hostname = try fmt.allocPrintZ(allocator, "{s}", .{hostname}),
+        .config_dir = if (config.getConfigDir(allocator)) |d| d else return,
     };
     defer allocator.free(opts.command);
     defer allocator.free(opts.title);

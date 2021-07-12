@@ -2,10 +2,12 @@ const std = @import("std");
 const gui = @import("gui.zig");
 usingnamespace @import("vte");
 const known_folders = @import("known-folders");
+const nt = @import("nestedtext");
 const prefs = @import("prefs.zig");
 const allocator = std.heap.page_allocator;
 const fmt = std.fmt;
-const path = std.fs.path;
+const fs = std.fs;
+const path = fs.path;
 const math = std.math;
 const mem = std.mem;
 const meta = std.meta;
@@ -21,10 +23,42 @@ pub fn parse_enum(comptime T: type, style: [*c]const u8) ?T {
     return meta.stringToEnum(T, style[0..len]);
 }
 
-pub fn get_config_file(alloc: *mem.Allocator) ?[]const u8 {
+pub fn getConfigDir(alloc: *mem.Allocator) ?[]const u8 {
     const dir = known_folders.getPath(alloc, .local_configuration) catch return null;
     if (dir) |d| {
-        return path.join(allocator, &[_][]const u8{ d, "zterm/config.nt" }) catch return null;
+        return path.join(alloc, &[_][]const u8{ d, "zterm" }) catch return null;
+    } else {
+        return if (os.getenv("HOME")) |h| path.join(alloc, &[_][]const u8{ h, ".config/zterm"}) catch return null else null;
+    }
+}
+
+fn getConfigDirHandle(dir: []const u8) ?std.fs.Dir {
+    defer allocator.free(dir);
+    if (fs.openDirAbsolute(dir, .{})) |d| {
+            return d;
+    } else |err| {
+        switch (err) {
+            fs.File.OpenError.FileNotFound => {
+                os.mkdir(dir, 0o755) catch return null;
+                if (fs.openDirAbsolute(dir, .{})) |d| {
+                    return d;
+                } else |new_err| {
+                    std.debug.print("OpenDir: {s}\n", .{new_err});
+                    return null;
+                }
+            },
+            else => {
+                std.debug.print("Create Directory: {s}\n", .{err});
+                return null;
+            },
+        }
+    }
+}
+
+pub fn getConfigFile(alloc: *mem.Allocator) ?[]const u8 {
+    const dir = known_folders.getPath(alloc, .local_configuration) catch return null;
+    if (dir) |d| {
+        return path.join(alloc, &[_][]const u8{ d, "zterm/config.nt" }) catch return null;
     } else {
         return if (os.getenv("HOME")) |h| path.join(alloc, &[_][]const u8{ h, ".config/zterm/config.nt" }) catch return null else null;
     }
@@ -41,28 +75,18 @@ pub const DynamicTitleStyle = enum {
     }
 };
 
-pub const CustomCommandType = enum {
-    command,
+pub const CustomCommand = union(enum) {
     none,
-};
-
-pub const CustomCommand = union(CustomCommandType) {
     command: []const u8,
-    none: void,
 
     pub fn default() CustomCommand {
         return CustomCommand.none;
     }
 };
 
-pub const ScrollbackType = enum {
-    finite,
-    infinite,
-};
-
-pub const Scrollback = union(ScrollbackType) {
+pub const Scrollback = union(enum) {
     finite: f64,
-    infinite: void,
+    infinite,
 
     pub fn default() Scrollback {
         return Scrollback{ .finite = 1500 };
@@ -76,13 +100,8 @@ pub const Scrollback = union(ScrollbackType) {
     }
 };
 
-pub const FontType = enum {
+pub const Font = union(enum) {
     system,
-    custom,
-};
-
-pub const Font = union(FontType) {
-    system: void,
     custom: []const u8,
 
     pub fn default() Font {
@@ -328,6 +347,24 @@ pub const Config = struct {
         };
     }
 
+    pub fn fromFile(dir: []const u8) ?Config {
+        if (getConfigDirHandle(dir)) |dir_fd| {
+            const fd = dir_fd.openFile("config.nt", .{ .read = true }) catch return null;
+            defer {
+                fd.close();
+                var dir_handle = dir_fd;
+                dir_handle.close();
+            }
+            const text = fd.reader().readAllAlloc(allocator, math.maxInt(usize)) catch return null;
+            defer allocator.free(text);
+            var parser = nt.Parser.init(allocator, .{});
+            @setEvalBranchQuota(4000);
+            const cfg = parser.parseTyped(Config, text) catch return null;
+            return cfg;
+        }
+        return null;
+    }
+
     fn set_bg(self: Config, term: *c.VteTerminal) void {
         switch (self.background) {
             .solid_color => self.colors.set_bg(term),
@@ -346,5 +383,20 @@ pub const Config = struct {
         self.scrollback.set(term);
         self.font.set(term);
         self.cursor.set(term);
+    }
+
+    pub fn save(self: Config, dir: []const u8) void {
+        const cfg_tree = nt.fromArbitraryType(allocator, self) catch return;
+        defer cfg_tree.deinit();
+        if (getConfigDirHandle(dir)) |h| {
+            var handle = h;
+            defer handle.close();
+            if (handle.createFile("config.nt", .{ .truncate = true })) |file| {
+                cfg_tree.stringify(.{}, file.writer()) catch return;
+            } else |write_err| {
+                std.debug.print("Write Error: {s}\n", .{write_err});
+                return;
+            }
+        }
     }
 };
