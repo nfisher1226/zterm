@@ -959,6 +959,7 @@
                         <property name="hexpand">True</property>
                         <property name="font">Sans 12</property>
                         <property name="language">en-us</property>
+                        <property name="level">GTK_FONT_CHOOSER_LEVEL_STYLE | GTK_FONT_CHOOSER_LEVEL_SIZE | GTK_FONT_CHOOSER_LEVEL_FEATURES | GTK_FONT_CHOOSER_LEVEL_FAMILY</property>
                         <property name="preview-text">All your fonts are belong to us.</property>
                       </object>
                       <packing>

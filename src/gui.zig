@@ -448,6 +448,8 @@ fn run_prefs() void {
     if (prefs.run(conf)) |newconf| {
         conf = newconf;
         gui.apply_settings();
-        conf.save(options.config_dir);
+        if (config.getConfigDir(allocator)) |d| {
+            conf.save(d);
+        }
     }
 }
