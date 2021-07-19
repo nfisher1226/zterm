@@ -1,5 +1,5 @@
 const Builder = @import("std").build.Builder;
-const pkgs = @import("deps.zig").pkgs;
+const deps = @import("deps.zig");
 
 pub fn build(b: *Builder) void {
     const target = b.standardTargetOptions(.{});
@@ -13,7 +13,12 @@ pub fn build(b: *Builder) void {
     exe.linkSystemLibrary("vte-2.91");
     exe.install();
 
-    pkgs.addAllTo(exe);
+    // support both gyro and zigmod
+    if (@hasDecl(deps, "addAllTo")) {
+        deps.addAllTo(exe);
+    } else {
+        deps.pkgs.addAllTo(exe);
+    }
 
     const run_cmd = exe.run();
     run_cmd.step.dependOn(b.getInstallStep());

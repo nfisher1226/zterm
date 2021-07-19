@@ -6,3 +6,4 @@ deps.zig
 .gyro/
 gyro.lock
 notes
+.zigmod/

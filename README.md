@@ -24,10 +24,16 @@ available from [ziglang.org](https://ziglang.org). You will also need
 the Gtk-3.x and vte libraries plus development headers installed on your
 system.
 
-Zterm now uses the [Gyro](https://github.com/mattnite/gyro) package
-manager to build and manage dependencies. To build the package:
+Zterm can be built using either the [Gyro](https://github.com/mattnite/gyro) or
+[Zigmod](https://github.com/nektro/zigmod) package managers for Zig.
+### Gyro
 ```Bash
 gyro build -Drelease-safe=true
+```
+### Zigmod
+```Bash
+zigmod fetch
+zig build -Drelease-safe=true
 ```
 At present there is no installation script, simply copy zig-out/bin/zterm to
 somewhere in your path.
