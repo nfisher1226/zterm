@@ -1,6 +1,8 @@
 const std = @import("std");
 const gui = @import("gui.zig");
-usingnamespace @import("vte");
+const VTE = @import("vte");
+const c = VTE.c;
+const gtk = VTE.gtk;
 const known_folders = @import("known-folders");
 const nt = @import("nestedtext");
 const prefs = @import("prefs.zig");
@@ -23,7 +25,7 @@ pub fn parse_enum(comptime T: type, style: [*c]const u8) ?T {
     return meta.stringToEnum(T, style[0..len]);
 }
 
-pub fn getConfigDir(alloc: *mem.Allocator) ?[]const u8 {
+pub fn getConfigDir(alloc: mem.Allocator) ?[]const u8 {
     const dir = known_folders.getPath(alloc, .local_configuration) catch return null;
     if (dir) |d| {
         return path.join(alloc, &[_][]const u8{ d, "zterm" }) catch return null;
@@ -55,7 +57,7 @@ fn getConfigDirHandle(dir: []const u8) ?std.fs.Dir {
     }
 }
 
-pub fn getConfigFile(alloc: *mem.Allocator) ?[]const u8 {
+pub fn getConfigFile(alloc: mem.Allocator) ?[]const u8 {
     const dir = known_folders.getPath(alloc, .local_configuration) catch return null;
     if (dir) |d| {
         return path.join(alloc, &[_][]const u8{ d, "zterm/config.nt" }) catch return null;

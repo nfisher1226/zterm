@@ -1,6 +1,8 @@
 const std = @import("std");
 const config = @import("config.zig");
-usingnamespace @import("vte");
+const VTE = @import("vte");
+const c = VTE.c;
+const gtk = VTE.gtk;
 const allocator = std.heap.page_allocator;
 const fmt = std.fmt;
 const mem = std.mem;

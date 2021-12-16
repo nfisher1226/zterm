@@ -2,7 +2,8 @@ const std = @import("std");
 const clap = @import("clap");
 const config = @import("config.zig");
 const gui = @import("gui.zig");
-usingnamespace @import("vte");
+const VTE = @import("vte");
+const c = VTE.c;
 const allocator = std.heap.page_allocator;
 const fmt = std.fmt;
 const mem = std.mem;
@@ -32,7 +33,7 @@ pub fn main() !void {
     const cmd = if (args.option("--command")) |e| e else os.getenvZ("SHELL") orelse "/bin/sh";
     const title = if (args.option("--title")) |t| t else "Zterm";
     const directory = if (args.option("--working-directory")) |d| d else os.getenv("PWD") orelse os.getenv("HOME") orelse "/";
-    var buf: [64]u8 = undefined;
+    var buf: [255]u8 = undefined;
     const hostname = try os.gethostname(&buf);
     var opts = gui.Opts{
         .command = try fmt.allocPrintZ(allocator, "{s}", .{cmd}),

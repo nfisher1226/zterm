@@ -1,4 +1,7 @@
-usingnamespace @import("vte");
+const VTE = @import("vte");
+const c = VTE.c;
+const gtk = VTE.gtk;
+const vte = VTE.vte;
 const std = @import("std");
 const config = @import("config.zig");
 const prefs = @import("prefs.zig");

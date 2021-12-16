@@ -1,5 +1,6 @@
 2
-git https://github.com/ziglibs/known-folders commit-f5e5fb8370de41fbc220c0c0770d62bdf00530ea
-git https://github.com/Hejsil/zig-clap branch-zig-master
-git https://github.com/LewisGaul/zig-nestedtext branch-zig-master
-git https://gitlab.com/jeang3nie/zig-vte branch-loki
+git https://github.com/ziglibs/known-folders commit-0c6c4849ddcdfb4f362573ea6e917e05e01dba47
+git https://github.com/Hejsil/zig-clap commit-cf8a34d11f0520bdf2afc08eda88862597a88b23
+git https://github.com/nfisher1226/zig-nestedtext.git commit-19eacf4fffdb40885cda7836de914ba836cc54e1
+git https://gitlab.com/jeang3nie/zig-vte commit-44889ed7d2fe989f39ec5c753033dc0322feb888
+git https://github.com/nfisher1226/zig-nestedtext.git commit-19eacf4fffdb40885cda7836de914ba836cc54e1
