@@ -33,7 +33,7 @@ pub fn main() !void {
     const cmd = if (args.option("--command")) |e| e else os.getenvZ("SHELL") orelse "/bin/sh";
     const title = if (args.option("--title")) |t| t else "Zterm";
     const directory = if (args.option("--working-directory")) |d| d else os.getenv("PWD") orelse os.getenv("HOME") orelse "/";
-    var buf: [255]u8 = undefined;
+    var buf: [os.system.HOST_NAME_MAX]u8 = undefined;
     const hostname = try os.gethostname(&buf);
     var opts = gui.Opts{
         .command = try fmt.allocPrintZ(allocator, "{s}", .{cmd}),
