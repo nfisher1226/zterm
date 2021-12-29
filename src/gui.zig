@@ -5,6 +5,7 @@ const vte = VTE.vte;
 const std = @import("std");
 const config = @import("config.zig");
 const prefs = @import("prefs.zig");
+const version = @import("version.zig").version;
 const allocator = std.heap.page_allocator;
 const fmt = std.fmt;
 const fs = std.fs;
@@ -201,9 +202,9 @@ const Gui = struct {
         const style = conf.dynamic_title_style;
         const title = switch (style) {
             .replaces_title => fmt.allocPrintZ(allocator, "{s} on {s}", .{ options.directory, options.hostname }),
-            .before_title => fmt.allocPrintZ(allocator, "{s} on {s} - {s}", .{ options.directory, options.hostname, conf.initial_title }),
-            .after_title => fmt.allocPrintZ(allocator, "{s} - {s} on {s}", .{ conf.initial_title, options.directory, options.hostname }),
-            .not_displayed => fmt.allocPrintZ(allocator, "{s}", .{conf.initial_title}),
+            .before_title => fmt.allocPrintZ(allocator, "{s} on {s} ~ {s}-{s}", .{ options.directory, options.hostname, conf.initial_title, version }),
+            .after_title => fmt.allocPrintZ(allocator, "{s}-{s} ~ {s} on {s}", .{ conf.initial_title, version, options.directory, options.hostname }),
+            .not_displayed => fmt.allocPrintZ(allocator, "{s}-{s}", .{conf.initial_title, version}),
         } catch return;
         defer allocator.free(title);
         self.window.set_title(title);

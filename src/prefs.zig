@@ -1,5 +1,6 @@
 const std = @import("std");
 const config = @import("config.zig");
+const version = @import("version.zig").version;
 const VTE = @import("vte");
 const c = VTE.c;
 const gtk = VTE.gtk;
@@ -145,6 +146,10 @@ pub const PrefWidgets = struct {
             .close_button = builder.get_widget("close_button").?.to_button().?,
             .color_buttons = ColorButtons.init(builder).?,
         };
+    }
+
+    fn set_window_title(self: PrefWidgets) void {
+        self.window.set_title("Zterm-" ++ version ++ " ~ Preferences");
     }
 
     fn set_initial_title(self: PrefWidgets) void {
@@ -419,6 +424,7 @@ pub const PrefWidgets = struct {
     }
 
     fn set_values(self: PrefWidgets) void {
+        self.set_window_title();
         self.set_initial_title();
         self.set_title_style();
         self.set_custom_command();

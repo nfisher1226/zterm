@@ -11,6 +11,7 @@ const os = std.os;
 const process = std.process;
 const stderr = std.io.getStdErr().writer();
 const stdout = std.io.getStdOut().writer();
+const version = @import("version.zig").version;
 
 const params = [_]clap.Param(clap.Help){
     clap.parseParam("-h, --help                     Display this help and exit.") catch unreachable,
@@ -27,6 +28,8 @@ pub fn main() !void {
     };
     defer args.deinit();
     if (args.flag("--help")) {
+        try stdout.print("Zterm version {s}\nCopyright 2021 by Nathan Fisher",
+            .{version});
         usage(0);
     }
 

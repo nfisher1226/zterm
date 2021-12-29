@@ -20,7 +20,7 @@ INSTALL_OBJS  += $(ICONDIR)/$(PROGNAME).svg
 all: $(PROGNAME)
 
 $(PROGNAME): $(SRCS)
-	gyro build -Drelease-safe=true
+	$(BUILD_CMD) build -Drelease-safe=true
 
 install: $(INSTALL_OBJS)
 
