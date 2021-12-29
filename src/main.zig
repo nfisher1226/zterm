@@ -28,7 +28,7 @@ pub fn main() !void {
     };
     defer args.deinit();
     if (args.flag("--help")) {
-        try stdout.print("Zterm version {s}\nCopyright 2021 by Nathan Fisher",
+        try stdout.print("Zterm version {s}\nCopyright 2021 by Nathan Fisher\n\n",
             .{version});
         usage(0);
     }

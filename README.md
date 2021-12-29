@@ -14,10 +14,6 @@ Zterm is a simple terminal emulator using Vte and Gtk+ writting using the
 works including opening and closing terminals in tabs and panes, giving it a
 program to run on the command line and setting the title from the command line.
 
-Zterm is under heavy development and currently no settings are saved to disk.
-However, it is possible to set many aspects of the program's behavior at runtime
-such as font, colors, scrollback lines etc.
-
 ## Building
 You will need the Zig compiler, version 0.9.0-dev.256+0134cb021 or above,
 available from [ziglang.org](https://ziglang.org). You will also need
@@ -45,15 +41,15 @@ install -sv zig-out/bin/zterm <directory in your path>
 | Shortcut | Action |
 | -------- | ------ |
 | Ctrl/Shift/T | New Tab |
-| Ctrl/+ | New Pane |
+| Ctrl/Shift/Enter | New Pane |
 | Alt/R | Change Pane Orientation |
 | Alt/[1-9] | Goto [num] Tab |
-| Alt/LeftArrow | Previous Tab |
+| Alt/UpArrow | Previous Tab |
 | Ctrl/PageUp | Previous Tab |
-| Alt/RightArrow | Next Tab |
+| Alt/DownArrow | Next Tab |
 | Ctrl/PageDown | Next Tab |
-| Alt/UpArrow | Next Pane |
-| Alt/DownArrow | Previous Pane |
+| Alt/RightArrow | Next Pane |
+| Alt/LeftArrow | Previous Pane |
 | Ctrl/Shift/Q | Quit |
 
 ## Command line options

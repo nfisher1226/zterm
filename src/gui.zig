@@ -254,6 +254,10 @@ const Gui = struct {
     }
 
     fn connect_accels(self: Gui) void {
+        const new_tab_closure = c.g_cclosure_new(new_tab, null, null);
+        const split_view_closure = c.g_cclosure_new(split_view, null, null);
+        const rotate_view_closure = c.g_cclosure_new(rotate_view, null, null);
+        const quit_closure = c.g_cclosure_new(quit, null, null);
         const tab1_closure = c.g_cclosure_new(goto_tab_1, null, null);
         const tab2_closure = c.g_cclosure_new(goto_tab_2, null, null);
         const tab3_closure = c.g_cclosure_new(goto_tab_3, null, null);
@@ -263,15 +267,69 @@ const Gui = struct {
         const tab7_closure = c.g_cclosure_new(goto_tab_7, null, null);
         const tab8_closure = c.g_cclosure_new(goto_tab_8, null, null);
         const tab9_closure = c.g_cclosure_new(goto_tab_9, null, null);
-        const alt_left_closure = c.g_cclosure_new(goto_prev_pane, null, null);
-        const alt_right_closure = c.g_cclosure_new(goto_next_pane, null, null);
-        const ctrl_page_up_closure = c.g_cclosure_new(goto_prev_tab, null, null);
-        const ctrl_page_down_closure = c.g_cclosure_new(goto_next_tab, null, null);
-        const alt_up_closure = c.g_cclosure_new(goto_prev_tab, null, null);
-        const alt_down_closure = c.g_cclosure_new(goto_next_tab, null, null);
+        const prev_pane_closure = c.g_cclosure_new(goto_prev_pane, null, null);
+        const next_pane_closure = c.g_cclosure_new(goto_next_pane, null, null);
+        const prev_tab_closure = c.g_cclosure_new(goto_prev_tab, null, null);
+        const next_tab_closure = c.g_cclosure_new(goto_next_tab, null, null);
         const copy_closure = c.g_cclosure_new(copy, null, null);
         const paste_closure = c.g_cclosure_new(paste, null, null);
         const accel_group = c.gtk_accel_group_new();
+
+
+        // Check to see if our keyfile exists, and if it does then load it
+        if (config.getConfigDir(allocator)) |dir| {
+            defer allocator.free(dir);
+            const keyfile = fmt.allocPrintZ(allocator, "{s}/keys", .{dir}) catch return;
+            defer allocator.free(keyfile);
+            if (fs.cwd().openFile(keyfile, .{ .read=true, .write=false })) |file| {
+                file.close();
+                c.gtk_accel_map_load(keyfile);
+            } else |_| {}
+        }
+
+        if (self.new_tab.get_accel_path(allocator)) |p| {
+            defer allocator.free(p);
+            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/NewTab", null) == 0) {
+                c.gtk_accel_map_add_entry(p, c.GDK_KEY_T, c.GDK_CONTROL_MASK | c.GDK_SHIFT_MASK);
+            }
+            c.gtk_accel_group_connect_by_path(accel_group, p, new_tab_closure);
+        }
+
+        if (self.split_view.get_accel_path(allocator)) |p| {
+            defer allocator.free(p);
+            if (c.gtk_accel_map_lookup_entry("<Zterm>/SplitView/NewTab", null) == 0) {
+                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Return, c.GDK_CONTROL_MASK | c.GDK_SHIFT_MASK);
+            }
+            c.gtk_accel_group_connect_by_path(accel_group, p, split_view_closure);
+        }
+
+        if (self.rotate_view.get_accel_path(allocator)) |p| {
+            defer allocator.free(p);
+            if (c.gtk_accel_map_lookup_entry("<Zterm>/RotateView/NewTab", null) == 0) {
+                c.gtk_accel_map_add_entry(p, c.GDK_KEY_R, c.GDK_MOD1_MASK);
+            }
+            c.gtk_accel_group_connect_by_path(accel_group, p, rotate_view_closure);
+        }
+
+        if (self.quit_app.get_accel_path(allocator)) |p| {
+            defer allocator.free(p);
+            if (c.gtk_accel_map_lookup_entry("<Zterm>/Quit/NewTab", null) == 0) {
+                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Q, c.GDK_CONTROL_MASK | c.GDK_SHIFT_MASK);
+            }
+            c.gtk_accel_group_connect_by_path(accel_group, p, quit_closure);
+        }
+
+        // if our keyfile doesn't exist, then create it by dumping the accel map
+        if (config.getConfigDir(allocator)) |dir| {
+            defer allocator.free(dir);
+            const keyfile = fmt.allocPrintZ(allocator, "{s}/keys", .{dir}) catch return;
+            defer allocator.free(keyfile);
+            if (fs.cwd().openFile(keyfile, .{ .read=true, .write=false })) |file| {
+                file.close();
+            } else |_| c.gtk_accel_map_save(keyfile);
+        }
+
+
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_1, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab1_closure);
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_2, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab2_closure);
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_3, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab3_closure);
@@ -281,12 +339,10 @@ const Gui = struct {
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_7, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab7_closure);
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_8, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab8_closure);
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_9, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, tab9_closure);
-        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Left, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, alt_left_closure);
-        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Right, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, alt_right_closure);
-        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Page_Up, c.GDK_CONTROL_MASK, c.GTK_ACCEL_LOCKED, ctrl_page_up_closure);
-        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Page_Down, c.GDK_CONTROL_MASK, c.GTK_ACCEL_LOCKED, ctrl_page_down_closure);
-        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Up, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, alt_up_closure);
-        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Down, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, alt_down_closure);
+        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Left, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, prev_pane_closure);
+        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Right, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, next_pane_closure);
+        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Up, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, prev_tab_closure);
+        c.gtk_accel_group_connect(accel_group, c.GDK_KEY_Down, c.GDK_MOD1_MASK, c.GTK_ACCEL_LOCKED, next_tab_closure);
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_C, c.GDK_CONTROL_MASK | c.GDK_SHIFT_MASK, c.GTK_ACCEL_LOCKED, copy_closure);
         c.gtk_accel_group_connect(accel_group, c.GDK_KEY_V, c.GDK_CONTROL_MASK | c.GDK_SHIFT_MASK, c.GTK_ACCEL_LOCKED, paste_closure);
         c.gtk_window_add_accel_group(@ptrCast(*c.GtkWindow, self.window.ptr), accel_group);
@@ -432,6 +488,24 @@ fn split_tab() void {
 
 fn rotate_tab() void {
     if (gui.current_tab()) |t| t.rotate();
+}
+
+// C style closures below
+
+fn new_tab() callconv(.C) void {
+    new_tab_callback();
+}
+
+fn split_view() callconv(.C) void {
+    split_tab();
+}
+
+fn rotate_view() callconv(.C) void {
+    rotate_tab();
+}
+
+fn quit() callconv(.C) void {
+    c.gtk_main_quit();
 }
 
 fn goto_tab_1() callconv(.C) void {
