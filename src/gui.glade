@@ -42,7 +42,7 @@
       <object class="GtkMenuItem" id="paste">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="accel-path">&lt;Zterm&gt;/AppMenu/Copy</property>
+        <property name="accel-path">&lt;Zterm&gt;/AppMenu/Paste</property>
         <property name="label" translatable="yes">Paste</property>
       </object>
     </child>

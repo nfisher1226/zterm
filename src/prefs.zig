@@ -34,7 +34,9 @@ pub const ColorButtons = struct {
     light_cyan_color: gtk.ColorButton,
     white_color: gtk.ColorButton,
 
-    fn init(builder: gtk.Builder) ?ColorButtons {
+    const Self = @This();
+
+    fn init(builder: gtk.Builder) ?Self {
         //var buttons: ColorButtons = undefined;
         //inline for (meta.fields(ColorButtons)) |color| {
         //    const color_name = fmt.allocPrintZ(allocator, "{s}", .{color.name}) catch return null;
@@ -46,7 +48,7 @@ pub const ColorButtons = struct {
         //    } else return null;
         //}
         //return buttons;
-        return ColorButtons{
+        return Self{
             .text_color = builder.get_widget("text_color").?.to_color_button().?,
             .background_color = builder.get_widget("background_color").?.to_color_button().?,
             .black_color = builder.get_widget("black_color").?.to_color_button().?,
@@ -68,7 +70,7 @@ pub const ColorButtons = struct {
         };
     }
 
-    fn get_colors(self: ColorButtons) config.Colors {
+    fn getColors(self: Self) config.Colors {
         var colors = config.Colors.default();
         inline for (meta.fields(config.Colors)) |color| {
             const button = @field(self, color.name);
@@ -78,7 +80,7 @@ pub const ColorButtons = struct {
         return colors;
     }
 
-    fn set_colors(self: ColorButtons) void {
+    fn setColors(self: Self) void {
         const colors = conf.colors;
         inline for (meta.fields(config.Colors)) |color| {
             const button = @field(self, color.name);
@@ -114,8 +116,10 @@ pub const PrefWidgets = struct {
     close_button: gtk.Button,
     color_buttons: ColorButtons,
 
-    fn init(builder: gtk.Builder) PrefWidgets {
-        return PrefWidgets{
+    const Self = @This();
+
+    fn init(builder: gtk.Builder) Self {
+        return Self{
             .window = builder.get_widget("window").?.to_window().?,
             .initial_title_entry = builder.get_widget("initial_title_entry").?.to_entry().?,
             .dynamic_title_combobox = builder.get_widget("dynamic_title_combobox").?.ptr,
@@ -148,24 +152,24 @@ pub const PrefWidgets = struct {
         };
     }
 
-    fn set_window_title(self: PrefWidgets) void {
+    fn setWindowTitle(self: Self) void {
         self.window.set_title("Zterm-" ++ version ++ " ~ Preferences");
     }
 
-    fn set_initial_title(self: PrefWidgets) void {
+    fn setInitialTitle(self: Self) void {
         const buf = self.initial_title_entry.get_buffer();
         const title = fmt.allocPrintZ(allocator, "{s}", .{conf.initial_title}) catch return;
         defer allocator.free(title);
         buf.set_text(title, -1);
     }
 
-    fn get_title_style(self: PrefWidgets) config.DynamicTitleStyle {
+    fn getTitleStyle(self: Self) config.DynamicTitleStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.dynamic_title_combobox));
         const style = config.parse_enum(config.DynamicTitleStyle, id).?;
         return style;
     }
 
-    fn set_title_style(self: PrefWidgets) void {
+    fn setTitleStyle(self: Self) void {
         const box = @ptrCast(*c.GtkComboBox, self.dynamic_title_combobox);
         switch (conf.dynamic_title_style) {
             .replaces_title => _ = c.gtk_combo_box_set_active_id(box, "replaces_title"),
@@ -175,7 +179,7 @@ pub const PrefWidgets = struct {
         }
     }
 
-    fn get_custom_command(self: PrefWidgets) config.CustomCommand {
+    fn getCustomCommand(self: Self) config.CustomCommand {
         const is_custom = self.custom_command_checkbutton.as_toggle_button().get_active();
         if (is_custom) {
             const val = self.custom_command_entry.get_text(allocator);
@@ -185,7 +189,7 @@ pub const PrefWidgets = struct {
         }
     }
 
-    fn set_custom_command(self: PrefWidgets) void {
+    fn setCustomCommand(self: Self) void {
         const command = conf.custom_command;
         const buf = self.custom_command_entry.get_buffer();
         switch (command) {
@@ -208,7 +212,7 @@ pub const PrefWidgets = struct {
         }
     }
 
-    fn get_scrollback(self: PrefWidgets) config.Scrollback {
+    fn getScrollback(self: Self) config.Scrollback {
         const toggle = self.infinite_scrollback_checkbutton.as_toggle_button();
         const spin = @ptrCast(*c.GtkSpinButton, self.scrollback_lines_spinbox);
         if (toggle.get_active()) {
@@ -219,7 +223,7 @@ pub const PrefWidgets = struct {
         }
     }
 
-    fn set_scrollback(self: PrefWidgets) void {
+    fn setScrollback(self: Self) void {
         const scrollback = conf.scrollback;
         const toggle = self.infinite_scrollback_checkbutton.as_toggle_button();
         switch (scrollback) {
@@ -235,7 +239,7 @@ pub const PrefWidgets = struct {
         }
     }
 
-    fn get_font(self: PrefWidgets) config.Font {
+    fn getFont(self: Self) config.Font {
         const toggle = self.system_font_checkbutton.as_toggle_button();
         const chooser = @ptrCast(*c.GtkFontChooser, self.font_chooser_button);
         if (toggle.get_active()) {
@@ -250,7 +254,7 @@ pub const PrefWidgets = struct {
         }
     }
 
-    fn set_font(self: PrefWidgets) void {
+    fn setFont(self: Self) void {
         const toggle = self.system_font_checkbutton.as_toggle_button();
         const chooser = @ptrCast(*c.GtkFontChooser, self.font_chooser_button);
         const font = conf.font;
@@ -274,21 +278,21 @@ pub const PrefWidgets = struct {
         }
     }
 
-    fn get_background_style(self: PrefWidgets) config.BackgroundStyle {
+    fn getBackgroundStyle(self: Self) config.BackgroundStyle {
         const box = @ptrCast(*c.GtkComboBox, self.background_style_combobox);
         const id = c.gtk_combo_box_get_active_id(box);
         const style = config.parse_enum(config.BackgroundStyle, id).?;
         return style;
     }
 
-    fn get_image_style(self: PrefWidgets) config.ImageStyle {
+    fn getImageStyle(self: PrefWidgets) config.ImageStyle {
         const box = @ptrCast(*c.GtkComboBox, self.background_image_style_combobox);
         const id = c.gtk_combo_box_get_active_id(box);
         const style = config.parse_enum(config.ImageStyle, id).?;
         return style;
     }
 
-    fn set_image_style(self: PrefWidgets, image: config.BackgroundImage) void {
+    fn setImageStyle(self: Self, image: config.BackgroundImage) void {
         const style = image.style;
         const box = @ptrCast(*c.GtkComboBox, self.background_image_style_combobox);
         switch (style) {
@@ -299,21 +303,21 @@ pub const PrefWidgets = struct {
         }
     }
 
-    fn get_background_image(self: PrefWidgets) ?config.BackgroundImage {
+    fn getBackgroundImage(self: Self) ?config.BackgroundImage {
         const button = @ptrCast(*c.GtkFileChooser, self.background_image_file_button);
         const val = c.gtk_file_chooser_get_filename(button);
         if (val == null) {
             return null;
         }
         const len = mem.len(val);
-        const style = self.get_image_style();
+        const style = self.getImageStyle();
         return config.BackgroundImage{
             .file = val[0..len],
             .style = style,
         };
     }
 
-    fn set_background_image(self: PrefWidgets, image: config.BackgroundImage) void {
+    fn setBackgroundImage(self: Self, image: config.BackgroundImage) void {
         // stub
         const button = @ptrCast(*c.GtkFileChooser, self.background_image_file_button);
         const file = fmt.allocPrintZ(allocator, "{s}", .{image.file}) catch |e| {
@@ -322,17 +326,17 @@ pub const PrefWidgets = struct {
         };
         defer allocator.free(file);
         _ = c.gtk_file_chooser_set_filename(button, file);
-        self.set_image_style(image);
+        self.setImageStyle(image);
     }
 
-    fn get_background(self: PrefWidgets) config.Background {
-        const style = self.get_background_style();
+    fn getBackground(self: Self) config.Background {
+        const style = self.getBackgroundStyle();
         switch (style) {
             .solid_color => {
                 return config.Background.solid_color;
             },
             .image => {
-                if (self.get_background_image()) |img| {
+                if (self.getBackgroundImage()) |img| {
                     return config.Background{ .image = img };
                 } else {
                     return config.Background.default();
@@ -345,11 +349,11 @@ pub const PrefWidgets = struct {
         }
     }
 
-    fn set_transparency(self: PrefWidgets, percent: f64) void {
+    fn setTransparency(self: Self, percent: f64) void {
         self.background_opacity_adjustment.set_value(percent);
     }
 
-    fn set_background(self: PrefWidgets) void {
+    fn setBackground(self: Self) void {
         const bg = conf.background;
         switch (bg) {
             .solid_color => {
@@ -367,7 +371,7 @@ pub const PrefWidgets = struct {
                     @ptrCast(*c.GtkComboBox, self.background_style_combobox),
                     "image",
                 );
-                self.set_background_image(img);
+                self.setBackgroundImage(img);
             },
             .transparent => |percent| {
                 self.background_image_grid.hide();
@@ -376,63 +380,63 @@ pub const PrefWidgets = struct {
                     @ptrCast(*c.GtkComboBox, self.background_style_combobox),
                     "transparent",
                 );
-                self.set_transparency(percent);
+                self.setTransparency(percent);
             },
         }
     }
 
-    fn get_cursor_style(self: PrefWidgets) config.CursorStyle {
+    fn getCursorStyle(self: Self) config.CursorStyle {
         const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, self.cursor_style_combobox));
         const style = config.parse_enum(config.CursorStyle, id).?;
         return style;
     }
 
-    fn get_cursor(self: PrefWidgets) config.Cursor {
-        const style = self.get_cursor_style();
+    fn getCursor(self: Self) config.Cursor {
+        const style = self.getCursorStyle();
         const blinks = self.cursor_blinks_checkbutton.as_toggle_button().get_active();
         return config.Cursor{
-            .cursor_style = style,
-            .cursor_blinks = blinks,
+            .style = style,
+            .blinks = blinks,
         };
     }
 
-    fn set_cursor(self: PrefWidgets) void {
-        if (conf.cursor.cursor_blinks) {
+    fn setCursor(self: Self) void {
+        if (conf.cursor.blinks) {
             self.cursor_blinks_checkbutton.as_toggle_button().set_active(true);
         } else {
             self.cursor_blinks_checkbutton.as_toggle_button().set_active(false);
         }
         const box = @ptrCast(*c.GtkComboBox, self.cursor_style_combobox);
-        switch (conf.cursor.cursor_style) {
+        switch (conf.cursor.style) {
             .block => _ = c.gtk_combo_box_set_active_id(box, "block"),
             .ibeam => _ = c.gtk_combo_box_set_active_id(box, "ibeam"),
             .underline => _ = c.gtk_combo_box_set_active_id(box, "underline"),
         }
     }
 
-    fn get_config(self: PrefWidgets) config.Config {
+    fn getConfig(self: Self) config.Config {
         return config.Config{
             .initial_title = if (self.initial_title_entry.get_text(allocator)) |t| t else "Zterm",
-            .dynamic_title_style = self.get_title_style(),
-            .custom_command = self.get_custom_command(),
-            .scrollback = self.get_scrollback(),
-            .font = self.get_font(),
-            .background = self.get_background(),
-            .colors = self.color_buttons.get_colors(),
-            .cursor = self.get_cursor(),
+            .dynamic_title_style = self.getTitleStyle(),
+            .custom_command = self.getCustomCommand(),
+            .scrollback = self.getScrollback(),
+            .font = self.getFont(),
+            .background = self.getBackground(),
+            .colors = self.color_buttons.getColors(),
+            .cursor = self.getCursor(),
         };
     }
 
-    fn set_values(self: PrefWidgets) void {
-        self.set_window_title();
-        self.set_initial_title();
-        self.set_title_style();
-        self.set_custom_command();
-        self.set_scrollback();
-        self.set_background();
-        self.color_buttons.set_colors();
-        self.set_font();
-        self.set_cursor();
+    fn setValues(self: Self) void {
+        self.setWindowTitle();
+        self.setInitialTitle();
+        self.setTitleStyle();
+        self.setCustomCommand();
+        self.setScrollback();
+        self.setBackground();
+        self.color_buttons.setColors();
+        self.setFont();
+        self.setCursor();
     }
 };
 
@@ -444,31 +448,31 @@ pub fn run(data: config.Config) ?config.Config {
         return null;
     };
     widgets = PrefWidgets.init(builder);
-    widgets.set_values();
+    widgets.setValues();
 
     widgets.custom_command_checkbutton.as_toggle_button().connect_toggled(
-        @ptrCast(c.GCallback, toggle_custom_command),
+        @ptrCast(c.GCallback, toggleCustomCommand),
         null,
     );
 
     widgets.infinite_scrollback_checkbutton.as_toggle_button().connect_toggled(
-        @ptrCast(c.GCallback, toggle_scrollback),
+        @ptrCast(c.GCallback, toggleScrollback),
         null,
     );
 
     widgets.system_font_checkbutton.as_toggle_button().connect_toggled(
-        @ptrCast(c.GCallback, toggle_font),
+        @ptrCast(c.GCallback, toggleFont),
         null,
     );
 
     _ = gtk.signal_connect(
         widgets.background_style_combobox,
         "changed",
-        @ptrCast(c.GCallback, toggle_background),
+        @ptrCast(c.GCallback, toggleBackground),
         null,
     );
 
-    widgets.close_button.connect_clicked(@ptrCast(c.GCallback, save_and_close), null);
+    widgets.close_button.connect_clicked(@ptrCast(c.GCallback, saveAndClose), null);
 
     const res = c.gtk_dialog_run(@ptrCast(*c.GtkDialog, widgets.window.ptr));
     if (res == -1) {
@@ -480,24 +484,24 @@ pub fn run(data: config.Config) ?config.Config {
     }
 }
 
-fn toggle_custom_command(custom_command_checkbutton: *c.GtkCheckButton) void {
+fn toggleCustomCommand(custom_command_checkbutton: *c.GtkCheckButton) void {
     const state = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, custom_command_checkbutton));
     widgets.custom_command_entry.as_widget().set_sensitive(state);
     widgets.custom_command_label.set_sensitive(state);
 }
 
-fn toggle_scrollback(infinite_scrollback_checkbutton: *c.GtkCheckButton) void {
+fn toggleScrollback(infinite_scrollback_checkbutton: *c.GtkCheckButton) void {
     const state = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, infinite_scrollback_checkbutton));
     widgets.scrollback_lines_label.set_sensitive(!state);
     gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.scrollback_lines_spinbox), !state);
 }
 
-fn toggle_font(system_font_checkbutton: *c.GtkCheckButton) void {
+fn toggleFont(system_font_checkbutton: *c.GtkCheckButton) void {
     const state = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, system_font_checkbutton));
     gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.font_chooser_button), !state);
 }
 
-fn toggle_background(background_combobox: *c.GtkComboBox) void {
+fn toggleBackground(background_combobox: *c.GtkComboBox) void {
     const id = c.gtk_combo_box_get_active_id(@ptrCast(*c.GtkComboBox, background_combobox));
     const style = config.parse_enum(config.BackgroundStyle, id).?;
     switch (style) {
@@ -516,8 +520,8 @@ fn toggle_background(background_combobox: *c.GtkComboBox) void {
     }
 }
 
-fn save_and_close() void {
-    conf = widgets.get_config();
+fn saveAndClose() void {
+    conf = widgets.getConfig();
     widgets.window.close();
     widgets.window.as_widget().destroy();
 }

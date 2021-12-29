@@ -147,19 +147,19 @@ pub const CursorStyle = enum {
 };
 
 pub const Cursor = struct {
-    cursor_style: CursorStyle,
-    cursor_blinks: bool,
+    style: CursorStyle,
+    blinks: bool,
 
     pub fn default() Cursor {
         return Cursor{
-            .cursor_style = CursorStyle.default(),
-            .cursor_blinks = true,
+            .style = CursorStyle.default(),
+            .blinks = true,
         };
     }
 
     pub fn set(self: Cursor, term: *c.VteTerminal) void {
-        self.cursor_style.set(term);
-        if (self.cursor_blinks) {
+        self.style.set(term);
+        if (self.blinks) {
             c.vte_terminal_set_cursor_blink_mode(term, c.VTE_CURSOR_BLINK_ON);
         } else {
             c.vte_terminal_set_cursor_blink_mode(term, c.VTE_CURSOR_BLINK_OFF);
