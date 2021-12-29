@@ -3,6 +3,7 @@ const gui = @import("gui.zig");
 const VTE = @import("vte");
 const c = VTE.c;
 const gtk = VTE.gtk;
+const vte = VTE.vte;
 const known_folders = @import("known-folders");
 const nt = @import("nestedtext");
 const prefs = @import("prefs.zig");
@@ -368,10 +369,24 @@ pub const Config = struct {
     }
 
     fn set_bg(self: Config, term: *c.VteTerminal) void {
+        const t = vte.Terminal{ .ptr = term };
         switch (self.background) {
-            .solid_color => self.colors.set_bg(term),
-            .image => {},
+            .solid_color => {
+                t.set_clear_background(false);
+                self.colors.set_bg(term);
+            },
+            .image => |img| {
+                const file = fs.cwd().openFile(img.file, .{}) catch return;
+                file.close();
+                t.set_clear_background(true);
+                const provider = gui.css_provider;
+                const css_string = fmt.allocPrintZ(allocator,
+                    "Terminal {{\n    background-image: url(\"{s}\")\n}}", .{img.file}) catch return;
+                defer allocator.free(css_string);
+                _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
+            },
             .transparent => |percent| {
+                t.set_clear_background(false);
                 const opacity = percent / 100.0;
                 const rgba = self.colors.background_color.to_gdk_alpha(opacity);
                 c.vte_terminal_set_color_background(term, &rgba);

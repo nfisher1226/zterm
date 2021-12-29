@@ -9,6 +9,7 @@ const allocator = std.heap.page_allocator;
 const fmt = std.fmt;
 const fs = std.fs;
 const hashmap = std.AutoHashMap;
+const mem = std.mem;
 const os = std.os;
 const stderr = std.io.getStdErr().writer();
 const stdout = std.io.getStdOut().writer();
@@ -18,6 +19,7 @@ var gui: Gui = undefined;
 var options: Opts = undefined;
 var tabs: hashmap(u64, Tab) = undefined;
 var terms: hashmap(u64, *c.VteTerminal) = undefined;
+pub var css_provider: *c.GtkCssProvider = undefined;
 
 pub const Opts = struct {
     command: [:0]const u8,
@@ -53,6 +55,7 @@ pub const Tab = struct {
         tab.box.as_widget().show_all();
         gui.notebook.append_page(tab.box.as_widget(), lbox.as_widget());
         gui.notebook.set_tab_label(tab.box.as_widget(), lbox.as_widget());
+        gui.notebook.set_tab_reorderable(tab.box.as_widget(), true);
 
         tab.close_button.connect_clicked(@ptrCast(c.GCallback, close_tab_by_button), @ptrCast(c.gpointer, tab.box.ptr));
 
@@ -68,6 +71,12 @@ pub const Tab = struct {
                 }
             }
             return null;
+        } else return null;
+    }
+
+    fn term_title(self: Tab, alloc: mem.Allocator) ?[:0]const u8 {
+        if (self.current_term()) |term| {
+            return if (term.get_window_title(alloc)) |s| s else null;
         } else return null;
     }
 
@@ -151,10 +160,17 @@ const Gui = struct {
         };
     }
 
-    fn current_tab(self: Gui) Tab {
+    fn current_tab(self: Gui) ?Tab {
         const num = self.notebook.get_current_page();
-        const box = self.notebook.get_nth_page(num).?;
-        return if (tabs.get(@ptrToInt(box.ptr))) |t| t else unreachable;
+        if (self.notebook.get_nth_page(num)) |box| {
+            return if (tabs.get(@ptrToInt(box.ptr))) |t| t else unreachable;
+        } else return null;
+    }
+
+    fn current_term(self: Gui) ?vte.Terminal {
+        if (self.current_tab()) |tab| {
+            return if (tab.current_term()) |t| t else null;
+        } else return null;
     }
 
     fn nth_tab(self: Gui, num: c_int) void {
@@ -305,6 +321,12 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     const visual = c.gdk_screen_get_rgba_visual(screen);
     if (visual) |v| gui.window.as_widget().set_visual(v);
 
+    css_provider = c.gtk_css_provider_new();
+    c.gtk_style_context_add_provider_for_screen(
+        screen,
+        @ptrCast(*c.GtkStyleProvider, css_provider),
+        c.GTK_STYLE_PROVIDER_PRIORITY_USER);
+
     gui.window.set_title(options.title);
 
     const tab = Tab.init(options.command);
@@ -400,15 +422,15 @@ fn page_removed_callback() void {
 }
 
 fn select_page_callback() void {
-    gui.current_tab().select_page();
+    if (gui.current_tab()) |t| t.select_page();
 }
 
 fn split_tab() void {
-    gui.current_tab().split();
+    if (gui.current_tab()) |t| t.split();
 }
 
 fn rotate_tab() void {
-    gui.current_tab().rotate();
+    if (gui.current_tab()) |t| t.rotate();
 }
 
 fn goto_tab_1() callconv(.C) void {
@@ -456,22 +478,26 @@ fn goto_next_tab() callconv(.C) void {
 }
 
 fn goto_next_pane() callconv(.C) void {
-    gui.current_tab().next_pane();
+    if (gui.current_tab()) |t| t.next_pane();
 }
 
 fn goto_prev_pane() callconv(.C) void {
-    gui.current_tab().prev_pane();
+    if (gui.current_tab()) |t| t.prev_pane();
 }
 
 fn copy() callconv(.C) void {
-    if (gui.current_tab().current_term()) |term| {
-        term.copy_primary();
+    if (gui.current_tab()) |tab| {
+        if (tab.current_term()) |term| {
+            term.copy_primary();
+        }
     }
 }
 
 fn paste() callconv(.C) void {
-    if (gui.current_tab().current_term()) |term| {
-        term.paste_primary();
+    if (gui.current_tab()) |tab| {
+        if (tab.current_term()) |term| {
+            term.paste_primary();
+        }
     }
 }
 
