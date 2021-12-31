@@ -1,5 +1,5 @@
 # Zterm
-![Zterm icon](https://hitchhiker-linux.org/assets/zterm-256.png)
+![Zterm icon](data/zterm.svg)
 <br />
 Contents
 ========

@@ -9,6 +9,7 @@ SRCS          += config.zig
 SRCS          += gui.zig
 SRCS          += main.zig
 SRCS          += prefs.zig
+SRCS          += version.zig
 SRCS          += gui.glade
 SRCS          += prefs.glade
 INSTALLDIRS   += $(XDGDIR)

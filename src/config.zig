@@ -35,7 +35,7 @@ pub fn getConfigDir(alloc: mem.Allocator) ?[]const u8 {
     }
 }
 
-fn getConfigDirHandle(dir: []const u8) ?std.fs.Dir {
+pub fn getConfigDirHandle(dir: []const u8) ?std.fs.Dir {
     defer allocator.free(dir);
     if (fs.openDirAbsolute(dir, .{})) |d| {
             return d;
@@ -67,14 +67,25 @@ pub fn getConfigFile(alloc: mem.Allocator) ?[]const u8 {
     }
 }
 
+pub fn getKeyFile(alloc: mem.Allocator) ?[]const u8 {
+    const dir = known_folders.getPath(alloc, .local_configuration) catch return null;
+    if (dir) |d| {
+        return path.joinZ(alloc, &[_][]const u8{ d, "zterm/keys" }) catch return null;
+    } else {
+        return if (os.getenv("HOME")) |h| path.joinZ(alloc, &[_][]const u8{ h, ".config/zterm/keys" }) catch return null else null;
+    }
+}
+
 pub const DynamicTitleStyle = enum {
     replaces_title,
     before_title,
     after_title,
     not_displayed,
 
-    pub fn default() DynamicTitleStyle {
-        return DynamicTitleStyle.after_title;
+    const Self = @This();
+
+    pub fn default() Self {
+        return Self.after_title;
     }
 };
 
@@ -82,8 +93,10 @@ pub const CustomCommand = union(enum) {
     none,
     command: []const u8,
 
-    pub fn default() CustomCommand {
-        return CustomCommand.none;
+    const Self = @This();
+
+    pub fn default() Self {
+        return Self.none;
     }
 };
 
@@ -91,11 +104,13 @@ pub const Scrollback = union(enum) {
     finite: f64,
     infinite,
 
-    pub fn default() Scrollback {
-        return Scrollback{ .finite = 1500 };
+    const Self = @This();
+
+    pub fn default() Self {
+        return Self{ .finite = 1500 };
     }
 
-    pub fn set(self: Scrollback, term: *c.VteTerminal) void {
+    pub fn set(self: Self, term: *c.VteTerminal) void {
         switch (self) {
             .finite => |v| c.vte_terminal_set_scrollback_lines(term, @floatToInt(c_long, v)),
             .infinite => c.vte_terminal_set_scrollback_lines(term, -1),
@@ -107,11 +122,13 @@ pub const Font = union(enum) {
     system,
     custom: []const u8,
 
-    pub fn default() Font {
-        return Font.system;
+    const Self = @This();
+
+    pub fn default() Self {
+        return Self.system;
     }
 
-    fn set(self: Font, term: *c.VteTerminal) void {
+    fn set(self: Self, term: *c.VteTerminal) void {
         switch (self) {
             .system => c.vte_terminal_set_font(term, null),
             .custom => |v| {
@@ -133,11 +150,13 @@ pub const CursorStyle = enum {
     ibeam,
     underline,
 
-    pub fn default() CursorStyle {
-        return CursorStyle.block;
+    const Self = @This();
+
+    pub fn default() Self {
+        return Self.block;
     }
 
-    fn set(self: CursorStyle, term: *c.VteTerminal) void {
+    fn set(self: Self, term: *c.VteTerminal) void {
         switch (self) {
             .block => c.vte_terminal_set_cursor_shape(term, c.VTE_CURSOR_SHAPE_BLOCK),
             .ibeam => c.vte_terminal_set_cursor_shape(term, c.VTE_CURSOR_SHAPE_IBEAM),
@@ -150,8 +169,10 @@ pub const Cursor = struct {
     style: CursorStyle,
     blinks: bool,
 
-    pub fn default() Cursor {
-        return Cursor{
+    const Self = @This();
+
+    pub fn default() Self {
+        return Self{
             .style = CursorStyle.default(),
             .blinks = true,
         };
@@ -172,8 +193,10 @@ pub const BackgroundStyle = enum {
     image,
     transparent,
 
-    pub fn default() BackgroundStyle {
-        return BackgroundStyle.solid_color;
+    const Self = @This();
+
+    pub fn default() Self {
+        return Self.solid_color;
     }
 };
 
@@ -183,8 +206,10 @@ pub const ImageStyle = enum {
     scaled,
     stretched,
 
-    pub fn default() ImageStyle {
-        return ImageStyle.tiled;
+    const Self = @This();
+
+    pub fn default() Self {
+        return Self.tiled;
     }
 };
 
@@ -198,8 +223,10 @@ pub const Background = union(BackgroundStyle) {
     image: BackgroundImage,
     transparent: f64,
 
-    pub fn default() Background {
-        return Background.solid_color;
+    const Self = @This();
+
+    pub fn default() Self {
+        return Self.solid_color;
     }
 };
 

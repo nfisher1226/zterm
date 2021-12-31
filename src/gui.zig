@@ -4,8 +4,13 @@ const gtk = VTE.gtk;
 const vte = VTE.vte;
 const std = @import("std");
 const config = @import("config.zig");
+const keys = @import("keys.zig");
+const menus = @import("menus.zig");
 const prefs = @import("prefs.zig");
 const version = @import("version.zig").version;
+const Keys = keys.Keys;
+const Menu = menus.Menu;
+const Nav = menus.Nav;
 const allocator = std.heap.page_allocator;
 const fmt = std.fmt;
 const fs = std.fs;
@@ -140,192 +145,6 @@ pub const Tab = struct {
     }
 };
 
-const Menu = struct {
-    new_tab: gtk.MenuItem,
-    split_view: gtk.MenuItem,
-    rotate_view: gtk.MenuItem,
-    copy: gtk.MenuItem,
-    paste: gtk.MenuItem,
-    preferences: gtk.MenuItem,
-    close_tab: gtk.MenuItem,
-    quit: gtk.MenuItem,
-
-    const Self = @This();
-
-    fn init(builder: gtk.Builder) Self {
-        return Self{
-            .new_tab = builder.get_widget("new_tab").?.to_menu_item().?,
-            .split_view = builder.get_widget("split_view").?.to_menu_item().?,
-            .rotate_view = builder.get_widget("rotate_view").?.to_menu_item().?,
-            .copy = builder.get_widget("copy").?.to_menu_item().?,
-            .paste = builder.get_widget("paste").?.to_menu_item().?,
-            .preferences = builder.get_widget("preferences").?.to_menu_item().?,
-            .close_tab = builder.get_widget("close_tab").?.to_menu_item().?,
-            .quit = builder.get_widget("quit_app").?.to_menu_item().?,
-        };
-    }
-
-    fn setAccels(self: Self) void {
-        _ = self;
-    }
-};
-
-const Nav = struct {
-    prev_pane: gtk.MenuItem,
-    next_pane: gtk.MenuItem,
-    prev_tab: gtk.MenuItem,
-    next_tab: gtk.MenuItem,
-    tab1: gtk.MenuItem,
-    tab2: gtk.MenuItem,
-    tab3: gtk.MenuItem,
-    tab4: gtk.MenuItem,
-    tab5: gtk.MenuItem,
-    tab6: gtk.MenuItem,
-    tab7: gtk.MenuItem,
-    tab8: gtk.MenuItem,
-    tab9: gtk.MenuItem,
-
-    const Self = @This();
-
-    fn init(builder: gtk.Builder) Self {
-        return Self{
-            .prev_pane = builder.get_widget("prev_pane").?.to_menu_item().?,
-            .next_pane = builder.get_widget("next_pane").?.to_menu_item().?,
-            .prev_tab = builder.get_widget("prev_tab").?.to_menu_item().?,
-            .next_tab = builder.get_widget("next_tab").?.to_menu_item().?,
-            .tab1 = builder.get_widget("tab_1").?.to_menu_item().?,
-            .tab2 = builder.get_widget("tab_2").?.to_menu_item().?,
-            .tab3 = builder.get_widget("tab_3").?.to_menu_item().?,
-            .tab4 = builder.get_widget("tab_4").?.to_menu_item().?,
-            .tab5 = builder.get_widget("tab_5").?.to_menu_item().?,
-            .tab6 = builder.get_widget("tab_6").?.to_menu_item().?,
-            .tab7 = builder.get_widget("tab_7").?.to_menu_item().?,
-            .tab8 = builder.get_widget("tab_8").?.to_menu_item().?,
-            .tab9 = builder.get_widget("tab_9").?.to_menu_item().?,
-        };
-    }
-
-    fn setAccels(self: Self, accel_group: *c.GtkAccelGroup) void {
-        const tab1_closure = c.g_cclosure_new(goto_tab_1, null, null);
-        const tab2_closure = c.g_cclosure_new(goto_tab_2, null, null);
-        const tab3_closure = c.g_cclosure_new(goto_tab_3, null, null);
-        const tab4_closure = c.g_cclosure_new(goto_tab_4, null, null);
-        const tab5_closure = c.g_cclosure_new(goto_tab_5, null, null);
-        const tab6_closure = c.g_cclosure_new(goto_tab_6, null, null);
-        const tab7_closure = c.g_cclosure_new(goto_tab_7, null, null);
-        const tab8_closure = c.g_cclosure_new(goto_tab_8, null, null);
-        const tab9_closure = c.g_cclosure_new(goto_tab_9, null, null);
-        const prev_pane_closure = c.g_cclosure_new(goto_prev_pane, null, null);
-        const next_pane_closure = c.g_cclosure_new(goto_next_pane, null, null);
-        const prev_tab_closure = c.g_cclosure_new(goto_prev_tab, null, null);
-        const next_tab_closure = c.g_cclosure_new(goto_next_tab, null, null);
-
-        if (self.tab1.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab1", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_1, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab1_closure);
-        }
-
-        if (self.tab2.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab2", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_2, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab2_closure);
-        }
-
-        if (self.tab3.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab3", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_3, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab3_closure);
-        }
-
-        if (self.tab4.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab4", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_4, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab4_closure);
-        }
-
-        if (self.tab5.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab5", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_5, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab5_closure);
-        }
-
-        if (self.tab6.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab6", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_6, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab6_closure);
-        }
-
-        if (self.tab7.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab7", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_7, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab7_closure);
-        }
-
-        if (self.tab8.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab8", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_8, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab8_closure);
-        }
-
-        if (self.tab9.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab9", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_9, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab9_closure);
-        }
-
-        if (self.prev_pane.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/PrevPane", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Left, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, prev_pane_closure);
-        }
-
-        if (self.next_pane.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/NextPane", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Right, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, next_pane_closure);
-        }
-
-        if (self.prev_tab.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/PrevTab", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Up, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, prev_tab_closure);
-        }
-
-        if (self.next_tab.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/NextTab", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Down, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, next_tab_closure);
-        }
-    }
-};
-
 const Gui = struct {
     window: gtk.Window,
     notebook: gtk.Notebook,
@@ -445,15 +264,28 @@ const Gui = struct {
         const accel_group = c.gtk_accel_group_new();
 
         // Check to see if our keyfile exists, and if it does then load it
-        if (config.getConfigDir(allocator)) |dir| {
-            defer allocator.free(dir);
-            const keyfile = fmt.allocPrintZ(allocator, "{s}/keys", .{dir}) catch return;
-            defer allocator.free(keyfile);
-            if (fs.cwd().openFile(keyfile, .{ .read=true, .write=false })) |file| {
-                file.close();
-                c.gtk_accel_map_load(keyfile);
+        if (config.getKeyFile(allocator)) |file| {
+            defer allocator.free(file);
+            if (fs.cwd().openFile(file, .{ .read=true, .write=false })) |f| {
+                f.close();
+                c.gtk_accel_map_load(@ptrCast([*c]const u8, file));
             } else |_| {}
         }
+
+        // Check to see if our keyfile exists, and if it doesn't then create it
+        // from the defaults
+        const bindings: Keys = if (keys.getKeyFile(allocator)) |file| kblk: {
+            defer allocator.free(file);
+            if (fs.cwd().openFile(file, .{ .read=true, .write=false })) |f| {
+                defer f.close();
+                break :kblk if (Keys.fromFile(f)) |k| k else Keys.default();
+            } else |_| {
+                const k = Keys.default();
+                Keys.save(k);
+                break :kblk k;
+            }
+        } else Keys.default();
+        std.debug.print("Keybindings: {s}", .{bindings});
 
         if (self.menu.new_tab.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
@@ -506,13 +338,11 @@ const Gui = struct {
         self.nav.setAccels(accel_group);
 
         // if our keyfile doesn't exist, then create it by dumping the accel map
-        if (config.getConfigDir(allocator)) |dir| {
-            defer allocator.free(dir);
-            const keyfile = fmt.allocPrintZ(allocator, "{s}/keys", .{dir}) catch return;
-            defer allocator.free(keyfile);
-            if (fs.cwd().openFile(keyfile, .{ .read=true, .write=false })) |file| {
-                file.close();
-            } else |_| c.gtk_accel_map_save(keyfile);
+        if (config.getKeyFile(allocator)) |file| {
+            defer allocator.free(file);
+            if (fs.cwd().openFile(file, .{ .read=true, .write=false })) |f| {
+                f.close();
+            } else |_| c.gtk_accel_map_save(@ptrCast([*c]const u8, file));
         }
         c.gtk_window_add_accel_group(@ptrCast(*c.GtkWindow, self.window.ptr), accel_group);
     }
@@ -661,75 +491,75 @@ fn rotate_tab() void {
 
 // C style closures below
 
-fn new_tab() callconv(.C) void {
+pub fn new_tab() callconv(.C) void {
     new_tab_callback();
 }
 
-fn split_view() callconv(.C) void {
+pub fn split_view() callconv(.C) void {
     split_tab();
 }
 
-fn rotate_view() callconv(.C) void {
+pub fn rotate_view() callconv(.C) void {
     rotate_tab();
 }
 
-fn quit() callconv(.C) void {
+pub fn quit() callconv(.C) void {
     c.gtk_main_quit();
 }
 
-fn goto_tab_1() callconv(.C) void {
+pub fn goto_tab_1() callconv(.C) void {
     gui.nthTab(0);
 }
 
-fn goto_tab_2() callconv(.C) void {
+pub fn goto_tab_2() callconv(.C) void {
     gui.nthTab(1);
 }
 
-fn goto_tab_3() callconv(.C) void {
+pub fn goto_tab_3() callconv(.C) void {
     gui.nthTab(2);
 }
 
-fn goto_tab_4() callconv(.C) void {
+pub fn goto_tab_4() callconv(.C) void {
     gui.nthTab(3);
 }
 
-fn goto_tab_5() callconv(.C) void {
+pub fn goto_tab_5() callconv(.C) void {
     gui.nthTab(4);
 }
 
-fn goto_tab_6() callconv(.C) void {
+pub fn goto_tab_6() callconv(.C) void {
     gui.nthTab(5);
 }
 
-fn goto_tab_7() callconv(.C) void {
+pub fn goto_tab_7() callconv(.C) void {
     gui.nthTab(6);
 }
 
-fn goto_tab_8() callconv(.C) void {
+pub fn goto_tab_8() callconv(.C) void {
     gui.nthTab(7);
 }
 
-fn goto_tab_9() callconv(.C) void {
+pub fn goto_tab_9() callconv(.C) void {
     gui.nthTab(8);
 }
 
-fn goto_prev_tab() callconv(.C) void {
+pub fn goto_prev_tab() callconv(.C) void {
     gui.prevTab();
 }
 
-fn goto_next_tab() callconv(.C) void {
+pub fn goto_next_tab() callconv(.C) void {
     gui.nextTab();
 }
 
-fn goto_next_pane() callconv(.C) void {
+pub fn goto_next_pane() callconv(.C) void {
     if (gui.currentTab()) |t| t.nextPane();
 }
 
-fn goto_prev_pane() callconv(.C) void {
+pub fn goto_prev_pane() callconv(.C) void {
     if (gui.currentTab()) |t| t.prevPane();
 }
 
-fn copy() callconv(.C) void {
+pub fn copy() callconv(.C) void {
     if (gui.currentTab()) |tab| {
         if (tab.currentTerm()) |term| {
             term.copy_primary();
@@ -737,7 +567,7 @@ fn copy() callconv(.C) void {
     }
 }
 
-fn paste() callconv(.C) void {
+pub fn paste() callconv(.C) void {
     if (gui.currentTab()) |tab| {
         if (tab.currentTerm()) |term| {
             term.paste_primary();
@@ -745,7 +575,7 @@ fn paste() callconv(.C) void {
     }
 }
 
-fn run_prefs() void {
+pub fn run_prefs() void {
     if (prefs.run(conf)) |newconf| {
         conf = newconf;
         gui.applySettings();
