@@ -399,7 +399,7 @@ pub const Config = struct {
                 t.set_clear_background(false);
                 const provider = gui.css_provider;
                 const css_string = fmt.allocPrintZ(allocator,
-                    "notebook {{\n    background-image: url(\"{s}\")\n}}", .{img.file}) catch return;
+                    ".workview stack {{\n    background-image: url(\"{s}\")\n}}", .{img.file}) catch return;
                 defer allocator.free(css_string);
                 _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
             },

@@ -73,6 +73,7 @@ effect.
 ## Roadmap
 - [x] Preferences dialog
 - [ ] Finish implementing all preferences
+  - [ ] Background image - status can set image, cannot set style
 - [x] User editable keybindings
 - [ ] Dialog to set keybindings
 - [ ] Set tab title based on running program / current directory

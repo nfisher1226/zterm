@@ -248,6 +248,9 @@
             <property name="tab-fill">False</property>
           </packing>
         </child>
+        <style>
+          <class name="workview"/>
+        </style>
       </object>
     </child>
   </object>
