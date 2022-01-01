@@ -95,6 +95,23 @@ pub const Views = struct {
     }
 };
 
+pub const Accel = struct {
+    key: c_uint,
+    mods: c.GdkModifierType,
+
+    const Self = @This();
+
+    pub fn parse(accel: []const u8) Self {
+        var key: c_uint = undefined;
+        var mods: c.GdkModifierType = undefined;
+        c.gtk_accelerator_parse(@ptrCast([*c]const u8, accel.ptr), &key, &mods);
+        return Self{
+            .key = key,
+            .mods = mods,
+        };
+    }
+};
+
 pub const Keys = struct {
     actions: Actions,
     tabs: Tabs,
@@ -119,7 +136,48 @@ pub const Keys = struct {
         return keys;
     }
 
-    pub fn save(self: Keys) void {
+    pub fn load(self: Self) void {
+        var accel = Accel.parse(self.actions.copy);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Copy", accel.key, accel.mods);
+        accel = Accel.parse(self.actions.paste);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Paste", accel.key, accel.mods);
+        accel = Accel.parse(self.actions.quit);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Quit", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.new_tab);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/NewTab", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.prev_tab);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/PrevTab", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.next_tab);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/NextTab", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.tab1);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab1", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.tab2);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab2", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.tab3);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab3", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.tab4);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab4", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.tab5);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab5", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.tab6);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab6", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.tab7);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab7", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.tab8);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab8", accel.key, accel.mods);
+        accel = Accel.parse(self.tabs.tab9);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab9", accel.key, accel.mods);
+        accel = Accel.parse(self.views.split_view);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/SplitView", accel.key, accel.mods);
+        accel = Accel.parse(self.views.rotate_view);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/RotateView", accel.key, accel.mods);
+        accel = Accel.parse(self.views.prev_view);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/PrevPane", accel.key, accel.mods);
+        accel = Accel.parse(self.views.next_view);
+        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/NextPane", accel.key, accel.mods);
+    }
+
+    pub fn save(self: Self) void {
         if (config.getConfigDir(allocator)) |dir| {
             const tree = nt.fromArbitraryType(allocator, self) catch return;
             defer tree.deinit();

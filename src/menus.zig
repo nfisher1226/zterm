@@ -5,6 +5,9 @@ const vte = VTE.vte;
 const std = @import("std");
 const allocator = std.heap.page_allocator;
 const gui = @import("gui.zig");
+const k = @import("keys.zig");
+const Accel = k.Accel;
+const Keys = k.Keys;
 
 pub const Menu = struct {
     new_tab: gtk.MenuItem,
@@ -31,8 +34,57 @@ pub const Menu = struct {
         };
     }
 
-    pub fn setAccels(self: Self) void {
-        _ = self;
+    pub fn setAccels(self: Self, accel_group: *c.GtkAccelGroup, keys: Keys) void {
+        const new_tab_closure = c.g_cclosure_new(gui.new_tab, null, null);
+        const split_view_closure = c.g_cclosure_new(gui.split_view, null, null);
+        const rotate_view_closure = c.g_cclosure_new(gui.rotate_view, null, null);
+        const copy_closure = c.g_cclosure_new(gui.copy, null, null);
+        const paste_closure = c.g_cclosure_new(gui.paste, null, null);
+        const quit_closure = c.g_cclosure_new(gui.quit, null, null);
+
+        var accel: Accel = undefined;
+
+        if (self.new_tab.get_accel_path(allocator)) |p| {
+            defer allocator.free(p);
+            accel = Accel.parse(keys.tabs.new_tab);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p, new_tab_closure);
+        }
+
+        if (self.split_view.get_accel_path(allocator)) |p| {
+            defer allocator.free(p);
+            accel = Accel.parse(keys.views.split_view);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p, split_view_closure);
+        }
+
+        if (self.rotate_view.get_accel_path(allocator)) |p| {
+            defer allocator.free(p);
+            accel = Accel.parse(keys.views.rotate_view);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p, rotate_view_closure);
+        }
+
+        if (self.copy.get_accel_path(allocator)) |p| {
+            defer allocator.free(p);
+            accel = Accel.parse(keys.actions.copy);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p, copy_closure);
+        }
+
+        if (self.paste.get_accel_path(allocator)) |p| {
+            defer allocator.free(p);
+            accel = Accel.parse(keys.actions.paste);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p, paste_closure);
+        }
+
+        if (self.quit.get_accel_path(allocator)) |p| {
+            defer allocator.free(p);
+            accel = Accel.parse(keys.actions.quit);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p, quit_closure);
+        }
     }
 };
 
@@ -71,7 +123,7 @@ pub const Nav = struct {
         };
     }
 
-    pub fn setAccels(self: Self, accel_group: *c.GtkAccelGroup) void {
+    pub fn setAccels(self: Self, accel_group: *c.GtkAccelGroup, keys: Keys) void {
         const tab1_closure = c.g_cclosure_new(gui.goto_tab_1, null, null);
         const tab2_closure = c.g_cclosure_new(gui.goto_tab_2, null, null);
         const tab3_closure = c.g_cclosure_new(gui.goto_tab_3, null, null);
@@ -86,107 +138,96 @@ pub const Nav = struct {
         const prev_tab_closure = c.g_cclosure_new(gui.goto_prev_tab, null, null);
         const next_tab_closure = c.g_cclosure_new(gui.goto_next_tab, null, null);
 
+        var accel: Accel = undefined;
+
         if (self.tab1.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab1", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_1, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.tabs.tab1);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, tab1_closure);
         }
 
         if (self.tab2.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab2", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_2, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.tabs.tab2);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, tab2_closure);
         }
 
         if (self.tab3.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab3", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_3, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.tabs.tab3);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, tab3_closure);
         }
 
         if (self.tab4.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab4", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_4, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.tabs.tab4);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, tab4_closure);
         }
 
         if (self.tab5.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab5", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_5, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.tabs.tab5);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, tab5_closure);
         }
 
         if (self.tab6.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab6", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_6, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.tabs.tab6);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, tab6_closure);
         }
 
         if (self.tab7.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab7", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_7, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.tabs.tab7);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, tab7_closure);
         }
 
         if (self.tab8.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab8", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_8, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.tabs.tab8);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, tab8_closure);
         }
 
         if (self.tab9.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/Tab9", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_9, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.tabs.tab9);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, tab9_closure);
         }
 
         if (self.prev_pane.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/PrevPane", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Left, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.views.prev_view);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, prev_pane_closure);
         }
 
         if (self.next_pane.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/NextPane", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Right, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.views.next_view);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, next_pane_closure);
         }
 
         if (self.prev_tab.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/PrevTab", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Up, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.tabs.prev_tab);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, prev_tab_closure);
         }
 
         if (self.next_tab.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Nav/NextTab", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Down, c.GDK_MOD1_MASK);
-            }
+            accel = Accel.parse(keys.tabs.next_tab);
+            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
             c.gtk_accel_group_connect_by_path(accel_group, p, next_tab_closure);
         }
     }

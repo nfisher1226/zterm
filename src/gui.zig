@@ -255,23 +255,6 @@ const Gui = struct {
     }
 
     fn connectAccels(self: Self) void {
-        const new_tab_closure = c.g_cclosure_new(new_tab, null, null);
-        const split_view_closure = c.g_cclosure_new(split_view, null, null);
-        const rotate_view_closure = c.g_cclosure_new(rotate_view, null, null);
-        const copy_closure = c.g_cclosure_new(copy, null, null);
-        const paste_closure = c.g_cclosure_new(paste, null, null);
-        const quit_closure = c.g_cclosure_new(quit, null, null);
-        const accel_group = c.gtk_accel_group_new();
-
-        // Check to see if our keyfile exists, and if it does then load it
-        if (config.getKeyFile(allocator)) |file| {
-            defer allocator.free(file);
-            if (fs.cwd().openFile(file, .{ .read=true, .write=false })) |f| {
-                f.close();
-                c.gtk_accel_map_load(@ptrCast([*c]const u8, file));
-            } else |_| {}
-        }
-
         // Check to see if our keyfile exists, and if it doesn't then create it
         // from the defaults
         const bindings: Keys = if (keys.getKeyFile(allocator)) |file| kblk: {
@@ -285,65 +268,10 @@ const Gui = struct {
                 break :kblk k;
             }
         } else Keys.default();
-        std.debug.print("Keybindings: {s}", .{bindings});
 
-        if (self.menu.new_tab.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/NewTab", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_T, c.GDK_CONTROL_MASK | c.GDK_SHIFT_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, new_tab_closure);
-        }
-
-        if (self.menu.split_view.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/SplitView/NewTab", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Return, c.GDK_CONTROL_MASK | c.GDK_SHIFT_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, split_view_closure);
-        }
-
-        if (self.menu.rotate_view.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/RotateView/NewTab", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_R, c.GDK_MOD1_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, rotate_view_closure);
-        }
-
-        if (self.menu.copy.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenut/Copy", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_C, c.GDK_CONTROL_MASK | c.GDK_SHIFT_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, copy_closure);
-        }
-
-        if (self.menu.paste.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Paste", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_V, c.GDK_CONTROL_MASK | c.GDK_SHIFT_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, paste_closure);
-        }
-
-        if (self.menu.quit.get_accel_path(allocator)) |p| {
-            defer allocator.free(p);
-            if (c.gtk_accel_map_lookup_entry("<Zterm>/AppMenu/Quit", null) == 0) {
-                c.gtk_accel_map_add_entry(p, c.GDK_KEY_Q, c.GDK_CONTROL_MASK | c.GDK_SHIFT_MASK);
-            }
-            c.gtk_accel_group_connect_by_path(accel_group, p, quit_closure);
-        }
-
-        self.nav.setAccels(accel_group);
-
-        // if our keyfile doesn't exist, then create it by dumping the accel map
-        if (config.getKeyFile(allocator)) |file| {
-            defer allocator.free(file);
-            if (fs.cwd().openFile(file, .{ .read=true, .write=false })) |f| {
-                f.close();
-            } else |_| c.gtk_accel_map_save(@ptrCast([*c]const u8, file));
-        }
+        const accel_group = c.gtk_accel_group_new();
+        self.menu.setAccels(accel_group, bindings);
+        self.nav.setAccels(accel_group, bindings);
         c.gtk_window_add_accel_group(@ptrCast(*c.GtkWindow, self.window.ptr), accel_group);
     }
 };

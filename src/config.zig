@@ -67,15 +67,6 @@ pub fn getConfigFile(alloc: mem.Allocator) ?[]const u8 {
     }
 }
 
-pub fn getKeyFile(alloc: mem.Allocator) ?[]const u8 {
-    const dir = known_folders.getPath(alloc, .local_configuration) catch return null;
-    if (dir) |d| {
-        return path.joinZ(alloc, &[_][]const u8{ d, "zterm/keys" }) catch return null;
-    } else {
-        return if (os.getenv("HOME")) |h| path.joinZ(alloc, &[_][]const u8{ h, ".config/zterm/keys" }) catch return null else null;
-    }
-}
-
 pub const DynamicTitleStyle = enum {
     replaces_title,
     before_title,
