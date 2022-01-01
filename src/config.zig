@@ -390,21 +390,21 @@ pub const Config = struct {
         const t = vte.Terminal{ .ptr = term };
         switch (self.background) {
             .solid_color => {
-                t.set_clear_background(false);
+                t.set_clear_background(true);
                 self.colors.set_bg(term);
             },
             .image => |img| {
                 const file = fs.cwd().openFile(img.file, .{}) catch return;
                 file.close();
-                t.set_clear_background(true);
+                t.set_clear_background(false);
                 const provider = gui.css_provider;
                 const css_string = fmt.allocPrintZ(allocator,
-                    "Terminal {{\n    background-image: url(\"{s}\")\n}}", .{img.file}) catch return;
+                    "notebook {{\n    background-image: url(\"{s}\")\n}}", .{img.file}) catch return;
                 defer allocator.free(css_string);
                 _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
             },
             .transparent => |percent| {
-                t.set_clear_background(false);
+                t.set_clear_background(true);
                 const opacity = percent / 100.0;
                 const rgba = self.colors.background_color.to_gdk_alpha(opacity);
                 c.vte_terminal_set_color_background(term, &rgba);
