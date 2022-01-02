@@ -398,8 +398,15 @@ pub const Config = struct {
                 file.close();
                 t.set_clear_background(false);
                 const provider = gui.css_provider;
+                const styling = switch (img.style) {
+                    .tiled => "    background-repeat: repeat;\n",
+                    .centered => "   background-position: center;\nbackground-repeat: no-repeat;",
+                    .scaled => "    background-size: contain;\nbackground-repeat: no-repeat;background-position: center;\n",
+                    .stretched => "    background-size: 100% 100%;\n",
+                };
                 const css_string = fmt.allocPrintZ(allocator,
-                    ".workview stack {{\n    background-image: url(\"{s}\")\n}}", .{img.file}) catch return;
+                    ".workview stack {{\n    background-image: url(\"{s}\");\n{s}}}",
+                    .{img.file, styling}) catch return;
                 defer allocator.free(css_string);
                 _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
             },

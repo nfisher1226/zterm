@@ -72,8 +72,10 @@ immediately. Any changes to the `keys.nt` file will require a restart to take
 effect.
 ## Roadmap
 - [x] Preferences dialog
+- [ ] Remove most color handling code and replace with `zig-color` color library
 - [ ] Finish implementing all preferences
-  - [ ] Background image - status can set image, cannot set style
+  - [x] Background image - status can set image, cannot set style
+  - [ ] Expose charset settings
 - [x] User editable keybindings
 - [ ] Dialog to set keybindings
 - [ ] Set tab title based on running program / current directory
