@@ -1,6 +1,6 @@
 2
 git https://github.com/ziglibs/known-folders commit-9db1b99219c767d5e24994b1525273fe4031e464
 git https://github.com/Hejsil/zig-clap commit-cf8a34d11f0520bdf2afc08eda88862597a88b23
-git https://github.com/LewisGaul/zig-nestedtext.git commit-0ab4437fa84628ab153f1c7b2df40bfc76a99568
-git https://codeberg.org/jeang3nie/zig-vte commit-f79e9fe08351ef3f8ba67633707b4efbe3404262
-git https://github.com/LewisGaul/zig-nestedtext.git commit-0ab4437fa84628ab153f1c7b2df40bfc76a99568
+git https://github.com/LewisGaul/zig-nestedtext.git commit-df2e8e794be51586a703e96664aca5405c7f934e
+git https://codeberg.org/jeang3nie/zig-vte commit-24ab07342dde36e881687b0c03befc4811799a7b
+git https://codeberg.org/jeang3nie/zig-color commit-e739ad96ff5ea58809948b87a527c0c511660a23

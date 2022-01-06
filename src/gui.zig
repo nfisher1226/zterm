@@ -218,7 +218,7 @@ const Gui = struct {
                 const opacity = percent / 100.0;
                 self.window.as_widget().set_opacity(opacity);
             },
-            .solid_color, .image => {
+            .solid_color, .image, .gradient => {
                 self.window.as_widget().set_opacity(1.0);
             },
         }

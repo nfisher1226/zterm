@@ -4,6 +4,9 @@ const VTE = @import("vte");
 const c = VTE.c;
 const gtk = VTE.gtk;
 const vte = VTE.vte;
+const col = @import("color");
+const RGBA = col.RGBA;
+const ColorTypeError = col.ColorTypeError;
 const known_folders = @import("known-folders");
 const nt = @import("nestedtext");
 const prefs = @import("prefs.zig");
@@ -183,6 +186,7 @@ pub const BackgroundStyle = enum {
     solid_color,
     image,
     transparent,
+    gradient,
 
     const Self = @This();
 
@@ -213,6 +217,7 @@ pub const Background = union(BackgroundStyle) {
     solid_color: void,
     image: BackgroundImage,
     transparent: f64,
+    gradient: void,
 
     const Self = @This();
 
@@ -263,6 +268,46 @@ pub const RGBColor = struct {
             .green = @intToFloat(f64, self.green) / 255.0,
             .blue = @intToFloat(f64, self.blue) / 255.0,
             .alpha = opacity,
+        };
+    }
+};
+
+pub const Color = union(enum) {
+    rgba: RGBA,
+    hex: []const u8,
+
+    const Self = @This();
+
+    pub fn default() Self {
+        return Self{ .rgba = RGBA.new(u8, 0, 0, 0, 0) catch unreachable };
+    }
+
+    pub fn fromWidget(button: gtk.ColorButton) Self {
+        const rgba = button.as_color_chooser().get_rgba();
+        const color = RGBA.new(f64, rgba.red, rgba.green, rgba.blue, rgba.alpha) catch unreachable;
+        return Self{ .rgba = color.toInt(u8) catch unreachable };
+    }
+
+    pub fn toGdk(self: Self) !c.GdkRGBA {
+        return switch (self) {
+            .rgba => |color| rblk: {
+                const f = try color.toFloat(f64);
+                break :rblk c.GdkRGBA{
+                    .red = f.red,
+                    .green = f.green,
+                    .blue = f.blue,
+                    .alpha = f.alpha,
+                };
+            },
+            .hex => |hex| hblk: {
+                const color = try RGBA.fromHex(f64, hex);
+                break :hblk c.GdkRGBA{
+                    .red = color.red,
+                    .green = color.green,
+                    .blue = color.blue,
+                    .alpha = color.alpha,
+                };
+            },
         };
     }
 };
@@ -424,6 +469,12 @@ pub const Config = struct {
                 const opacity = percent / 100.0;
                 const rgba = self.colors.background_color.to_gdk_alpha(opacity);
                 c.vte_terminal_set_color_background(term, &rgba);
+            },
+            .gradient => {
+                t.set_clear_background(false);
+                const provider = gui.css_provider;
+                const css_string = ".workview stack {\n    background-image: radial-gradient(ellipse at bottom right, #211d1d, #181414 35%, #2d2929 95%, #423d3d);\n    background-size: 100% 100%;\n }";
+                _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
             },
         }
     }

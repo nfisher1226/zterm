@@ -10,3 +10,6 @@ dev_dependencies:
   - src: git https://codeberg.org/jeang3nie/zig-vte branch-loki
     name: vte
     main: lib.zig
+  - src: git https://codeberg.org/jeang3nie/zig-color
+    name: color
+    main: src/lib.zig

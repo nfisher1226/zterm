@@ -2,6 +2,12 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
+  <object class="GtkAdjustment" id="angle_adjustment">
+    <property name="upper">360</property>
+    <property name="value">45</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
   <object class="GtkAdjustment" id="background_opacity_adjustment">
     <property name="upper">100</property>
     <property name="value">90</property>
@@ -16,11 +22,39 @@
       <mime-type>image/svg+xml</mime-type>
     </mime-types>
   </object>
+  <object class="GtkAdjustment" id="gradient_stops_adjustment">
+    <property name="lower">2</property>
+    <property name="upper">4</property>
+    <property name="value">2</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">1</property>
+  </object>
   <object class="GtkAdjustment" id="scollback_lines_adjustment">
     <property name="upper">10000</property>
     <property name="value">1500</property>
     <property name="step-increment">10</property>
     <property name="page-increment">50</property>
+  </object>
+  <object class="GtkAdjustment" id="stop1_adjustment">
+    <property name="upper">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="stop2_adjustment">
+    <property name="upper">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="stop3_adjustment">
+    <property name="upper">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="stop4_adjustment">
+    <property name="upper">100</property>
+    <property name="value">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
   </object>
   <object class="GtkDialog" id="window">
     <property name="can-focus">False</property>
@@ -78,8 +112,6 @@
               <object class="GtkBox">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-left">5</property>
-                <property name="margin-right">5</property>
                 <property name="margin-start">5</property>
                 <property name="margin-end">5</property>
                 <property name="margin-top">5</property>
@@ -840,6 +872,7 @@
                       <item id="solid_color" translatable="yes">Solid Color</item>
                       <item id="image" translatable="yes">Image</item>
                       <item id="transparent" translatable="yes">Transparent Color</item>
+                      <item id="gradient" translatable="yes">Gradient</item>
                     </items>
                   </object>
                   <packing>
@@ -970,10 +1003,489 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkBox" id="gradient_editor">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="margin-start">5</property>
+                <property name="margin-end">5</property>
+                <property name="margin-top">5</property>
+                <property name="margin-bottom">5</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">2</property>
+                <child>
+                  <!-- n-columns=6 n-rows=4 -->
+                  <object class="GtkGrid">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="hexpand">True</property>
+                    <property name="row-spacing">2</property>
+                    <property name="column-spacing">5</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Gradient Type:</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">0</property>
+                        <property name="width">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Start Position:</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">1</property>
+                        <property name="width">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="gradient_kind">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="hexpand">True</property>
+                        <property name="active-id">linear</property>
+                        <items>
+                          <item id="linear" translatable="yes">Linear</item>
+                          <item id="radial" translatable="yes">Radial (circle)</item>
+                          <item id="elliptical" translatable="yes">Radial (ellipse)</item>
+                        </items>
+                      </object>
+                      <packing>
+                        <property name="left-attach">2</property>
+                        <property name="top-attach">0</property>
+                        <property name="width">4</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="gradient_vertical_start">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="active-id">top</property>
+                        <items>
+                          <item id="top" translatable="yes">Top</item>
+                          <item id="right" translatable="yes">Center</item>
+                          <item id="bottom" translatable="yes">Bottom</item>
+                        </items>
+                      </object>
+                      <packing>
+                        <property name="left-attach">2</property>
+                        <property name="top-attach">1</property>
+                        <property name="width">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="gradient_horizontal_start">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="active-id">left</property>
+                        <items>
+                          <item id="left" translatable="yes">Left</item>
+                          <item id="right" translatable="yes">Center</item>
+                          <item id="right" translatable="yes">Right</item>
+                        </items>
+                      </object>
+                      <packing>
+                        <property name="left-attach">4</property>
+                        <property name="top-attach">1</property>
+                        <property name="width">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Stops:</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="gradient_stops">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="input-purpose">digits</property>
+                        <property name="adjustment">gradient_stops_adjustment</property>
+                        <property name="climb-rate">1</property>
+                        <property name="numeric">True</property>
+                        <property name="value">2</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="gradient_stop_selector">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="active-id">stop1</property>
+                        <items>
+                          <item id="stop1" translatable="yes">Stop 1</item>
+                          <item id="stop2" translatable="yes">Stop 2</item>
+                        </items>
+                      </object>
+                      <packing>
+                        <property name="left-attach">2</property>
+                        <property name="top-attach">3</property>
+                        <property name="width">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkStack" id="stops_stack">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <child>
+                          <!-- n-columns=2 n-rows=1 -->
+                          <object class="GtkGrid" id="stop1_grid">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="hexpand">True</property>
+                            <property name="column-spacing">5</property>
+                            <child>
+                              <object class="GtkSpinButton" id="stop1_position">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="hexpand">True</property>
+                                <property name="input-purpose">number</property>
+                                <property name="adjustment">stop1_adjustment</property>
+                                <property name="numeric">True</property>
+                                <property name="update-policy">if-valid</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkColorButton" id="stop1_color">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="use-alpha">True</property>
+                                <property name="rgba">rgb(0,0,0)</property>
+                                <property name="show-editor">True</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="name">page0</property>
+                            <property name="title" translatable="yes">page0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <!-- n-columns=2 n-rows=1 -->
+                          <object class="GtkGrid" id="stop2_grid">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="column-spacing">5</property>
+                            <child>
+                              <object class="GtkColorButton" id="stop2_color">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="rgba">rgb(36,31,49)</property>
+                                <property name="show-editor">True</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="stop2_position">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="input-purpose">number</property>
+                                <property name="adjustment">stop2_adjustment</property>
+                                <property name="numeric">True</property>
+                                <property name="update-policy">if-valid</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="name">page1</property>
+                            <property name="title" translatable="yes">page1</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <!-- n-columns=2 n-rows=1 -->
+                          <object class="GtkGrid" id="stop3_grid">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="column-spacing">5</property>
+                            <child>
+                              <object class="GtkColorButton" id="stop3_color">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="rgba">rgb(61,56,70)</property>
+                                <property name="show-editor">True</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="stop3_position">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="input-purpose">number</property>
+                                <property name="adjustment">stop3_adjustment</property>
+                                <property name="numeric">True</property>
+                                <property name="update-policy">if-valid</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="name">page2</property>
+                            <property name="title" translatable="yes">page2</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <!-- n-columns=2 n-rows=1 -->
+                          <object class="GtkGrid" id="stop4_grid">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="column-spacing">5</property>
+                            <child>
+                              <object class="GtkColorButton" id="stop4_color">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="rgba">rgb(255,255,255)</property>
+                                <property name="show-editor">True</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="stop4_position">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="input-purpose">number</property>
+                                <property name="adjustment">stop4_adjustment</property>
+                                <property name="numeric">True</property>
+                                <property name="update-policy">if-valid</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="name">page3</property>
+                            <property name="title" translatable="yes">page3</property>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="left-attach">4</property>
+                        <property name="top-attach">3</property>
+                        <property name="width">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkStack" id="gradient_direction_stack">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="hexpand">True</property>
+                        <child>
+                          <!-- n-columns=2 n-rows=1 -->
+                          <object class="GtkGrid" id="gradient_edge_grid">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="hexpand">True</property>
+                            <property name="column-spacing">5</property>
+                            <child>
+                              <object class="GtkComboBoxText" id="gradient_vertical_end">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="hexpand">True</property>
+                                <property name="vexpand">True</property>
+                                <property name="active-id">top</property>
+                                <items>
+                                  <item id="top" translatable="yes">Top</item>
+                                  <item id="center" translatable="yes">Center</item>
+                                  <item id="bottom" translatable="yes">Bottom</item>
+                                </items>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="gradient_horizontal_end">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="hexpand">True</property>
+                                <property name="vexpand">True</property>
+                                <property name="active-id">left</property>
+                                <items>
+                                  <item id="left" translatable="yes">Left</item>
+                                  <item id="center" translatable="yes">Center</item>
+                                  <item id="right" translatable="yes">Right</item>
+                                </items>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="name">page1</property>
+                            <property name="title" translatable="yes">page1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <!-- n-columns=2 n-rows=1 -->
+                          <object class="GtkGrid" id="gradient_angle_grid">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="hexpand">True</property>
+                            <property name="column-spacing">5</property>
+                            <child>
+                              <object class="GtkSpinButton" id="gradient_angle">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="halign">start</property>
+                                <property name="adjustment">angle_adjustment</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Degrees:</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="name">page0</property>
+                            <property name="title" translatable="yes">page0</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="left-attach">2</property>
+                        <property name="top-attach">2</property>
+                        <property name="width">4</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="gradient_direction_type">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="active-id">angle</property>
+                        <items>
+                          <item id="angle" translatable="yes">Angle</item>
+                          <item id="edge" translatable="yes">To Edge</item>
+                        </items>
+                      </object>
+                      <packing>
+                        <property name="left-attach">1</property>
+                        <property name="top-attach">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="label" translatable="yes">Direction:</property>
+                      </object>
+                      <packing>
+                        <property name="left-attach">0</property>
+                        <property name="top-attach">2</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkBox" id="gradient_preview">
+                    <property name="height-request">200</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="tooltip-text" translatable="yes">The current gradient</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="margin-bottom">10</property>
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
+                    <property name="orientation">vertical</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <style>
+                      <class name="gradient_preview"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">4</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="position">2</property>
+              </packing>
             </child>
             <child type="tab">
-              <placeholder/>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">Gradient Editor</property>
+              </object>
+              <packing>
+                <property name="position">2</property>
+                <property name="tab-fill">False</property>
+              </packing>
             </child>
           </object>
           <packing>

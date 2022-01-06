@@ -25,11 +25,11 @@ Zterm can be built using either the [Gyro](https://github.com/mattnite/gyro) or
 [Zigmod](https://github.com/nektro/zigmod) package managers for Zig.
 ### Gyro
 > NOTE: Gyro build is out of date and currently broken
-```Bash
+```sh
 gyro build -Drelease-safe=true
 ```
 ### Zigmod
-```Bash
+```sh
 zigmod fetch
 zig build -Drelease-safe=true
 ```
@@ -53,7 +53,7 @@ desired, see [configuration](#configuration)
 | Ctrl/Shift/Q | Quit |
 
 ## Command line options
-```Bash
+```sh
 Usage: zterm [-h] [-e <COMMAND>] [-t <TITLE>] [-w <DIR>]
 Flags:
 	-h, --help                   	Display this help and exit.
@@ -74,7 +74,7 @@ effect.
 - [x] Preferences dialog
 - [ ] Remove most color handling code and replace with `zig-color` color library
 - [ ] Finish implementing all preferences
-  - [x] Background image - status can set image, cannot set style
+  - [x] Background image
   - [ ] Expose charset settings
 - [x] User editable keybindings
 - [ ] Dialog to set keybindings
