@@ -15,16 +15,16 @@ pub const StopControls = struct {
     stops_stack: gtk.Stack,
     stop1_grid: gtk.Widget,
     stop1_color: gtk.ColorButton,
-    stop1_position: gtk.SpinButton,
+    stop1_position: gtk.Scale,
     stop2_grid: gtk.Widget,
     stop2_color: gtk.ColorButton,
-    stop2_position: gtk.SpinButton,
+    stop2_position: gtk.Scale,
     stop3_grid: gtk.Widget,
     stop3_color: gtk.ColorButton,
-    stop3_position: gtk.SpinButton,
+    stop3_position: gtk.Scale,
     stop4_grid: gtk.Widget,
     stop4_color: gtk.ColorButton,
-    stop4_position: gtk.SpinButton,
+    stop4_position: gtk.Scale,
 
     const Self = @This();
 
@@ -35,16 +35,16 @@ pub const StopControls = struct {
             .stops_stack = builder.get_widget("stops_stack").?.to_stack().?,
             .stop1_grid = builder.get_widget("stop1_grid").?,
             .stop1_color = builder.get_widget("stop1_color").?.to_color_button().?,
-            .stop1_position = builder.get_widget("stop1_position").?.to_spin_button().?,
+            .stop1_position = builder.get_widget("stop1_position").?.to_scale().?,
             .stop2_grid = builder.get_widget("stop2_grid").?,
             .stop2_color = builder.get_widget("stop2_color").?.to_color_button().?,
-            .stop2_position = builder.get_widget("stop2_position").?.to_spin_button().?,
+            .stop2_position = builder.get_widget("stop2_position").?.to_scale().?,
             .stop3_grid = builder.get_widget("stop3_grid").?,
             .stop3_color = builder.get_widget("stop3_color").?.to_color_button().?,
-            .stop3_position = builder.get_widget("stop3_position").?.to_spin_button().?,
+            .stop3_position = builder.get_widget("stop3_position").?.to_scale().?,
             .stop4_grid = builder.get_widget("stop4_grid").?,
             .stop4_color = builder.get_widget("stop4_color").?.to_color_button().?,
-            .stop4_position = builder.get_widget("stop4_position").?.to_spin_button().?,
+            .stop4_position = builder.get_widget("stop4_position").?.to_scale().?,
         };
     }
 
@@ -90,7 +90,7 @@ pub const StopControls = struct {
                     3 => self.stop_selector.append("stop4", "Stop 4"),
                     else => {},
                 }
-                numStops = 3;
+                numStops = 4;
             },
             else => unreachable,
         }

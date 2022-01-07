@@ -81,7 +81,7 @@
                 <property name="can-default">True</property>
                 <property name="has-default">True</property>
                 <property name="receives-default">True</property>
-                <property name="tooltip-text" translatable="yes">Close Dialog</property>
+                <property name="tooltip-text" translatable="yes">Close the preferences dialog.</property>
                 <property name="use-stock">True</property>
                 <accelerator key="w" signal="activate" modifiers="GDK_CONTROL_MASK"/>
               </object>
@@ -156,6 +156,7 @@
                       <object class="GtkEntry" id="initial_title_entry">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
+                        <property name="tooltip-text" translatable="yes">The first component of the program title displayed in the title bar.</property>
                         <property name="text" translatable="yes">Zterm</property>
                         <property name="input-purpose">alpha</property>
                       </object>
@@ -180,6 +181,7 @@
                       <object class="GtkComboBoxText" id="dynamic_title_combobox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">Where to place the automatically generated portion of the title string, if used.</property>
                         <property name="active-id">after_title</property>
                         <items>
                           <item id="replaces_title" translatable="yes">Replaces initial title</item>
@@ -222,6 +224,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
+                    <property name="tooltip-text" translatable="yes">Whether to run a custom command or default to the user's shell.</property>
                     <property name="draw-indicator">True</property>
                   </object>
                   <packing>
@@ -253,6 +256,7 @@
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can-focus">True</property>
+                        <property name="tooltip-text" translatable="yes">The custom command to run in lieu of the user's shell.</property>
                         <property name="hexpand">True</property>
                       </object>
                       <packing>
@@ -306,6 +310,7 @@
                       <object class="GtkComboBoxText" id="cursor_style_combobox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">The style of the cursor.</property>
                         <property name="hexpand">True</property>
                         <property name="active-id">block</property>
                         <items>
@@ -327,6 +332,7 @@
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">False</property>
+                        <property name="tooltip-text" translatable="yes">Whether or not to let the cursor blink to aid in seeing it's location.</property>
                         <property name="halign">end</property>
                         <property name="active">True</property>
                         <property name="draw-indicator">True</property>
@@ -366,6 +372,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
+                    <property name="tooltip-text" translatable="yes">If checked, an unlimited number of lines will be saved in the scrollback history. This feature can significantly increase memory consumption for a long running terminal, particularly with multiple terminals open simultaneously.</property>
                     <property name="halign">start</property>
                     <property name="active">True</property>
                     <property name="draw-indicator">True</property>
@@ -397,6 +404,7 @@
                       <object class="GtkSpinButton" id="scrollback_lines_spinbox">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
+                        <property name="tooltip-text" translatable="yes">The number of lines to save in the scrollback history.</property>
                         <property name="hexpand">True</property>
                         <property name="adjustment">scollback_lines_adjustment</property>
                       </object>
@@ -419,6 +427,7 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="tooltip-text" translatable="yes">Settings affecting how Zterm behaves.</property>
                 <property name="label" translatable="yes">General</property>
               </object>
               <packing>
@@ -814,6 +823,7 @@
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">False</property>
+                        <property name="tooltip-text" translatable="yes">Use the monospace variant of the standard system typeface.</property>
                         <property name="active">True</property>
                         <property name="draw-indicator">True</property>
                       </object>
@@ -828,6 +838,7 @@
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
+                        <property name="tooltip-text" translatable="yes">The font to display in the terminal.</property>
                         <property name="hexpand">True</property>
                         <property name="font">Sans 12</property>
                         <property name="language">en-us</property>
@@ -867,6 +878,7 @@
                   <object class="GtkComboBoxText" id="background_style_combobox">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
+                    <property name="tooltip-text" translatable="yes">The type of background to display in the terminal window.</property>
                     <property name="active-id">solid_color</property>
                     <items>
                       <item id="solid_color" translatable="yes">Solid Color</item>
@@ -902,6 +914,7 @@
                       <object class="GtkComboBoxText" id="background_image_style_combobox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">How the image is to be scaled and positioned.</property>
                         <property name="hexpand">True</property>
                         <property name="active-id">tiled</property>
                         <items>
@@ -920,6 +933,7 @@
                       <object class="GtkFileChooserButton" id="background_image_file_button">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">An image file of type png, jpeg, or svg to use as the background image.</property>
                         <property name="hexpand">True</property>
                         <property name="filter">filefilter1</property>
                         <property name="title" translatable="yes"/>
@@ -968,6 +982,7 @@
                       <object class="GtkScale" id="background_style_opacity_scale">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
+                        <property name="tooltip-text" translatable="yes">The opacity of the terminal window.</property>
                         <property name="hexpand">True</property>
                         <property name="adjustment">background_opacity_adjustment</property>
                         <property name="round-digits">1</property>
@@ -995,6 +1010,7 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="tooltip-text" translatable="yes">Settings affecting how Zterm looks.</property>
                 <property name="label" translatable="yes">Appearance</property>
               </object>
               <packing>
@@ -1050,6 +1066,7 @@
                       <object class="GtkComboBoxText" id="gradient_kind">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">A linear gradient runs in a straight line between two points, while a radial gradient extends outwards from it's starting point.</property>
                         <property name="hexpand">True</property>
                         <property name="active-id">linear</property>
                         <items>
@@ -1068,6 +1085,7 @@
                       <object class="GtkComboBoxText" id="gradient_vertical_start">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">The location along the vertical axis to begin the gradient.</property>
                         <property name="active-id">top</property>
                         <items>
                           <item id="top" translatable="yes">Top</item>
@@ -1085,6 +1103,7 @@
                       <object class="GtkComboBoxText" id="gradient_horizontal_start">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">The location along the horizontal axis to begin the gradient.</property>
                         <property name="active-id">left</property>
                         <items>
                           <item id="left" translatable="yes">Left</item>
@@ -1114,6 +1133,7 @@
                       <object class="GtkSpinButton" id="gradient_stops">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
+                        <property name="tooltip-text" translatable="yes">The number of different color stops used to define the gradient.</property>
                         <property name="input-purpose">digits</property>
                         <property name="adjustment">gradient_stops_adjustment</property>
                         <property name="climb-rate">1</property>
@@ -1129,6 +1149,8 @@
                       <object class="GtkComboBoxText" id="gradient_stop_selector">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">Select a stop to edit</property>
+                        <property name="active">0</property>
                         <property name="active-id">stop1</property>
                         <items>
                           <item id="stop1" translatable="yes">Stop 1</item>
@@ -1145,6 +1167,7 @@
                       <object class="GtkStack" id="stops_stack">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="hexpand">True</property>
                         <child>
                           <!-- n-columns=2 n-rows=1 -->
                           <object class="GtkGrid" id="stop1_grid">
@@ -1153,31 +1176,33 @@
                             <property name="hexpand">True</property>
                             <property name="column-spacing">5</property>
                             <child>
-                              <object class="GtkSpinButton" id="stop1_position">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="hexpand">True</property>
-                                <property name="input-purpose">number</property>
-                                <property name="adjustment">stop1_adjustment</property>
-                                <property name="numeric">True</property>
-                                <property name="update-policy">if-valid</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
                               <object class="GtkColorButton" id="stop1_color">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
+                                <property name="tooltip-text" translatable="yes">The color of the first gradient stop.</property>
                                 <property name="use-alpha">True</property>
                                 <property name="rgba">rgb(0,0,0)</property>
                                 <property name="show-editor">True</property>
                               </object>
                               <packing>
                                 <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkScale" id="stop1_position">
+                                <property name="width-request">75</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="tooltip-text" translatable="yes">How far from the starting point to place the first stop. If any number other than "0" is specified, the gradient will use a solid color until it reaches this point before beginning it's transition to the next color.</property>
+                                <property name="hexpand">True</property>
+                                <property name="adjustment">stop1_adjustment</property>
+                                <property name="show-fill-level">True</property>
+                                <property name="round-digits">1</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
                                 <property name="top-attach">0</property>
                               </packing>
                             </child>
@@ -1198,6 +1223,7 @@
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
+                                <property name="tooltip-text" translatable="yes">The color of the second gradient stop.</property>
                                 <property name="rgba">rgb(36,31,49)</property>
                                 <property name="show-editor">True</property>
                               </object>
@@ -1207,13 +1233,14 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkSpinButton" id="stop2_position">
+                              <object class="GtkScale" id="stop2_position">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="input-purpose">number</property>
+                                <property name="tooltip-text" translatable="yes">How far from the beginning to place the second gradient stop.</property>
+                                <property name="hexpand">True</property>
                                 <property name="adjustment">stop2_adjustment</property>
-                                <property name="numeric">True</property>
-                                <property name="update-policy">if-valid</property>
+                                <property name="show-fill-level">True</property>
+                                <property name="round-digits">1</property>
                               </object>
                               <packing>
                                 <property name="left-attach">1</property>
@@ -1238,6 +1265,7 @@
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
+                                <property name="tooltip-text" translatable="yes">The color of the third gradient stop.</property>
                                 <property name="rgba">rgb(61,56,70)</property>
                                 <property name="show-editor">True</property>
                               </object>
@@ -1247,13 +1275,14 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkSpinButton" id="stop3_position">
+                              <object class="GtkScale" id="stop3_position">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="input-purpose">number</property>
+                                <property name="tooltip-text" translatable="yes">How far from the beginning to place the third gradient stop.</property>
+                                <property name="hexpand">True</property>
                                 <property name="adjustment">stop3_adjustment</property>
-                                <property name="numeric">True</property>
-                                <property name="update-policy">if-valid</property>
+                                <property name="show-fill-level">True</property>
+                                <property name="round-digits">1</property>
                               </object>
                               <packing>
                                 <property name="left-attach">1</property>
@@ -1278,6 +1307,7 @@
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
+                                <property name="tooltip-text" translatable="yes">The color of the fourth gradient stop.</property>
                                 <property name="rgba">rgb(255,255,255)</property>
                                 <property name="show-editor">True</property>
                               </object>
@@ -1287,13 +1317,14 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkSpinButton" id="stop4_position">
+                              <object class="GtkScale" id="stop4_position">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="input-purpose">number</property>
+                                <property name="tooltip-text" translatable="yes">How far from the starting point to place the first stop. If any number other than "100" is specified, the gradient will end it's transitionfrom the previous color at that point and show a solid color from there until it's end.</property>
+                                <property name="hexpand">True</property>
                                 <property name="adjustment">stop4_adjustment</property>
-                                <property name="numeric">True</property>
-                                <property name="update-policy">if-valid</property>
+                                <property name="show-fill-level">True</property>
+                                <property name="round-digits">1</property>
                               </object>
                               <packing>
                                 <property name="left-attach">1</property>
@@ -1330,6 +1361,7 @@
                               <object class="GtkComboBoxText" id="gradient_vertical_end">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">The location along the vertical axis to end the gradient.</property>
                                 <property name="hexpand">True</property>
                                 <property name="vexpand">True</property>
                                 <property name="active-id">top</property>
@@ -1348,6 +1380,7 @@
                               <object class="GtkComboBoxText" id="gradient_horizontal_end">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">The location along the horizontal axis to end the gradient.</property>
                                 <property name="hexpand">True</property>
                                 <property name="vexpand">True</property>
                                 <property name="active-id">left</property>
@@ -1379,6 +1412,7 @@
                               <object class="GtkSpinButton" id="gradient_angle">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
+                                <property name="tooltip-text" translatable="yes">The angle the gradient travels away from it's starting location.</property>
                                 <property name="halign">start</property>
                                 <property name="adjustment">angle_adjustment</property>
                               </object>
@@ -1416,6 +1450,7 @@
                       <object class="GtkComboBoxText" id="gradient_direction_type">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">A linear gradient can run between a start and end point or can begin at a starting point and extend in a specified angle.</property>
                         <property name="active-id">angle</property>
                         <items>
                           <item id="angle" translatable="yes">Angle</item>
@@ -1480,6 +1515,7 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="tooltip-text" translatable="yes">An editor for the gradient used as the background of Zterm.</property>
                 <property name="label" translatable="yes">Gradient Editor</property>
               </object>
               <packing>
