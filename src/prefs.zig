@@ -464,8 +464,6 @@ pub fn run(data: config.Config) ?config.Config {
         return null;
     };
     widgets = PrefWidgets.init(builder);
-    gradient.gradientEditor = widgets.gradient_editor;
-    gradient.gradientEditor.setup();
     widgets.setValues();
 
     widgets.custom_command_checkbutton.as_toggle_button().connect_toggled(

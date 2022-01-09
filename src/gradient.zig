@@ -4,9 +4,11 @@ const c = VTE.c;
 const gtk = VTE.gtk;
 const config = @import("config.zig");
 const RGBColor = config.RGBColor;
+const RGB = @import("zig-color").RGB;
 const allocator = std.heap.page_allocator;
+const math = std.math;
 
-pub var gradientEditor: GradientEditor = undefined;
+var gradientEditor: GradientEditor = undefined;
 var numStops: u8 = 2;
 
 pub const StopControls = struct {
@@ -96,77 +98,121 @@ pub const StopControls = struct {
         }
     }
 
+    fn updateScale2(self: Self) void {
+        const val = self.stop1_position.as_range().get_value();
+        const adj = self.stop2_position.as_range().get_adjustment();
+        if (adj.get_value() < val) adj.set_value(val);
+        adj.set_lower(val);
+    }
+
+    fn updateScale3(self: Self) void {
+        const val = self.stop2_position.as_range().get_value();
+        const adj = self.stop3_position.as_range().get_adjustment();
+        if (adj.get_value() < val) adj.set_value(val);
+        adj.set_lower(val);
+    }
+
+    fn updateScale4(self: Self) void {
+        const val = self.stop3_position.as_range().get_value();
+        const adj = self.stop4_position.as_range().get_adjustment();
+        if (adj.get_value() < val) adj.set_value(val);
+        adj.set_lower(val);
+    }
+
     fn connectSignals(self: Self) void {
         self.stops.connect_value_changed(@ptrCast(c.GCallback, alterNumStops), null);
         self.stop_selector.as_combo_box().connect_changed(@ptrCast(c.GCallback, toggleStops), null);
+        self.stop1_position.as_range().connect_value_changed(@ptrCast(c.GCallback, clampScale2), null);
+        self.stop2_position.as_range().connect_value_changed(@ptrCast(c.GCallback, clampScale3), null);
+        self.stop3_position.as_range().connect_value_changed(@ptrCast(c.GCallback, clampScale4), null);
+    }
+
+    fn getStop(button: gtk.ColorButton, scale: gtk.Scale) ?Stop {
+        const gdk = button.as_color_chooser().get_rgba();
+        const f = RGB.new(f64, gdk.red, gdk.green, gdk.blue) catch return null;
+        const color = f.toInt(u8) catch return null;
+        return Stop{
+            .color = color,
+            .position = scale.as_range().get_value(),
+        };
     }
 };
 
 pub const GradientEditor = struct {
     editor: gtk.Widget,
     kind: gtk.ComboBox,
-    vstart: gtk.ComboBox,
-    hstart: gtk.ComboBox,
+    position_type: gtk.Stack,
+    start_position: gtk.Widget,
+    end_position: gtk.Widget,
     dir_type: gtk.ComboBox,
     dir_stack: gtk.Stack,
-    edge_grid: gtk.Widget,
     angle_grid: gtk.Widget,
     angle: gtk.SpinButton,
-    vend: gtk.ComboBox,
-    hend: gtk.ComboBox,
+    edge_grid: gtk.Widget,
+    vertical_position: gtk.ComboBox,
+    horizontal_position: gtk.ComboBox,
     stops: StopControls,
     gradient_preview: gtk.Box,
 
     const Self = @This();
 
     pub fn init(builder: gtk.Builder) ?Self {
-        return Self{
+        gradientEditor = Self{
             .editor = builder.get_widget("gradient_editor").?,
             .kind = builder.get_widget("gradient_kind").?.to_combo_box().?,
-            .vstart = builder.get_widget("gradient_vertical_start").?.to_combo_box().?,
-            .hstart = builder.get_widget("gradient_horizontal_start").?.to_combo_box().?,
+            .position_type = builder.get_widget("position_type_stack").?.to_stack().?,
+            .start_position = builder.get_widget("start_position").?,
+            .end_position = builder.get_widget("end_position").?,
             .dir_type = builder.get_widget("gradient_direction_type").?.to_combo_box().?,
             .dir_stack = builder.get_widget("gradient_direction_stack").?.to_stack().?,
-            .edge_grid = builder.get_widget("gradient_edge_grid").?,
             .angle_grid = builder.get_widget("gradient_angle_grid").?,
             .angle = builder.get_widget("gradient_angle").?.to_spin_button().?,
-            .vend = builder.get_widget("gradient_vertical_end").?.to_combo_box().?,
-            .hend = builder.get_widget("gradient_horizontal_end").?.to_combo_box().?,
+            .edge_grid = builder.get_widget("gradient_edge_grid").?,
+            .vertical_position = builder.get_widget("gradient_vertical_position").?.to_combo_box().?,
+            .horizontal_position = builder.get_widget("gradient_horizontal_position").?.to_combo_box().?,
             .stops = StopControls.init(builder).?,
             .gradient_preview = builder.get_widget("gradient_preview").?.to_box().?,
         };
+        gradientEditor.setup();
+        return gradientEditor;
     }
 
-    fn getKind(self: Self) ?GradientKind {
+    fn getGradientKind(self: Self) ?GradientKind {
         if (self.kind.get_active_id(allocator)) |id| {
             defer allocator.free(id);
             return if (config.parse_enum(GradientKind, id)) |k| k else null;
         } else return null;
     }
 
-    fn getStart(self: Self) ?Placement {
-        const vert = if (self.vstart.get_active_id(allocator)) |id| vblk: {
-            defer allocator.free(id);
-            if (config.parse_enum(VerticalPlacement, id)) |v| break :vblk v else return null;
+    fn getKind(self: Self) ?Kind {
+        const gradient_kind = if (self.getGradientKind()) |k| k else return null;
+        const kind: ?Kind = switch (gradient_kind) {
+            .linear => lblk: {
+                if (self.getDirection()) |d| {
+                    break :lblk GradientKind{ .linear = d };
+                } else return null;
+            },
+            .radial => rblk: {
+                if (self.getPlacement()) |p| {
+                    break :rblk GradientKind{ .radial = p };
+                } else return null;
+            },
+            .elliptical => eblk: {
+                if (self.getPlacement()) |p| {
+                    break eblk: GradientKind{ .elliptical = p };
+                } else return null;
+            },
         };
-
-        const hor = if (self.hstart.get_active_id(allocator)) |id| hblk: {
-            defer allocator.free(id);
-            if (config.parse_enum(HorizontalPlacement, id)) |h| break :hblk h else return null;
-        };
-        return Placement{
-            .vertical = vert,
-            .horizontal = hor,
-        };
+        return kind;
     }
 
-    fn getEnd(self: Self) ?Placement {
-        const vert = if (self.vend.get_active_id(allocator)) |id| vblk: {
+    fn getPlacement(self: Self) ?Placement {
+        const vert = if (self.vertical_position.get_active_id(allocator)) |id| vblk: {
             defer allocator.free(id);
             if (config.parse_enum(VerticalPlacement, id)) |v| break :vblk v else return null;
         };
 
-        const hor = if (self.hend.get_active_id(allocator)) |id| hblk: {
+        const hor = if (self.horizontal_placement.get_active_id(allocator)) |id| hblk: {
             defer allocator.free(id);
             if (config.parse_enum(HorizontalPlacement, id)) |h| break :hblk h else return null;
         };
@@ -187,34 +233,51 @@ pub const GradientEditor = struct {
         if (self.getDirectionType()) |dtype| {
             return switch (dtype) {
                 .angle => Direction{ .angle = self.angle.get_value() },
-                .edge => if (self.getEnd()) |end| Direction{ .edge = end } else null,
+                .edge => if (self.getPlacement()) |p| Direction{ .edge = p } else null,
             };
         } else return null;
     }
 
+    fn getGradient(self: Self) ?Gradient {
+        const s3: ?Stop = switch (numStops) {
+            2 => null,
+            3, 4 => if (self.stops.getStop(self.stop3_color, self.stop3_position)) |s| s else return null,
+        };
+        const s4: ?Stop = switch (numStops) {
+            2, 3 => null,
+            4 => if (self.stops.getStop(self.stop4_color, self.stop4_position)) |s| s else return null,
+        };
+        return Gradient{
+            .kind = if (self.getKind()) |k| k else return null,
+            .stop1 = if (self.stops.getStop(self.stop1_color, self.stop1_position)) |x| x else return null,
+            .stop2 = if (self.stops.getStop(self.stop2_color, self.stop2_position)) |x| x else return null,
+            .stop3 = if (s3) |x| x else null,
+            .stop4 = if (s4) |x| x else null,
+        };
+    }
 
     fn connectSignals(self: Self) void {
-        self.kind.connect_changed(@ptrCast(c.GCallback, toggleDirectionControls), null);
-        self.dir_type.connect_changed(@ptrCast(c.GCallback, toggleGradientEnd), null);
+        self.kind.connect_changed(@ptrCast(c.GCallback, togglePosition), null);
+        self.dir_type.connect_changed(@ptrCast(c.GCallback, toggleDirection), null);
         self.stops.connectSignals();
     }
 
-    fn toggleDirGrid(self: Self) void {
+    fn togglePositionType(self: Self) void {
         if (self.getKind()) |kind| {
             switch (kind) {
                 .linear => {
-                    self.dir_type.as_widget().show();
-                    self.dir_stack.as_widget().show();
+                    self.position_type.set_visible_child(self.end_position);
+                    self.toggleDirectionType();
                 },
                 .radial, .elliptical => {
-                    self.dir_type.as_widget().hide();
-                    self.dir_stack.as_widget().hide();
+                    self.position_type.set_visible_child(self.start_position);
+                    self.dir_stack.set_visible_child(self.edge_grid);
                 },
             }
         }
     }
 
-    fn toggleEnd(self: Self) void {
+    fn toggleDirectionType(self: Self) void {
         if (self.dir_type.get_active_id(allocator)) |id| {
             defer allocator.free(id);
             if (config.parse_enum(DirectionType, id)) |kind| {
@@ -231,8 +294,8 @@ pub const GradientEditor = struct {
     }
 
     fn toggle(self: Self) void {
-        self.toggleDirGrid();
-        self.toggleEnd();
+        self.toggleDirectionType();
+        self.togglePositionType();
         self.stops.toggle();
     }
 
@@ -246,11 +309,17 @@ pub const GradientKind = enum {
     linear,
     radial,
     elliptical,
+};
+
+pub const Kind = union(GradientKind) {
+    linear: Direction,
+    radial: Placement,
+    elliptical: Placement,
 
     const Self = @This();
 
     fn default() Self {
-        return Self.linear;
+        return Self{ .linear = Direction{ .edge = Placement.default() }};
     }
 };
 
@@ -311,14 +380,12 @@ pub const Direction = union(DirectionType) {
 };
 
 pub const Stop = struct {
-    color: RGBColor,
+    color: RGB,
     position: f64,
 };
 
 pub const Gradient = struct {
-    kind: GradientKind,
-    start: Placement,
-    direction: ?Direction,
+    kind: Kind,
     stop1: Stop,
     stop2: Stop,
     stop3: ?Stop,
@@ -331,8 +398,14 @@ pub const Gradient = struct {
             .kind = GradientKind.default(),
             .start = Placement.default(),
             .direction = Direction.default(),
-            .stop1 = RGBColor{ .red = 0, .green = 0, .blue = 0 },
-            .stop2 = RGBColor{ .red = 64, .green = 64, .blue = 64 },
+            .stop1 = Stop{
+                .color = RGBColor{ .red = 0, .green = 0, .blue = 0 },
+                .position = 0.0,
+            },
+            .stop2 = Stop{
+                .color = RGBColor{ .red = 64, .green = 64, .blue = 64 },
+                .position = 100.0,
+            },
             .stop4 = null,
             .stop4 = null,
         };
@@ -347,10 +420,22 @@ fn toggleStops() void {
     gradientEditor.stops.toggle();
 }
 
-fn toggleDirectionControls() void {
-    gradientEditor.toggleDirGrid();
+fn clampScale2() void {
+    gradientEditor.stops.updateScale2();
 }
 
-fn toggleGradientEnd() void {
-    gradientEditor.toggleEnd();
+fn clampScale3() void {
+    gradientEditor.stops.updateScale3();
+}
+
+fn clampScale4() void {
+    gradientEditor.stops.updateScale4();
+}
+
+fn togglePosition() void {
+    gradientEditor.togglePositionType();
+}
+
+fn toggleDirection() void {
+    gradientEditor.toggleDirectionType();
 }

@@ -7,7 +7,7 @@ dev_dependencies:
   - src: git https://github.com/LewisGaul/zig-nestedtext.git branch-zig-master
     name: nestedtext
     main: src/nestedtext.zig
-  - src: git https://codeberg.org/jeang3nie/zig-vte branch-loki
+  - src: git https://codeberg.org/jeang3nie/zig-vte branch-odin
     name: vte
     main: lib.zig
   - src: git https://codeberg.org/jeang3nie/zig-color
