@@ -10,6 +10,3 @@ dev_dependencies:
   - src: git https://codeberg.org/jeang3nie/zig-vte branch-odin
     name: vte
     main: lib.zig
-  - src: git https://codeberg.org/jeang3nie/zig-color
-    name: color
-    main: src/lib.zig

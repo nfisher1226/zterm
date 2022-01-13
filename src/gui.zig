@@ -65,7 +65,7 @@ pub const Tab = struct {
         gui.notebook.set_tab_label(tab.box.as_widget(), lbox.as_widget());
         gui.notebook.set_tab_reorderable(tab.box.as_widget(), true);
 
-        tab.close_button.connect_clicked(@ptrCast(c.GCallback, close_tab_by_button), @ptrCast(c.gpointer, tab.box.ptr));
+        tab.close_button.connect_clicked(@ptrCast(c.GCallback, Callbacks.closeTabByButton), @ptrCast(c.gpointer, tab.box.ptr));
 
         return tab;
     }
@@ -253,7 +253,7 @@ const Gui = struct {
         self.menu.rotate_view.connect_activate(@ptrCast(c.GCallback, Callbacks.rotateView), null);
         self.notebook.connect_page_removed(@ptrCast(c.GCallback, Callbacks.pageRemoved), null);
         self.notebook.connect_select_page(@ptrCast(c.GCallback, Callbacks.selectPage), null);
-        self.menu.preferences.connect_activate(@ptrCast(c.GCallback, runPrefs), null);
+        self.menu.preferences.connect_activate(@ptrCast(c.GCallback, Callbacks.runPrefs), null);
         self.menu.close_tab.connect_activate(@ptrCast(c.GCallback, Callbacks.closeCurrentTab), null);
         self.menu.quit.connect_activate(@ptrCast(c.GCallback, c.gtk_main_quit), null);
         self.window.as_widget().connect("delete-event", @ptrCast(c.GCallback, c.gtk_main_quit), null);
@@ -348,7 +348,7 @@ const Callbacks = struct {
         _ = gtk.signal_connect(
             term.ptr,
             "child-exited",
-            @ptrCast(c.GCallback, close_term_callback),
+            @ptrCast(c.GCallback, Callbacks.closeTermCallback),
             null,
         );
         return term;
@@ -375,59 +375,59 @@ const Callbacks = struct {
         const box = gui.notebook.get_nth_page(num);
         if (box) |b| {
             const key = @ptrToInt(b.ptr);
-            close_tab_by_ref(key);
+            Callbacks.closeTabByRef(key);
         }
     }
-};
 
-fn close_tab_by_button(_: *c.GtkButton, box: c.gpointer) void {
-    const box_widget = @ptrCast(*c.GtkWidget, @alignCast(8, box));
-    const key = @ptrToInt(box_widget);
-    close_tab_by_ref(key);
-}
+    fn closeTabByButton(_: *c.GtkButton, box: c.gpointer) void {
+        const box_widget = @ptrCast(*c.GtkWidget, @alignCast(8, box));
+        const key = @ptrToInt(box_widget);
+        Callbacks.closeTabByRef(key);
+    }
 
-fn close_tab_by_ref(key: u64) void {
-    if (tabs.get(key)) |tab| {
-        const num = gui.notebook.page_num(tab.box.as_widget());
-        if (num) |n| {
-            // if num < 0 tab is already closed
-            if (n >= 0) {
-                gui.notebook.remove_page(n);
-                _ = tabs.remove(key);
+    fn closeTabByRef(key: u64) void {
+        if (tabs.get(key)) |tab| {
+            const num = gui.notebook.page_num(tab.box.as_widget());
+            if (num) |n| {
+                // if num < 0 tab is already closed
+                if (n >= 0) {
+                    gui.notebook.remove_page(n);
+                    _ = tabs.remove(key);
+                }
             }
         }
     }
-}
 
-fn close_term_callback(term: *c.VteTerminal) void {
-    const box = c.gtk_widget_get_parent(@ptrCast(*c.GtkWidget, term));
-    const key = @ptrToInt(box);
-    const termkey = @ptrToInt(@ptrCast(*c.GtkWidget, term));
-    _ = terms.remove(termkey);
-    c.gtk_container_remove(@ptrCast(*c.GtkContainer, box), @ptrCast(*c.GtkWidget, term));
-    c.gtk_widget_destroy(@ptrCast(*c.GtkWidget, term));
-    if (tabs.get(key)) |_| {
-        const kids = c.gtk_container_get_children(@ptrCast(*c.GtkContainer, box));
-        const len = c.g_list_length(kids);
-        if (len == 0) {
-            close_tab_by_ref(key);
-        } else {
-            const first = c.g_list_nth_data(kids, 0);
-            const first_ptr = @ptrCast(*c.GtkWidget, @alignCast(8, first));
-            c.gtk_widget_grab_focus(first_ptr);
+    fn closeTermCallback(term: *c.VteTerminal) void {
+        const box = c.gtk_widget_get_parent(@ptrCast(*c.GtkWidget, term));
+        const key = @ptrToInt(box);
+        const termkey = @ptrToInt(@ptrCast(*c.GtkWidget, term));
+        _ = terms.remove(termkey);
+        c.gtk_container_remove(@ptrCast(*c.GtkContainer, box), @ptrCast(*c.GtkWidget, term));
+        c.gtk_widget_destroy(@ptrCast(*c.GtkWidget, term));
+        if (tabs.get(key)) |_| {
+            const kids = c.gtk_container_get_children(@ptrCast(*c.GtkContainer, box));
+            const len = c.g_list_length(kids);
+            if (len == 0) {
+                Callbacks.closeTabByRef(key);
+            } else {
+                const first = c.g_list_nth_data(kids, 0);
+                const first_ptr = @ptrCast(*c.GtkWidget, @alignCast(8, first));
+                c.gtk_widget_grab_focus(first_ptr);
+            }
         }
     }
-}
 
-pub fn runPrefs() void {
-    if (prefs.run(conf)) |newconf| {
-        conf = newconf;
-        gui.applySettings();
-        if (config.getConfigDir(allocator)) |d| {
-            conf.save(d);
+    pub fn runPrefs() void {
+        if (prefs.run(conf)) |newconf| {
+            conf = newconf;
+            gui.applySettings();
+            if (config.getConfigDir(allocator)) |d| {
+                conf.save(d);
+            }
         }
     }
-}
+};
 
 // C style closures below
 pub const Closures = struct {

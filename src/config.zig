@@ -21,7 +21,7 @@ pub const known_folders_config = .{
     .xdg_on_mac = true,
 };
 
-pub fn parse_enum(comptime T: type, style: [*c]const u8) ?T {
+pub fn parseEnum(comptime T: type, style: [*c]const u8) ?T {
     const len = mem.len(style);
     return meta.stringToEnum(T, style[0..len]);
 }
@@ -253,7 +253,7 @@ pub const RGB = struct {
         return str;
     }
 
-    pub fn to_gdk(self: Self) c.GdkRGBA {
+    pub fn toGdk(self: Self) c.GdkRGBA {
         return c.GdkRGBA{
             .red = @intToFloat(f64, self.red) / 255.0,
             .green = @intToFloat(f64, self.green) / 255.0,
@@ -262,7 +262,7 @@ pub const RGB = struct {
         };
     }
 
-    fn to_gdk_alpha(self: Self, opacity: f64) c.GdkRGBA {
+    fn toGdkAlpha(self: Self, opacity: f64) c.GdkRGBA {
         return c.GdkRGBA{
             .red = @intToFloat(f64, self.red) / 255.0,
             .green = @intToFloat(f64, self.green) / 255.0,
@@ -316,36 +316,36 @@ pub const Colors = struct {
     }
 
     fn set(self: Colors, term: *c.VteTerminal) void {
-        const fgcolor = self.text_color.to_gdk();
-        const bgcolor = self.background_color.to_gdk();
-        const palette = self.to_palette();
+        const fgcolor = self.text_color.toGdk();
+        const bgcolor = self.background_color.toGdk();
+        const palette = self.toPalette();
         c.vte_terminal_set_color_foreground(term, &fgcolor);
         c.vte_terminal_set_colors(term, &fgcolor, &bgcolor, &palette, 16);
     }
 
-    fn set_bg(self: Colors, term: *c.VteTerminal) void {
-        const bgcolor = self.background_color.to_gdk();
+    fn setBg(self: Colors, term: *c.VteTerminal) void {
+        const bgcolor = self.background_color.toGdk();
         c.vte_terminal_set_color_background(term, &bgcolor);
     }
 
-    fn to_palette(self: Colors) [16]c.GdkRGBA {
+    fn toPalette(self: Colors) [16]c.GdkRGBA {
         return [16]c.GdkRGBA{
-            self.black_color.to_gdk(),
-            self.red_color.to_gdk(),
-            self.green_color.to_gdk(),
-            self.yellow_color.to_gdk(),
-            self.blue_color.to_gdk(),
-            self.magenta_color.to_gdk(),
-            self.cyan_color.to_gdk(),
-            self.light_grey_color.to_gdk(),
-            self.dark_grey_color.to_gdk(),
-            self.brown_color.to_gdk(),
-            self.light_red_color.to_gdk(),
-            self.light_green_color.to_gdk(),
-            self.light_blue_color.to_gdk(),
-            self.light_magenta_color.to_gdk(),
-            self.light_cyan_color.to_gdk(),
-            self.white_color.to_gdk(),
+            self.black_color.toGdk(),
+            self.red_color.toGdk(),
+            self.green_color.toGdk(),
+            self.yellow_color.toGdk(),
+            self.blue_color.toGdk(),
+            self.magenta_color.toGdk(),
+            self.cyan_color.toGdk(),
+            self.light_grey_color.toGdk(),
+            self.dark_grey_color.toGdk(),
+            self.brown_color.toGdk(),
+            self.light_red_color.toGdk(),
+            self.light_green_color.toGdk(),
+            self.light_blue_color.toGdk(),
+            self.light_magenta_color.toGdk(),
+            self.light_cyan_color.toGdk(),
+            self.white_color.toGdk(),
         };
     }
 };
@@ -391,12 +391,12 @@ pub const Config = struct {
         return null;
     }
 
-    fn set_bg(self: Config, term: *c.VteTerminal) void {
+    fn setBg(self: Config, term: *c.VteTerminal) void {
         const t = vte.Terminal{ .ptr = term };
         switch (self.background) {
             .solid_color => {
                 t.set_clear_background(true);
-                self.colors.set_bg(term);
+                self.colors.setBg(term);
             },
             .image => |img| {
                 const file = fs.cwd().openFile(img.file, .{}) catch return;
@@ -427,7 +427,7 @@ pub const Config = struct {
             .transparent => |percent| {
                 t.set_clear_background(true);
                 const opacity = percent / 100.0;
-                const rgba = self.colors.background_color.to_gdk_alpha(opacity);
+                const rgba = self.colors.background_color.toGdkAlpha(opacity);
                 c.vte_terminal_set_color_background(term, &rgba);
             },
             .gradient => {
@@ -441,7 +441,7 @@ pub const Config = struct {
 
     pub fn set(self: Config, term: *c.VteTerminal) void {
         self.colors.set(term);
-        self.set_bg(term);
+        self.setBg(term);
         self.scrollback.set(term);
         self.font.set(term);
         self.cursor.set(term);

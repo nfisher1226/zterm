@@ -257,7 +257,7 @@ pub const GradientEditor = struct {
     fn getGradientKind(self: Self) ?GradientKind {
         if (self.kind.get_active_id(allocator)) |id| {
             defer allocator.free(id);
-            return if (config.parse_enum(GradientKind, id)) |k| k else null;
+            return if (config.parseEnum(GradientKind, id)) |k| k else null;
         } else return null;
     }
 
@@ -287,14 +287,14 @@ pub const GradientEditor = struct {
         const vert = vblk: {
             if (self.vertical_position.get_active_id(allocator)) |id| {
                 defer allocator.free(id);
-                if (config.parse_enum(VerticalPlacement, id)) |v| break :vblk v else return null;
+                if (config.parseEnum(VerticalPlacement, id)) |v| break :vblk v else return null;
             } else return null;
         };
 
         const hor = hblk: {
             if (self.horizontal_position.get_active_id(allocator)) |id| {
                 defer allocator.free(id);
-                if (config.parse_enum(HorizontalPlacement, id)) |h| break :hblk h else return null;
+                if (config.parseEnum(HorizontalPlacement, id)) |h| break :hblk h else return null;
             } else return null;
         };
         return Placement{
@@ -306,7 +306,7 @@ pub const GradientEditor = struct {
     fn getDirectionType(self: Self) ?DirectionType {
         if (self.dir_type.get_active_id(allocator)) |id| {
             defer allocator.free(id);
-            return if (config.parse_enum(DirectionType, id)) |d| d else null;
+            return if (config.parseEnum(DirectionType, id)) |d| d else null;
         } else return null;
     }
 
@@ -398,7 +398,7 @@ pub const GradientEditor = struct {
     fn toggleDirectionType(self: Self) void {
         if (self.dir_type.get_active_id(allocator)) |id| {
             defer allocator.free(id);
-            if (config.parse_enum(DirectionType, id)) |kind| {
+            if (config.parseEnum(DirectionType, id)) |kind| {
                 switch (kind) {
                     .angle => {
                         self.dir_stack.set_visible_child(self.angle_grid);
