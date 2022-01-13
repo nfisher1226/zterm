@@ -5,6 +5,7 @@ const vte = VTE.vte;
 const std = @import("std");
 const allocator = std.heap.page_allocator;
 const gui = @import("gui.zig");
+const Closures = gui.Closures;
 const k = @import("keys.zig");
 const Accel = k.Accel;
 const Keys = k.Keys;
@@ -35,12 +36,12 @@ pub const Menu = struct {
     }
 
     pub fn setAccels(self: Self, accel_group: *c.GtkAccelGroup, keys: Keys) void {
-        const new_tab_closure = c.g_cclosure_new(gui.new_tab, null, null);
-        const split_view_closure = c.g_cclosure_new(gui.split_view, null, null);
-        const rotate_view_closure = c.g_cclosure_new(gui.rotate_view, null, null);
-        const copy_closure = c.g_cclosure_new(gui.copy, null, null);
-        const paste_closure = c.g_cclosure_new(gui.paste, null, null);
-        const quit_closure = c.g_cclosure_new(gui.quit, null, null);
+        const new_tab_closure = c.g_cclosure_new(Closures.newTab, null, null);
+        const split_view_closure = c.g_cclosure_new(Closures.splitView, null, null);
+        const rotate_view_closure = c.g_cclosure_new(Closures.rotateView, null, null);
+        const copy_closure = c.g_cclosure_new(Closures.copy, null, null);
+        const paste_closure = c.g_cclosure_new(Closures.paste, null, null);
+        const quit_closure = c.g_cclosure_new(Closures.quit, null, null);
 
         var accel: Accel = undefined;
 
@@ -124,19 +125,19 @@ pub const Nav = struct {
     }
 
     pub fn setAccels(self: Self, accel_group: *c.GtkAccelGroup, keys: Keys) void {
-        const tab1_closure = c.g_cclosure_new(gui.goto_tab_1, null, null);
-        const tab2_closure = c.g_cclosure_new(gui.goto_tab_2, null, null);
-        const tab3_closure = c.g_cclosure_new(gui.goto_tab_3, null, null);
-        const tab4_closure = c.g_cclosure_new(gui.goto_tab_4, null, null);
-        const tab5_closure = c.g_cclosure_new(gui.goto_tab_5, null, null);
-        const tab6_closure = c.g_cclosure_new(gui.goto_tab_6, null, null);
-        const tab7_closure = c.g_cclosure_new(gui.goto_tab_7, null, null);
-        const tab8_closure = c.g_cclosure_new(gui.goto_tab_8, null, null);
-        const tab9_closure = c.g_cclosure_new(gui.goto_tab_9, null, null);
-        const prev_pane_closure = c.g_cclosure_new(gui.goto_prev_pane, null, null);
-        const next_pane_closure = c.g_cclosure_new(gui.goto_next_pane, null, null);
-        const prev_tab_closure = c.g_cclosure_new(gui.goto_prev_tab, null, null);
-        const next_tab_closure = c.g_cclosure_new(gui.goto_next_tab, null, null);
+        const tab1_closure = c.g_cclosure_new(Closures.tab1, null, null);
+        const tab2_closure = c.g_cclosure_new(Closures.tab2, null, null);
+        const tab3_closure = c.g_cclosure_new(Closures.tab3, null, null);
+        const tab4_closure = c.g_cclosure_new(Closures.tab4, null, null);
+        const tab5_closure = c.g_cclosure_new(Closures.tab5, null, null);
+        const tab6_closure = c.g_cclosure_new(Closures.tab6, null, null);
+        const tab7_closure = c.g_cclosure_new(Closures.tab7, null, null);
+        const tab8_closure = c.g_cclosure_new(Closures.tab8, null, null);
+        const tab9_closure = c.g_cclosure_new(Closures.tab9, null, null);
+        const prev_pane_closure = c.g_cclosure_new(Closures.prevPane, null, null);
+        const next_pane_closure = c.g_cclosure_new(Closures.nextPane, null, null);
+        const prev_tab_closure = c.g_cclosure_new(Closures.prevTab, null, null);
+        const next_tab_closure = c.g_cclosure_new(Closures.nextTab, null, null);
 
         var accel: Accel = undefined;
 

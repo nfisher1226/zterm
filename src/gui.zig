@@ -48,7 +48,7 @@ pub const Tab = struct {
             .tab_label = gtk.Label.new("Zterm"),
             .close_button = gtk.Button.new_from_icon_name("window-close", .menu),
         };
-        const term = new_term(command);
+        const term = Callbacks.newTerm(command);
         const lbox = gtk.Box.new(.horizontal, 10);
         tab.close_button.set_relief(.none);
         const close_button_widget = tab.close_button.as_widget();
@@ -132,7 +132,7 @@ pub const Tab = struct {
     }
 
     fn split(self: Self) void {
-        const term = new_term(options.command);
+        const term = Callbacks.newTerm(options.command);
         term.as_widget().show();
         self.box.pack_start(term.as_widget(), true, true, 1);
     }
@@ -154,6 +154,11 @@ const Gui = struct {
     const Self = @This();
 
     fn init(builder: gtk.Builder) Self {
+        const glade_str = @embedFile("gui.glade");
+        if (c.gtk_builder_add_from_string(builder.ptr, glade_str, glade_str.len, @intToPtr([*c][*c]c._GError, 0)) == 0) {
+            stderr.print("builder file fail\n", .{}) catch unreachable;
+            std.process.exit(1);
+        }
         return Self{
             .window = builder.get_widget("window").?.to_window().?,
             .notebook = builder.get_widget("notebook").?.to_notebook().?,
@@ -238,18 +243,18 @@ const Gui = struct {
         if (pages == 0) {
             c.gtk_main_quit();
         } else {
-            select_page_callback();
+            Callbacks.selectPage();
         }
     }
 
     fn connectSignals(self: Self) void {
-        self.menu.new_tab.connect_activate(@ptrCast(c.GCallback, new_tab_callback), null);
-        self.menu.split_view.connect_activate(@ptrCast(c.GCallback, split_tab), null);
-        self.menu.rotate_view.connect_activate(@ptrCast(c.GCallback, rotate_tab), null);
-        self.notebook.connect_page_removed(@ptrCast(c.GCallback, page_removed_callback), null);
-        self.notebook.connect_select_page(@ptrCast(c.GCallback, select_page_callback), null);
-        self.menu.preferences.connect_activate(@ptrCast(c.GCallback, run_prefs), null);
-        self.menu.close_tab.connect_activate(@ptrCast(c.GCallback, close_current_tab), null);
+        self.menu.new_tab.connect_activate(@ptrCast(c.GCallback, Callbacks.newTab), null);
+        self.menu.split_view.connect_activate(@ptrCast(c.GCallback, Callbacks.splitTab), null);
+        self.menu.rotate_view.connect_activate(@ptrCast(c.GCallback, Callbacks.rotateView), null);
+        self.notebook.connect_page_removed(@ptrCast(c.GCallback, Callbacks.pageRemoved), null);
+        self.notebook.connect_select_page(@ptrCast(c.GCallback, Callbacks.selectPage), null);
+        self.menu.preferences.connect_activate(@ptrCast(c.GCallback, runPrefs), null);
+        self.menu.close_tab.connect_activate(@ptrCast(c.GCallback, Callbacks.closeCurrentTab), null);
         self.menu.quit.connect_activate(@ptrCast(c.GCallback, c.gtk_main_quit), null);
         self.window.as_widget().connect("delete-event", @ptrCast(c.GCallback, c.gtk_main_quit), null);
     }
@@ -290,11 +295,6 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     //conf = config.Config.default();
 
     const builder = gtk.Builder.new();
-    const glade_str = @embedFile("gui.glade");
-    if (c.gtk_builder_add_from_string(builder.ptr, glade_str, glade_str.len, @intToPtr([*c][*c]c._GError, 0)) == 0) {
-        stderr.print("builder file fail\n", .{}) catch unreachable;
-        std.process.exit(1);
-    }
     c.gtk_builder_set_application(builder.ptr, application);
 
     gui = Gui.init(builder);
@@ -332,26 +332,53 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     c.gtk_main();
 }
 
-fn new_tab_callback() void {
-    const tab = Tab.init(options.command);
-    tabs.putNoClobber(@ptrToInt(tab.box.ptr), tab) catch |e| {
-        stderr.print("{}\n", .{e}) catch unreachable;
-    };
-}
+const Callbacks = struct {
+    fn newTab() void {
+        const tab = Tab.init(options.command);
+        tabs.putNoClobber(@ptrToInt(tab.box.ptr), tab) catch |e| {
+            stderr.print("{}\n", .{e}) catch unreachable;
+        };
+    }
 
-fn new_term(command: [:0]const u8) vte.Terminal {
-    const term = vte.Terminal.new();
-    terms.put(@ptrToInt(term.ptr), term.ptr) catch {};
-    term.spawn_async(.default, options.directory, command, null, .default, null, -1, null);
-    conf.set(term.ptr);
-    _ = gtk.signal_connect(
-        term.ptr,
-        "child-exited",
-        @ptrCast(c.GCallback, close_term_callback),
-        null,
-    );
-    return term;
-}
+    fn newTerm(command: [:0]const u8) vte.Terminal {
+        const term = vte.Terminal.new();
+        terms.put(@ptrToInt(term.ptr), term.ptr) catch {};
+        term.spawn_async(.default, options.directory, command, null, .default, null, -1, null);
+        conf.set(term.ptr);
+        _ = gtk.signal_connect(
+            term.ptr,
+            "child-exited",
+            @ptrCast(c.GCallback, close_term_callback),
+            null,
+        );
+        return term;
+    }
+
+    fn splitTab() void {
+        if (gui.currentTab()) |t| t.split();
+    }
+
+    fn rotateView() void {
+        if (gui.currentTab()) |t| t.rotate();
+    }
+
+    fn pageRemoved() void {
+        gui.pageRemoved();
+    }
+
+    fn selectPage() void {
+        if (gui.currentTab()) |t| t.selectPage();
+    }
+
+    fn closeCurrentTab() void {
+        const num = gui.notebook.get_current_page();
+        const box = gui.notebook.get_nth_page(num);
+        if (box) |b| {
+            const key = @ptrToInt(b.ptr);
+            close_tab_by_ref(key);
+        }
+    }
+};
 
 fn close_tab_by_button(_: *c.GtkButton, box: c.gpointer) void {
     const box_widget = @ptrCast(*c.GtkWidget, @alignCast(8, box));
@@ -369,15 +396,6 @@ fn close_tab_by_ref(key: u64) void {
                 _ = tabs.remove(key);
             }
         }
-    }
-}
-
-fn close_current_tab() void {
-    const num = gui.notebook.get_current_page();
-    const box = gui.notebook.get_nth_page(num);
-    if (box) |b| {
-        const key = @ptrToInt(b.ptr);
-        close_tab_by_ref(key);
     }
 }
 
@@ -401,109 +419,7 @@ fn close_term_callback(term: *c.VteTerminal) void {
     }
 }
 
-fn page_removed_callback() void {
-    gui.pageRemoved();
-}
-
-fn select_page_callback() void {
-    if (gui.currentTab()) |t| t.selectPage();
-}
-
-fn split_tab() void {
-    if (gui.currentTab()) |t| t.split();
-}
-
-fn rotate_tab() void {
-    if (gui.currentTab()) |t| t.rotate();
-}
-
-// C style closures below
-
-pub fn new_tab() callconv(.C) void {
-    new_tab_callback();
-}
-
-pub fn split_view() callconv(.C) void {
-    split_tab();
-}
-
-pub fn rotate_view() callconv(.C) void {
-    rotate_tab();
-}
-
-pub fn quit() callconv(.C) void {
-    c.gtk_main_quit();
-}
-
-pub fn goto_tab_1() callconv(.C) void {
-    gui.nthTab(0);
-}
-
-pub fn goto_tab_2() callconv(.C) void {
-    gui.nthTab(1);
-}
-
-pub fn goto_tab_3() callconv(.C) void {
-    gui.nthTab(2);
-}
-
-pub fn goto_tab_4() callconv(.C) void {
-    gui.nthTab(3);
-}
-
-pub fn goto_tab_5() callconv(.C) void {
-    gui.nthTab(4);
-}
-
-pub fn goto_tab_6() callconv(.C) void {
-    gui.nthTab(5);
-}
-
-pub fn goto_tab_7() callconv(.C) void {
-    gui.nthTab(6);
-}
-
-pub fn goto_tab_8() callconv(.C) void {
-    gui.nthTab(7);
-}
-
-pub fn goto_tab_9() callconv(.C) void {
-    gui.nthTab(8);
-}
-
-pub fn goto_prev_tab() callconv(.C) void {
-    gui.prevTab();
-}
-
-pub fn goto_next_tab() callconv(.C) void {
-    gui.nextTab();
-}
-
-pub fn goto_next_pane() callconv(.C) void {
-    if (gui.currentTab()) |t| t.nextPane();
-}
-
-pub fn goto_prev_pane() callconv(.C) void {
-    if (gui.currentTab()) |t| t.prevPane();
-}
-
-pub fn copy() callconv(.C) void {
-    if (gui.currentTab()) |tab| {
-        if (tab.currentTerm()) |term| {
-            term.copy_primary();
-        }
-    }
-}
-
-pub fn paste() callconv(.C) void {
-    if (gui.currentTab()) |tab| {
-        if (tab.currentTerm()) |term| {
-            term.paste_primary();
-        }
-    }
-}
-
-pub fn run_prefs() void {
+pub fn runPrefs() void {
     if (prefs.run(conf)) |newconf| {
         conf = newconf;
         gui.applySettings();
@@ -512,3 +428,90 @@ pub fn run_prefs() void {
         }
     }
 }
+
+// C style closures below
+pub const Closures = struct {
+    pub fn newTab() callconv(.C) void {
+        Callbacks.newTab();
+    }
+
+    pub fn splitView() callconv(.C) void {
+        Callbacks.splitTab();
+    }
+
+    pub fn rotateView() callconv(.C) void {
+        Callbacks.rotateView();
+    }
+
+    pub fn quit() callconv(.C) void {
+        c.gtk_main_quit();
+    }
+
+    pub fn tab1() callconv(.C) void {
+        gui.nthTab(0);
+    }
+
+    pub fn tab2() callconv(.C) void {
+        gui.nthTab(1);
+    }
+
+    pub fn tab3() callconv(.C) void {
+        gui.nthTab(2);
+    }
+
+    pub fn tab4() callconv(.C) void {
+        gui.nthTab(3);
+    }
+
+    pub fn tab5() callconv(.C) void {
+        gui.nthTab(4);
+    }
+
+    pub fn tab6() callconv(.C) void {
+        gui.nthTab(5);
+    }
+
+    pub fn tab7() callconv(.C) void {
+        gui.nthTab(6);
+    }
+
+    pub fn tab8() callconv(.C) void {
+        gui.nthTab(7);
+    }
+
+    pub fn tab9() callconv(.C) void {
+        gui.nthTab(8);
+    }
+
+    pub fn prevTab() callconv(.C) void {
+        gui.prevTab();
+    }
+
+    pub fn nextTab() callconv(.C) void {
+        gui.nextTab();
+    }
+
+    pub fn nextPane() callconv(.C) void {
+        if (gui.currentTab()) |t| t.nextPane();
+    }
+
+    pub fn prevPane() callconv(.C) void {
+        if (gui.currentTab()) |t| t.prevPane();
+    }
+
+    pub fn copy() callconv(.C) void {
+        if (gui.currentTab()) |tab| {
+            if (tab.currentTerm()) |term| {
+                term.copy_primary();
+            }
+        }
+    }
+
+    pub fn paste() callconv(.C) void {
+        if (gui.currentTab()) |tab| {
+            if (tab.currentTerm()) |term| {
+                term.paste_primary();
+            }
+        }
+    }
+};

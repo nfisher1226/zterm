@@ -75,7 +75,7 @@ pub const ColorButtons = struct {
         var colors = config.Colors.default();
         inline for (meta.fields(config.Colors)) |color| {
             const button = @field(self, color.name);
-            const value = config.RGBColor.from_widget(button);
+            const value = config.RGB.fromButton(button);
             @field(colors, color.name) = value;
         }
         return colors;

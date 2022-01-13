@@ -4,9 +4,6 @@ const VTE = @import("vte");
 const c = VTE.c;
 const gtk = VTE.gtk;
 const vte = VTE.vte;
-const col = @import("color");
-const RGBA = col.RGBA;
-const ColorTypeError = col.ColorTypeError;
 const known_folders = @import("known-folders");
 const nt = @import("nestedtext");
 const prefs = @import("prefs.zig");
@@ -226,34 +223,37 @@ pub const Background = union(BackgroundStyle) {
     }
 };
 
-pub const RGBColor = struct {
+pub const RGB = struct {
     red: u8,
     green: u8,
     blue: u8,
 
-    pub fn default() RGBColor {
-        return RGBColor{
+    const Self = @This();
+
+    pub fn default() Self {
+        return Self{
             .red = 0,
             .blue = 0,
             .green = 0,
         };
     }
 
-    pub fn from_widget(button: gtk.ColorButton) RGBColor {
+    pub fn fromButton(button: gtk.ColorButton) Self {
         const rgba = button.as_color_chooser().get_rgba();
-        return RGBColor{
+        return Self{
             .red = @floatToInt(u8, math.round(rgba.red * 255.0)),
             .green = @floatToInt(u8, math.round(rgba.green * 255.0)),
             .blue = @floatToInt(u8, math.round(rgba.blue * 255.0)),
         };
     }
 
-    fn to_hex(self: RGBColor) ?[]const u8 {
-        const buf = fmt.allocPrintZ(allocator, "#{x}{x}{x}", .{ self.red, self.green, self.blue }) catch return null;
-        return buf;
+    pub fn toHex(self: Self, alloc: mem.Allocator) ?[]const u8 {
+        const str = fmt.allocPrint(alloc, "#{x}{x}{x}",
+            .{ self.red, self.green, self.blue }) catch return null;
+        return str;
     }
 
-    pub fn to_gdk(self: RGBColor) c.GdkRGBA {
+    pub fn to_gdk(self: Self) c.GdkRGBA {
         return c.GdkRGBA{
             .red = @intToFloat(f64, self.red) / 255.0,
             .green = @intToFloat(f64, self.green) / 255.0,
@@ -262,7 +262,7 @@ pub const RGBColor = struct {
         };
     }
 
-    fn to_gdk_alpha(self: RGBColor, opacity: f64) c.GdkRGBA {
+    fn to_gdk_alpha(self: Self, opacity: f64) c.GdkRGBA {
         return c.GdkRGBA{
             .red = @intToFloat(f64, self.red) / 255.0,
             .green = @intToFloat(f64, self.green) / 255.0,
@@ -272,86 +272,46 @@ pub const RGBColor = struct {
     }
 };
 
-pub const Color = union(enum) {
-    rgba: RGBA,
-    hex: []const u8,
-
-    const Self = @This();
-
-    pub fn default() Self {
-        return Self{ .rgba = RGBA.new(u8, 0, 0, 0, 0) catch unreachable };
-    }
-
-    pub fn fromWidget(button: gtk.ColorButton) Self {
-        const rgba = button.as_color_chooser().get_rgba();
-        const color = RGBA.new(f64, rgba.red, rgba.green, rgba.blue, rgba.alpha) catch unreachable;
-        return Self{ .rgba = color.toInt(u8) catch unreachable };
-    }
-
-    pub fn toGdk(self: Self) !c.GdkRGBA {
-        return switch (self) {
-            .rgba => |color| rblk: {
-                const f = try color.toFloat(f64);
-                break :rblk c.GdkRGBA{
-                    .red = f.red,
-                    .green = f.green,
-                    .blue = f.blue,
-                    .alpha = f.alpha,
-                };
-            },
-            .hex => |hex| hblk: {
-                const color = try RGBA.fromHex(f64, hex);
-                break :hblk c.GdkRGBA{
-                    .red = color.red,
-                    .green = color.green,
-                    .blue = color.blue,
-                    .alpha = color.alpha,
-                };
-            },
-        };
-    }
-};
-
 pub const Colors = struct {
-    text_color: RGBColor,
-    background_color: RGBColor,
-    black_color: RGBColor,
-    red_color: RGBColor,
-    green_color: RGBColor,
-    brown_color: RGBColor,
-    blue_color: RGBColor,
-    magenta_color: RGBColor,
-    cyan_color: RGBColor,
-    light_grey_color: RGBColor,
-    dark_grey_color: RGBColor,
-    light_red_color: RGBColor,
-    light_green_color: RGBColor,
-    yellow_color: RGBColor,
-    light_blue_color: RGBColor,
-    light_magenta_color: RGBColor,
-    light_cyan_color: RGBColor,
-    white_color: RGBColor,
+    text_color: RGB,
+    background_color: RGB,
+    black_color: RGB,
+    red_color: RGB,
+    green_color: RGB,
+    brown_color: RGB,
+    blue_color: RGB,
+    magenta_color: RGB,
+    cyan_color: RGB,
+    light_grey_color: RGB,
+    dark_grey_color: RGB,
+    light_red_color: RGB,
+    light_green_color: RGB,
+    yellow_color: RGB,
+    light_blue_color: RGB,
+    light_magenta_color: RGB,
+    light_cyan_color: RGB,
+    white_color: RGB,
 
     pub fn default() Colors {
         return Colors{
-            .text_color = RGBColor{ .red = 225, .green = 225, .blue = 225 },
-            .background_color = RGBColor{ .red = 36, .green = 34, .blue = 34 },
-            .black_color = RGBColor{ .red = 36, .green = 34, .blue = 34 },
-            .red_color = RGBColor{ .red = 165, .green = 29, .blue = 45 },
-            .green_color = RGBColor{ .red = 0, .green = 170, .blue = 0 },
-            .brown_color = RGBColor{ .red = 99, .green = 69, .blue = 44 },
-            .blue_color = RGBColor{ .red = 0, .green = 0, .blue = 170 },
-            .magenta_color = RGBColor{ .red = 170, .green = 0, .blue = 170 },
-            .cyan_color = RGBColor{ .red = 0, .green = 170, .blue = 170 },
-            .light_grey_color = RGBColor{ .red = 170, .green = 170, .blue = 170 },
-            .dark_grey_color = RGBColor{ .red = 85, .green = 85, .blue = 85 },
-            .light_red_color = RGBColor{ .red = 255, .green = 85, .blue = 85 },
-            .light_green_color = RGBColor{ .red = 85, .green = 255, .blue = 85 },
-            .yellow_color = RGBColor{ .red = 225, .green = 189, .blue = 0 },
-            .light_blue_color = RGBColor{ .red = 85, .green = 85, .blue = 255 },
-            .light_magenta_color = RGBColor{ .red = 255, .green = 85, .blue = 255 },
-            .light_cyan_color = RGBColor{ .red = 85, .green = 255, .blue = 255 },
-            .white_color = RGBColor{ .red = 225, .green = 225, .blue = 225 },
+            .text_color = RGB{ .red = 225, .green = 225, .blue = 225 },
+            .background_color = RGB{ .red = 36, .green = 34, .blue = 34 },
+            .black_color = RGB{ .red = 36, .green = 34, .blue = 34 },
+            .red_color = RGB{ .red = 165, .green = 29, .blue = 45 },
+            .green_color = RGB{ .red = 0, .green = 170, .blue = 0 },
+            .brown_color = RGB{ .red = 99, .green = 69, .blue = 44 },
+            .blue_color = RGB{ .red = 0, .green = 0, .blue = 170 },
+            .magenta_color = RGB{ .red = 170, .green = 0, .blue = 170 },
+            .cyan_color = RGB{ .red = 0, .green = 170, .blue = 170 },
+            .light_grey_color = RGB{ .red = 170, .green = 170, .blue = 170 },
+            .dark_grey_color = RGB{ .red = 85, .green = 85, .blue = 85 },
+            .light_red_color = RGB{ .red = 255, .green = 85, .blue = 85 },
+            .light_green_color = RGB{ .red = 85, .green = 255, .blue = 85 },
+            .yellow_color = RGB{ .red = 225, .green = 189, .blue = 0 },
+            .light_blue_color = RGB{ .red = 85, .green = 85, .blue = 255 },
+            .light_magenta_color = RGB{ .red = 255, .green = 85, .blue = 255 },
+            .light_cyan_color = RGB{ .red = 85, .green = 255, .blue = 255 },
+            .white_color = RGB{ .red = 225, .green = 225, .blue = 225 },
         };
     }
 
@@ -472,9 +432,9 @@ pub const Config = struct {
             },
             .gradient => {
                 t.set_clear_background(false);
-                const provider = gui.css_provider;
-                const css_string = ".workview stack {\n    background-image: radial-gradient(ellipse at bottom right, #211d1d, #181414 35%, #2d2929 95%, #423d3d);\n    background-size: 100% 100%;\n }";
-                _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
+                //const provider = gui.css_provider;
+                //const css_string = ".workview stack {\n    background-image: radial-gradient(ellipse at bottom right, #211d1d, #181414 35%, #2d2929 95%, #423d3d);\n    background-size: 100% 100%;\n }";
+                //_ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
             },
         }
     }

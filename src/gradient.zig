@@ -3,10 +3,12 @@ const VTE = @import("vte");
 const c = VTE.c;
 const gtk = VTE.gtk;
 const config = @import("config.zig");
-const RGBColor = config.RGBColor;
-const RGB = @import("zig-color").RGB;
+const gui = @import("gui.zig");
+const RGB = config.RGB;
 const allocator = std.heap.page_allocator;
+const fmt = std.fmt;
 const math = std.math;
+const mem = std.mem;
 
 var gradientEditor: GradientEditor = undefined;
 var numStops: u8 = 2;
@@ -78,7 +80,11 @@ pub const StopControls = struct {
             3 => {
                 switch (numStops) {
                     4 => self.stop_selector.remove(3),
-                    2 => self.stop_selector.append("stop3", "Stop 3"),
+                    2 => {
+                        self.stop_selector.append("stop3", "Stop 3");
+                        const adj = self.stop2_position.as_range().get_adjustment();
+                        adj.set_value(50);
+                    },
                     else => {},
                 }
                 numStops = 3;
@@ -87,9 +93,17 @@ pub const StopControls = struct {
                 switch (numStops) {
                     2 => {
                         self.stop_selector.append("stop3", "Stop 3");
+                        var adj = self.stop2_position.as_range().get_adjustment();
+                        adj.set_value(33);
                         self.stop_selector.append("stop4", "Stop 4");
+                        adj = self.stop2_position.as_range().get_adjustment();
+                        adj.set_value(66);
                     },
-                    3 => self.stop_selector.append("stop4", "Stop 4"),
+                    3 => {
+                        self.stop_selector.append("stop4", "Stop 4");
+                        const adj = self.stop3_position.as_range().get_adjustment();
+                        adj.set_value(66);
+                    },
                     else => {},
                 }
                 numStops = 4;
@@ -120,19 +134,82 @@ pub const StopControls = struct {
     }
 
     fn connectSignals(self: Self) void {
-        self.stops.connect_value_changed(@ptrCast(c.GCallback, alterNumStops), null);
-        self.stop_selector.as_combo_box().connect_changed(@ptrCast(c.GCallback, toggleStops), null);
-        self.stop1_position.as_range().connect_value_changed(@ptrCast(c.GCallback, clampScale2), null);
-        self.stop2_position.as_range().connect_value_changed(@ptrCast(c.GCallback, clampScale3), null);
-        self.stop3_position.as_range().connect_value_changed(@ptrCast(c.GCallback, clampScale4), null);
+        const Callbacks = struct {
+            fn stopsValueChanged() void {
+                gradientEditor.stops.addRemoveStops();
+                gradientEditor.updatePreview();
+            }
+
+            fn stopSelectorChanged() void {
+                gradientEditor.stops.toggle();
+            }
+
+            fn stop1PositionValueChanged() void {
+                gradientEditor.stops.updateScale2();
+                gradientEditor.updatePreview();
+            }
+
+            fn stop2PositionValueChanged() void {
+                gradientEditor.stops.updateScale3();
+                gradientEditor.updatePreview();
+            }
+
+            fn stop3PositionValueChanged() void {
+                gradientEditor.stops.updateScale4();
+                gradientEditor.updatePreview();
+            }
+
+            fn updatePreview() void {
+                gradientEditor.updatePreview();
+            }
+        };
+
+        self.stops.connect_value_changed(
+            @ptrCast(c.GCallback, Callbacks.stopsValueChanged),
+            null
+        );
+        self.stop_selector.as_combo_box().connect_changed(
+            @ptrCast(c.GCallback, Callbacks.stopSelectorChanged),
+            null
+        );
+        self.stop1_position.as_range().connect_value_changed(
+            @ptrCast(c.GCallback, Callbacks.stop1PositionValueChanged),
+            null
+        );
+        self.stop1_color.connect_color_set(
+            @ptrCast(c.GCallback, Callbacks.updatePreview),
+            null
+        );
+        self.stop2_position.as_range().connect_value_changed(
+            @ptrCast(c.GCallback, Callbacks.stop2PositionValueChanged),
+            null
+        );
+        self.stop2_color.connect_color_set(
+            @ptrCast(c.GCallback, Callbacks.updatePreview),
+            null
+        );
+        self.stop3_position.as_range().connect_value_changed(
+            @ptrCast(c.GCallback, Callbacks.stop3PositionValueChanged),
+            null
+        );
+        self.stop3_color.connect_color_set(
+            @ptrCast(c.GCallback, Callbacks.updatePreview),
+            null
+        );
+        self.stop4_position.as_range().connect_value_changed(
+            @ptrCast(c.GCallback, Callbacks.updatePreview),
+            null
+        );
+        self.stop4_color.connect_color_set(
+            @ptrCast(c.GCallback, Callbacks.updatePreview),
+            null
+        );
     }
 
-    fn getStop(button: gtk.ColorButton, scale: gtk.Scale) ?Stop {
-        const gdk = button.as_color_chooser().get_rgba();
-        const f = RGB.new(f64, gdk.red, gdk.green, gdk.blue) catch return null;
-        const color = f.toInt(u8) catch return null;
+    fn getStop(self: Self, button: gtk.ColorButton, scale: gtk.Scale) Stop {
+        _ = self;
         return Stop{
-            .color = color,
+            .color = RGB.fromButton(button),
             .position = scale.as_range().get_value(),
         };
     }
@@ -189,17 +266,17 @@ pub const GradientEditor = struct {
         const kind: ?Kind = switch (gradient_kind) {
             .linear => lblk: {
                 if (self.getDirection()) |d| {
-                    break :lblk GradientKind{ .linear = d };
+                    break :lblk Kind{ .linear = d };
                 } else return null;
             },
             .radial => rblk: {
                 if (self.getPlacement()) |p| {
-                    break :rblk GradientKind{ .radial = p };
+                    break :rblk Kind{ .radial = p };
                 } else return null;
             },
             .elliptical => eblk: {
                 if (self.getPlacement()) |p| {
-                    break eblk: GradientKind{ .elliptical = p };
+                    break :eblk Kind{ .elliptical = p };
                 } else return null;
             },
         };
@@ -207,14 +284,18 @@ pub const GradientEditor = struct {
     }
 
     fn getPlacement(self: Self) ?Placement {
-        const vert = if (self.vertical_position.get_active_id(allocator)) |id| vblk: {
-            defer allocator.free(id);
-            if (config.parse_enum(VerticalPlacement, id)) |v| break :vblk v else return null;
+        const vert = vblk: {
+            if (self.vertical_position.get_active_id(allocator)) |id| {
+                defer allocator.free(id);
+                if (config.parse_enum(VerticalPlacement, id)) |v| break :vblk v else return null;
+            } else return null;
         };
 
-        const hor = if (self.horizontal_placement.get_active_id(allocator)) |id| hblk: {
-            defer allocator.free(id);
-            if (config.parse_enum(HorizontalPlacement, id)) |h| break :hblk h else return null;
+        const hor = hblk: {
+            if (self.horizontal_position.get_active_id(allocator)) |id| {
+                defer allocator.free(id);
+                if (config.parse_enum(HorizontalPlacement, id)) |h| break :hblk h else return null;
+            } else return null;
         };
         return Placement{
             .vertical = vert,
@@ -222,7 +303,7 @@ pub const GradientEditor = struct {
         };
     }
 
-    fn getDirectionType(self: Self) DirectionType {
+    fn getDirectionType(self: Self) ?DirectionType {
         if (self.dir_type.get_active_id(allocator)) |id| {
             defer allocator.free(id);
             return if (config.parse_enum(DirectionType, id)) |d| d else null;
@@ -241,24 +322,61 @@ pub const GradientEditor = struct {
     fn getGradient(self: Self) ?Gradient {
         const s3: ?Stop = switch (numStops) {
             2 => null,
-            3, 4 => if (self.stops.getStop(self.stop3_color, self.stop3_position)) |s| s else return null,
+            3, 4 => self.stops.getStop(self.stops.stop3_color, self.stops.stop3_position),
+            else => return null,
         };
         const s4: ?Stop = switch (numStops) {
             2, 3 => null,
-            4 => if (self.stops.getStop(self.stop4_color, self.stop4_position)) |s| s else return null,
+            4 => self.stops.getStop(self.stops.stop4_color, self.stops.stop4_position),
+            else => return null,
         };
         return Gradient{
             .kind = if (self.getKind()) |k| k else return null,
-            .stop1 = if (self.stops.getStop(self.stop1_color, self.stop1_position)) |x| x else return null,
-            .stop2 = if (self.stops.getStop(self.stop2_color, self.stop2_position)) |x| x else return null,
+            .stop1 = self.stops.getStop(self.stops.stop1_color, self.stops.stop1_position),
+            .stop2 = self.stops.getStop(self.stops.stop2_color, self.stops.stop2_position),
             .stop3 = if (s3) |x| x else null,
             .stop4 = if (s4) |x| x else null,
         };
     }
 
+    fn updatePreview(self: Self) void {
+        if (self.getGradient()) |grad| {
+            if (grad.toCss(".workview stack")) |css| {
+                defer allocator.free(css);
+
+                const provider = gui.css_provider;
+                _ = c.gtk_css_provider_load_from_data(provider, css, -1, null);
+            }
+        }
+    }
+
     fn connectSignals(self: Self) void {
-        self.kind.connect_changed(@ptrCast(c.GCallback, togglePosition), null);
-        self.dir_type.connect_changed(@ptrCast(c.GCallback, toggleDirection), null);
+        const Callbacks = struct {
+            fn kindChanged() void {
+                gradientEditor.togglePositionType();
+                gradientEditor.updatePreview();
+            }
+
+            fn dirTypeChanged() void {
+                gradientEditor.toggleDirectionType();
+                gradientEditor.updatePreview();
+            }
+
+            fn updatePreview() void {
+                gradientEditor.updatePreview();
+            }
+        };
+
+        self.kind.connect_changed(
+            @ptrCast(c.GCallback, Callbacks.kindChanged), null);
+        self.dir_type.connect_changed(
+            @ptrCast(c.GCallback, Callbacks.dirTypeChanged), null);
+        self.angle.connect_value_changed(
+            @ptrCast(c.GCallback, Callbacks.updatePreview), null);
+        self.vertical_position.connect_changed(
+            @ptrCast(c.GCallback, Callbacks.updatePreview), null);
+        self.horizontal_position.connect_changed(
+            @ptrCast(c.GCallback, Callbacks.updatePreview), null);
         self.stops.connectSignals();
     }
 
@@ -382,6 +500,17 @@ pub const Direction = union(DirectionType) {
 pub const Stop = struct {
     color: RGB,
     position: f64,
+
+    const Self = @This();
+
+    fn toCss(self: Self, alloc: mem.Allocator) ?[]const u8 {
+        if (self.color.toHex(allocator)) |h| {
+            defer allocator.free(h);
+            const str = fmt.allocPrint(alloc, ", {s} {d}%",
+                .{h, math.round(self.position)}) catch return null;
+            return str;
+        } else return null;
+    }
 };
 
 pub const Gradient = struct {
@@ -399,43 +528,133 @@ pub const Gradient = struct {
             .start = Placement.default(),
             .direction = Direction.default(),
             .stop1 = Stop{
-                .color = RGBColor{ .red = 0, .green = 0, .blue = 0 },
+                .color = RGB{ .red = 0, .green = 0, .blue = 0 },
                 .position = 0.0,
             },
             .stop2 = Stop{
-                .color = RGBColor{ .red = 64, .green = 64, .blue = 64 },
+                .color = RGB{ .red = 64, .green = 64, .blue = 64 },
                 .position = 100.0,
             },
             .stop4 = null,
             .stop4 = null,
         };
     }
+
+    pub fn toCss(self: Self, class: []const u8) ?[:0]const u8 {
+        var variety: []const u8 = "";
+        var positioning: []const u8 = "";
+        var angle: ?u16 = null;
+        switch (self.kind) {
+            .linear => |dir| {
+                variety = "linear-gradient";
+                switch (dir) {
+                    .angle => |a| {
+                        angle = @floatToInt(u16, math.round(a));
+                    },
+                    .edge => |e| {
+                        positioning = switch (e.vertical) {
+                            .top => switch (e.horizontal) {
+                                .left => "to top left",
+                                .center => "to top",
+                                .right => "to top right",
+                            },
+                            .center => switch (e.horizontal) {
+                                .left => "to left",
+                                .center => "to bottom right",
+                                .right => "to top right",
+                            },
+                            .bottom => switch (e.horizontal) {
+                                .left => "to bottom left",
+                                .center => "to bottom",
+                                .right => "to bottom right",
+                            },
+                        };
+                    },
+                }
+            },
+            .radial => |pos| {
+                variety = "radial-gradient";
+                positioning = switch (pos.vertical) {
+                    .top => switch (pos.horizontal) {
+                        .left => "circle at top left",
+                        .center => "circle at top",
+                        .right => "circle at top right",
+                    },
+                    .center => switch (pos.horizontal) {
+                        .left => "circle at left",
+                        .center => "circle at center",
+                        .right => "circle at right",
+                    },
+                    .bottom => switch (pos.horizontal) {
+                        .left => "circle at bottom left",
+                        .center => "circle at bottom",
+                        .right => "circle at bottom right",
+                    },
+                };
+            },
+            .elliptical => |pos| {
+                variety = "radial-gradient";
+                positioning = switch (pos.vertical) {
+                    .top => switch (pos.horizontal) {
+                        .left => "ellipse at top left",
+                        .center => "ellipse at top",
+                        .right => "ellipse at top right",
+                    },
+                    .center => switch (pos.horizontal) {
+                        .left => "ellipse at left",
+                        .center => "ellipse at center",
+                        .right => "ellipse at right",
+                    },
+                    .bottom => switch (pos.horizontal) {
+                        .left => "ellipse at bottom left",
+                        .center => "ellipse at bottom",
+                        .right => "ellipse at bottom right",
+                    },
+                };
+            },
+        }
+        if (angle) |a| {
+            var buf: [7]u8 = undefined;
+            const str = fmt.bufPrint(&buf, "{d}deg", .{a}) catch return null;
+            positioning = str[0..];
+        }
+
+        const s1 = if (self.stop1.toCss(allocator)) |css| css else return null;
+        defer allocator.free(s1);
+        const s2 = if (self.stop2.toCss(allocator)) |css| css else return null;
+        defer allocator.free(s2);
+
+        const s3: ?[]const u8 = if (self.stop3) |s| sblk: {
+            if (s.toCss(allocator)) |css| {
+                break :sblk css;
+            } else return null;
+        } else null;
+
+        const s4: ?[]const u8 = if (self.stop4) |s| sblk: {
+            if (s.toCss(allocator)) |css| {
+                break :sblk css;
+            } else return null;
+        } else null;
+
+        const css_string = fmt.allocPrintZ(allocator,
+            "{s} {{\n    background-image: {s}({s}{s}{s}{s}{s});\n    background-size: 100% 100%;\n\n}}",
+            .{  class,
+                variety,
+                positioning,
+                s1,
+                s2,
+                if (s3) |s| s else "",
+                if (s4) |s| s else "",
+            }
+        ) catch return null;
+        if (s3) |s| {
+            _ = s;
+            allocator.free(s);
+        }
+        if (s4) |s| {
+            _ = s;
+            allocator.free(s);
+        }
+        return css_string;
+    }
 };
-
-fn alterNumStops() void {
-    gradientEditor.stops.addRemoveStops();
-}
-
-fn toggleStops() void {
-    gradientEditor.stops.toggle();
-}
-
-fn clampScale2() void {
-    gradientEditor.stops.updateScale2();
-}
-
-fn clampScale3() void {
-    gradientEditor.stops.updateScale3();
-}
-
-fn clampScale4() void {
-    gradientEditor.stops.updateScale4();
-}
-
-fn togglePosition() void {
-    gradientEditor.togglePositionType();
-}
-
-fn toggleDirection() void {
-    gradientEditor.toggleDirectionType();
-}
