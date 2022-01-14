@@ -107,6 +107,8 @@ pub const PrefWidgets = struct {
     system_font_checkbutton: gtk.CheckButton,
     font_chooser_button: *c.GtkWidget,
     background_style_combobox: gtk.ComboBox,
+    background_style_stack: gtk.Stack,
+    background_color_box: gtk.Widget,
     background_image_grid: gtk.Widget,
     background_image_file_button: *c.GtkWidget,
     background_image_style_combobox: gtk.ComboBox,
@@ -145,6 +147,10 @@ pub const PrefWidgets = struct {
             .font_chooser_button = builder.get_widget("font_chooser_button").?.ptr,
             .background_style_combobox = builder
                 .get_widget("background_style_combobox").?.to_combo_box().?,
+            .background_style_stack = builder
+                .get_widget("background_style_stack").?.to_stack().?,
+            .background_color_box = builder
+                .get_widget("background_color_box").?,
             .background_image_grid = builder.get_widget("background_image_grid").?,
             .background_image_file_button = builder
                 .get_widget("background_image_file_button").?.ptr,
@@ -366,30 +372,23 @@ pub const PrefWidgets = struct {
         const bg = conf.background;
         switch (bg) {
             .solid_color => {
-                self.background_image_grid.hide();
-                self.background_style_opacity_box.hide();
-                self.gradient_editor.editor.hide();
                 self.background_style_combobox.set_active_id("solid_color");
+                self.background_style_stack.set_visible_child(self.background_color_box);
             },
             .image => |img| {
-                self.background_image_grid.show_all();
-                self.background_style_opacity_box.hide();
-                self.gradient_editor.editor.hide();
                 self.background_style_combobox.set_active_id("image");
+                self.background_style_stack.set_visible_child(self.background_image_grid);
                 self.setBackgroundImage(img);
             },
             .transparent => |percent| {
-                self.background_image_grid.hide();
-                self.background_style_opacity_box.show_all();
-                self.gradient_editor.editor.hide();
                 self.background_style_combobox.set_active_id("transparent");
+                self.background_style_stack.set_visible_child(self.background_style_opacity_box);
                 self.setTransparency(percent);
             },
             .gradient => {
-                self.background_image_grid.hide();
-                self.background_style_opacity_box.hide();
-                self.gradient_editor.editor.show();
                 self.background_style_combobox.set_active_id("gradient");
+                self.background_style_stack.set_visible_child(self.gradient_editor.editor);
+                self.gradient_editor.setBg();
             },
         }
     }
@@ -476,24 +475,17 @@ pub const PrefWidgets = struct {
                 const style = config.parseEnum(config.BackgroundStyle, id).?;
                 switch (style) {
                     .solid_color => {
-                        widgets.background_image_grid.set_visible(false);
-                        widgets.background_style_opacity_box.set_visible(false);
-                        widgets.gradient_editor.editor.set_visible(false);
+                        widgets.background_style_stack.set_visible_child(widgets.background_color_box);
                     },
                     .image => {
-                        widgets.background_image_grid.set_visible(true);
-                        widgets.background_style_opacity_box.set_visible(false);
-                        widgets.gradient_editor.editor.set_visible(false);
+                        widgets.background_style_stack.set_visible_child(widgets.background_image_grid);
                     },
                     .transparent => {
-                        widgets.background_image_grid.set_visible(false);
-                        widgets.background_style_opacity_box.set_visible(true);
-                        widgets.gradient_editor.editor.set_visible(false);
+                        widgets.background_style_stack.set_visible_child(widgets.background_style_opacity_box);
                     },
                     .gradient => {
-                        widgets.background_image_grid.set_visible(false);
-                        widgets.background_style_opacity_box.set_visible(false);
-                        widgets.gradient_editor.editor.set_visible(true);
+                        widgets.background_style_stack.set_visible_child(widgets.gradient_editor.editor);
+                        widgets.gradient_editor.setBg();
                     },
                 }
             }

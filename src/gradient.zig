@@ -137,7 +137,7 @@ pub const StopControls = struct {
         const Callbacks = struct {
             fn stopsValueChanged() void {
                 gradientEditor.stops.addRemoveStops();
-                gradientEditor.updatePreview();
+                gradientEditor.setBg();
             }
 
             fn stopSelectorChanged() void {
@@ -146,21 +146,21 @@ pub const StopControls = struct {
 
             fn stop1PositionValueChanged() void {
                 gradientEditor.stops.updateScale2();
-                gradientEditor.updatePreview();
+                gradientEditor.setBg();
             }
 
             fn stop2PositionValueChanged() void {
                 gradientEditor.stops.updateScale3();
-                gradientEditor.updatePreview();
+                gradientEditor.setBg();
             }
 
             fn stop3PositionValueChanged() void {
                 gradientEditor.stops.updateScale4();
-                gradientEditor.updatePreview();
+                gradientEditor.setBg();
             }
 
             fn updatePreview() void {
-                gradientEditor.updatePreview();
+                gradientEditor.setBg();
             }
         };
 
@@ -229,7 +229,6 @@ pub const GradientEditor = struct {
     vertical_position: gtk.ComboBox,
     horizontal_position: gtk.ComboBox,
     stops: StopControls,
-    gradient_preview: gtk.Box,
 
     const Self = @This();
 
@@ -248,7 +247,6 @@ pub const GradientEditor = struct {
             .vertical_position = builder.get_widget("gradient_vertical_position").?.to_combo_box().?,
             .horizontal_position = builder.get_widget("gradient_horizontal_position").?.to_combo_box().?,
             .stops = StopControls.init(builder).?,
-            .gradient_preview = builder.get_widget("gradient_preview").?.to_box().?,
         };
         gradientEditor.setup();
         return gradientEditor;
@@ -339,11 +337,10 @@ pub const GradientEditor = struct {
         };
     }
 
-    fn updatePreview(self: Self) void {
+    pub fn setBg(self: Self) void {
         if (self.getGradient()) |grad| {
             if (grad.toCss(".workview stack")) |css| {
                 defer allocator.free(css);
-
                 const provider = gui.css_provider;
                 _ = c.gtk_css_provider_load_from_data(provider, css, -1, null);
             }
@@ -354,16 +351,16 @@ pub const GradientEditor = struct {
         const Callbacks = struct {
             fn kindChanged() void {
                 gradientEditor.togglePositionType();
-                gradientEditor.updatePreview();
+                gradientEditor.setBg();
             }
 
             fn dirTypeChanged() void {
                 gradientEditor.toggleDirectionType();
-                gradientEditor.updatePreview();
+                gradientEditor.setBg();
             }
 
-            fn updatePreview() void {
-                gradientEditor.updatePreview();
+            fn setBg() void {
+                gradientEditor.setBg();
             }
         };
 
@@ -372,11 +369,11 @@ pub const GradientEditor = struct {
         self.dir_type.connect_changed(
             @ptrCast(c.GCallback, Callbacks.dirTypeChanged), null);
         self.angle.connect_value_changed(
-            @ptrCast(c.GCallback, Callbacks.updatePreview), null);
+            @ptrCast(c.GCallback, Callbacks.setBg), null);
         self.vertical_position.connect_changed(
-            @ptrCast(c.GCallback, Callbacks.updatePreview), null);
+            @ptrCast(c.GCallback, Callbacks.setBg), null);
         self.horizontal_position.connect_changed(
-            @ptrCast(c.GCallback, Callbacks.updatePreview), null);
+            @ptrCast(c.GCallback, Callbacks.setBg), null);
         self.stops.connectSignals();
     }
 
@@ -503,13 +500,11 @@ pub const Stop = struct {
 
     const Self = @This();
 
-    fn toCss(self: Self, alloc: mem.Allocator) ?[]const u8 {
-        if (self.color.toHex(allocator)) |h| {
-            defer allocator.free(h);
-            const str = fmt.allocPrint(alloc, ", {s} {d}%",
-                .{h, math.round(self.position)}) catch return null;
-            return str;
-        } else return null;
+    fn toCss(self: Self, buf: *[26]u8) ?[]const u8 {
+        const str = fmt.bufPrint(buf, ", rgb({d}, {d}, {d}) {d}%",
+            .{self.color.red, self.color.green, self.color.blue, math.round(self.position)})
+            catch return null;
+        return str;
     }
 };
 
@@ -619,22 +614,24 @@ pub const Gradient = struct {
             positioning = str[0..];
         }
 
-        const s1 = if (self.stop1.toCss(allocator)) |css| css else return null;
-        defer allocator.free(s1);
-        const s2 = if (self.stop2.toCss(allocator)) |css| css else return null;
-        defer allocator.free(s2);
+        var buf1: [26]u8 = undefined;
+        const s1 = if (self.stop1.toCss(&buf1)) |css| css else return null;
+        var buf2: [26]u8 = undefined;
+        const s2 = if (self.stop2.toCss(&buf2)) |css| css else return null;
 
-        const s3: ?[]const u8 = if (self.stop3) |s| sblk: {
-            if (s.toCss(allocator)) |css| {
+        const s3: []const u8 = if (self.stop3) |s| sblk: {
+            var buf3: [26]u8 = undefined;
+            if (s.toCss(&buf3)) |css| {
                 break :sblk css;
             } else return null;
-        } else null;
+        } else "";
 
-        const s4: ?[]const u8 = if (self.stop4) |s| sblk: {
-            if (s.toCss(allocator)) |css| {
+        const s4: []const u8 = if (self.stop4) |s| sblk: {
+            var buf4: [26]u8 = undefined;
+            if (s.toCss(&buf4)) |css| {
                 break :sblk css;
             } else return null;
-        } else null;
+        } else "";
 
         const css_string = fmt.allocPrintZ(allocator,
             "{s} {{\n    background-image: {s}({s}{s}{s}{s}{s});\n    background-size: 100% 100%;\n\n}}",
@@ -643,18 +640,10 @@ pub const Gradient = struct {
                 positioning,
                 s1,
                 s2,
-                if (s3) |s| s else "",
-                if (s4) |s| s else "",
+                s3,
+                s4,
             }
         ) catch return null;
-        if (s3) |s| {
-            _ = s;
-            allocator.free(s);
-        }
-        if (s4) |s| {
-            _ = s;
-            allocator.free(s);
-        }
         return css_string;
     }
 };

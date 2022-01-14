@@ -391,19 +391,22 @@ pub const Config = struct {
         return null;
     }
 
-    fn setBg(self: Config, term: *c.VteTerminal) void {
-        const t = vte.Terminal{ .ptr = term };
+    pub fn setBg(self: Config) void {
+        const provider = gui.css_provider;
+        const color = self.colors.background_color;
+        var buf: [55]u8 = undefined;
+        const bg_color = fmt.bufPrint(&buf, "\n    background-color: rgb({d}, {d}, {d});",
+            .{color.red, color.green, color.blue}) catch return;
         switch (self.background) {
             .solid_color => {
-                t.set_clear_background(true);
-                self.colors.setBg(term);
+                const css_string = fmt.allocPrintZ(allocator,
+                    ".workview stack {{{s}\n    background-size: 100% 100%;}}",
+                    .{bg_color}) catch return;
+                _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
             },
             .image => |img| {
                 const file = fs.cwd().openFile(img.file, .{}) catch return;
                 file.close();
-                t.set_clear_background(false);
-                const provider = gui.css_provider;
-                const bg_color = self.colors.background_color;
                 const centered =
                     \\    background-position: center;
                     \\    background-repeat: no-repeat;
@@ -420,18 +423,12 @@ pub const Config = struct {
                     .stretched => "    background-size: 100% 100%;\n",
                 };
                 const css_string = fmt.allocPrintZ(allocator,
-                    ".workview stack {{\n    background-image: url(\"{s}\");\n    background-color: rgb({d}, {d}, {d});\n{s}}}",
-                    .{img.file, bg_color.red, bg_color.green, bg_color.blue, styling}) catch return;
+                    ".workview stack {{\n    background-image: url(\"{s}\");{s}\n{s}}}",
+                    .{img.file, bg_color, styling}) catch return;
                 _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
             },
-            .transparent => |percent| {
-                t.set_clear_background(true);
-                const opacity = percent / 100.0;
-                const rgba = self.colors.background_color.toGdkAlpha(opacity);
-                c.vte_terminal_set_color_background(term, &rgba);
-            },
+            .transparent => {},
             .gradient => {
-                t.set_clear_background(false);
                 //const provider = gui.css_provider;
                 //const css_string = ".workview stack {\n    background-image: radial-gradient(ellipse at bottom right, #211d1d, #181414 35%, #2d2929 95%, #423d3d);\n    background-size: 100% 100%;\n }";
                 //_ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
@@ -441,7 +438,6 @@ pub const Config = struct {
 
     pub fn set(self: Config, term: *c.VteTerminal) void {
         self.colors.set(term);
-        self.setBg(term);
         self.scrollback.set(term);
         self.font.set(term);
         self.cursor.set(term);

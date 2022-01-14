@@ -49,6 +49,7 @@ pub const Tab = struct {
             .close_button = gtk.Button.new_from_icon_name("window-close", .menu),
         };
         const term = Callbacks.newTerm(command);
+        term.set_clear_background(false);
         const lbox = gtk.Box.new(.horizontal, 10);
         tab.close_button.set_relief(.none);
         const close_button_widget = tab.close_button.as_widget();
@@ -231,6 +232,7 @@ const Gui = struct {
         while (iter.next()) |term| {
             conf.set(term.*);
         }
+        conf.setBg();
     }
 
     fn applySettings(self: Self) void {

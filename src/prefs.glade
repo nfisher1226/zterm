@@ -35,29 +35,6 @@
     <property name="step-increment">10</property>
     <property name="page-increment">50</property>
   </object>
-  <object class="GtkAdjustment" id="stop1_adjustment">
-    <property name="upper">100</property>
-    <property name="step-increment">1</property>
-    <property name="page-increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="stop2_adjustment">
-    <property name="upper">100</property>
-    <property name="value">100</property>
-    <property name="step-increment">1</property>
-    <property name="page-increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="stop3_adjustment">
-    <property name="upper">100</property>
-    <property name="value">100</property>
-    <property name="step-increment">1</property>
-    <property name="page-increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="stop4_adjustment">
-    <property name="upper">100</property>
-    <property name="value">100</property>
-    <property name="step-increment">1</property>
-    <property name="page-increment">10</property>
-  </object>
   <object class="GtkDialog" id="window">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">Zterm - Preferences</property>
@@ -494,33 +471,6 @@
                         <property name="position">1</property>
                       </packing>
                     </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="label" translatable="yes">Background Color:</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkColorButton" id="background_color">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
-                        <property name="tooltip-text" translatable="yes">Background Color</property>
-                        <property name="rgba">rgb(36,34,34)</property>
-                        <property name="show-editor">True</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">3</property>
-                      </packing>
-                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -892,115 +842,615 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">8</property>
+                    <property name="position">7</property>
                   </packing>
                 </child>
                 <child>
-                  <!-- n-columns=2 n-rows=2 -->
-                  <object class="GtkGrid" id="background_image_grid">
+                  <object class="GtkStack" id="background_style_stack">
+                    <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="row-spacing">2</property>
-                    <property name="column-spacing">5</property>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkBox" id="background_color_box">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="label" translatable="yes">Style:</property>
+                        <property name="valign">start</property>
+                        <property name="spacing">5</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">Color:</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkColorButton" id="background_color">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">True</property>
+                            <property name="tooltip-text" translatable="yes">Background Color</property>
+                            <property name="rgba">rgb(36,34,34)</property>
+                            <property name="show-editor">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
                       </object>
                       <packing>
-                        <property name="left-attach">0</property>
-                        <property name="top-attach">1</property>
+                        <property name="name">page0</property>
+                        <property name="title" translatable="yes">page0</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkComboBoxText" id="background_image_style_combobox">
+                      <!-- n-columns=2 n-rows=2 -->
+                      <object class="GtkGrid" id="background_image_grid">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="tooltip-text" translatable="yes">How the image is to be scaled and positioned.</property>
-                        <property name="hexpand">True</property>
-                        <property name="active-id">tiled</property>
-                        <items>
-                          <item id="tiled" translatable="yes">Tiled</item>
-                          <item id="centered" translatable="yes">Centered</item>
-                          <item id="scaled" translatable="yes">Scaled</item>
-                          <item id="stretched" translatable="yes">Stretched</item>
-                        </items>
+                        <property name="valign">start</property>
+                        <property name="row-spacing">2</property>
+                        <property name="column-spacing">5</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">Style:</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkComboBoxText" id="background_image_style_combobox">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="tooltip-text" translatable="yes">How the image is to be scaled and positioned.</property>
+                            <property name="hexpand">True</property>
+                            <property name="active-id">tiled</property>
+                            <items>
+                              <item id="tiled" translatable="yes">Tiled</item>
+                              <item id="centered" translatable="yes">Centered</item>
+                              <item id="scaled" translatable="yes">Scaled</item>
+                              <item id="stretched" translatable="yes">Stretched</item>
+                            </items>
+                          </object>
+                          <packing>
+                            <property name="left-attach">1</property>
+                            <property name="top-attach">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkFileChooserButton" id="background_image_file_button">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="tooltip-text" translatable="yes">An image file of type png, jpeg, or svg to use as the background image.</property>
+                            <property name="hexpand">True</property>
+                            <property name="filter">filefilter1</property>
+                            <property name="title" translatable="yes"/>
+                          </object>
+                          <packing>
+                            <property name="left-attach">1</property>
+                            <property name="top-attach">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">File:</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">0</property>
+                          </packing>
+                        </child>
                       </object>
                       <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkFileChooserButton" id="background_image_file_button">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="tooltip-text" translatable="yes">An image file of type png, jpeg, or svg to use as the background image.</property>
-                        <property name="hexpand">True</property>
-                        <property name="filter">filefilter1</property>
-                        <property name="title" translatable="yes"/>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="label" translatable="yes">File:</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">0</property>
-                        <property name="top-attach">0</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">9</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkBox" id="background_style_opacity_box">
-                    <property name="name">background_image_opacity_box</property>
-                    <property name="can-focus">False</property>
-                    <property name="spacing">5</property>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="label" translatable="yes">Opacity:</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkScale" id="background_style_opacity_scale">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="tooltip-text" translatable="yes">The opacity of the terminal window.</property>
-                        <property name="hexpand">True</property>
-                        <property name="adjustment">background_opacity_adjustment</property>
-                        <property name="round-digits">1</property>
-                        <property name="value-pos">right</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
+                        <property name="name">page1</property>
+                        <property name="title" translatable="yes">page1</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
+                    <child>
+                      <object class="GtkBox" id="background_style_opacity_box">
+                        <property name="name">background_image_opacity_box</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="valign">start</property>
+                        <property name="spacing">5</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">Opacity:</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkScale" id="background_style_opacity_scale">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="tooltip-text" translatable="yes">The opacity of the terminal window.</property>
+                            <property name="hexpand">True</property>
+                            <property name="adjustment">background_opacity_adjustment</property>
+                            <property name="round-digits">1</property>
+                            <property name="value-pos">right</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="name">page2</property>
+                        <property name="title" translatable="yes">page2</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <!-- n-columns=6 n-rows=3 -->
+                      <object class="GtkGrid" id="gradient_editor">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="hexpand">True</property>
+                        <property name="row-spacing">2</property>
+                        <property name="column-spacing">5</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="label" translatable="yes">Gradient Type:</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">0</property>
+                            <property name="width">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkComboBoxText" id="gradient_kind">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="tooltip-text" translatable="yes">A linear gradient runs in a straight line between two points, while a radial gradient extends outwards from it's starting point.</property>
+                            <property name="hexpand">True</property>
+                            <property name="active-id">linear</property>
+                            <items>
+                              <item id="linear" translatable="yes">Linear</item>
+                              <item id="radial" translatable="yes">Radial (circle)</item>
+                              <item id="elliptical" translatable="yes">Radial (ellipse)</item>
+                            </items>
+                          </object>
+                          <packing>
+                            <property name="left-attach">2</property>
+                            <property name="top-attach">0</property>
+                            <property name="width">4</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkStack" id="position_type_stack">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <child>
+                              <object class="GtkLabel" id="start_position">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="vexpand">True</property>
+                                <property name="label" translatable="yes">Start Position:</property>
+                              </object>
+                              <packing>
+                                <property name="name">page0</property>
+                                <property name="title" translatable="yes">page0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <!-- n-columns=2 n-rows=1 -->
+                              <object class="GtkGrid" id="end_position">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="vexpand">True</property>
+                                    <property name="label" translatable="yes">Direction:</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkComboBoxText" id="gradient_direction_type">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">A linear gradient can run between a start and end point or can begin at a starting point and extend in a specified angle.</property>
+                                    <property name="vexpand">True</property>
+                                    <property name="active-id">angle</property>
+                                    <items>
+                                      <item id="angle" translatable="yes">Angle</item>
+                                      <item id="edge" translatable="yes">To Edge</item>
+                                    </items>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="name">page1</property>
+                                <property name="title" translatable="yes">page1</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">1</property>
+                            <property name="width">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkStack" id="gradient_direction_stack">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="hexpand">True</property>
+                            <child>
+                              <!-- n-columns=2 n-rows=1 -->
+                              <object class="GtkGrid" id="gradient_edge_grid">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="hexpand">True</property>
+                                <property name="column-spacing">5</property>
+                                <child>
+                                  <object class="GtkComboBoxText" id="gradient_vertical_position">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">The location along the vertical axis to end the gradient.</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="vexpand">True</property>
+                                    <property name="active-id">top</property>
+                                    <items>
+                                      <item id="top" translatable="yes">Top</item>
+                                      <item id="center" translatable="yes">Center</item>
+                                      <item id="bottom" translatable="yes">Bottom</item>
+                                    </items>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkComboBoxText" id="gradient_horizontal_position">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">The location along the horizontal axis to end the gradient.</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="vexpand">True</property>
+                                    <property name="active-id">left</property>
+                                    <items>
+                                      <item id="left" translatable="yes">Left</item>
+                                      <item id="center" translatable="yes">Center</item>
+                                      <item id="right" translatable="yes">Right</item>
+                                    </items>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="name">page1</property>
+                                <property name="title" translatable="yes">page1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <!-- n-columns=2 n-rows=1 -->
+                              <object class="GtkGrid" id="gradient_angle_grid">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="hexpand">True</property>
+                                <property name="column-spacing">5</property>
+                                <property name="column-homogeneous">True</property>
+                                <child>
+                                  <object class="GtkSpinButton" id="gradient_angle">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="tooltip-text" translatable="yes">The angle the gradient travels away from it's starting location.</property>
+                                    <property name="halign">start</property>
+                                    <property name="text" translatable="yes">45</property>
+                                    <property name="adjustment">angle_adjustment</property>
+                                    <property name="value">45</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="halign">start</property>
+                                    <property name="label" translatable="yes">Degrees:</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="name">page0</property>
+                                <property name="title" translatable="yes">page0</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="left-attach">2</property>
+                            <property name="top-attach">1</property>
+                            <property name="width">4</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="label" translatable="yes">Stops:</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkSpinButton" id="gradient_stops">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="tooltip-text" translatable="yes">The number of different color stops used to define the gradient.</property>
+                            <property name="text" translatable="yes">2</property>
+                            <property name="input-purpose">digits</property>
+                            <property name="adjustment">gradient_stops_adjustment</property>
+                            <property name="climb-rate">1</property>
+                            <property name="numeric">True</property>
+                            <property name="value">2</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">1</property>
+                            <property name="top-attach">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkComboBoxText" id="gradient_stop_selector">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="tooltip-text" translatable="yes">Select a stop to edit</property>
+                            <property name="active">0</property>
+                            <property name="active-id">stop1</property>
+                            <items>
+                              <item id="stop1" translatable="yes">Stop 1</item>
+                              <item id="stop2" translatable="yes">Stop 2</item>
+                            </items>
+                          </object>
+                          <packing>
+                            <property name="left-attach">2</property>
+                            <property name="top-attach">2</property>
+                            <property name="width">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkStack" id="stops_stack">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="hexpand">True</property>
+                            <child>
+                              <!-- n-columns=2 n-rows=1 -->
+                              <object class="GtkGrid" id="stop1_grid">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="hexpand">True</property>
+                                <property name="column-spacing">5</property>
+                                <child>
+                                  <object class="GtkColorButton" id="stop1_color">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <property name="tooltip-text" translatable="yes">The color of the first gradient stop.</property>
+                                    <property name="use-alpha">True</property>
+                                    <property name="rgba">rgb(0,0,0)</property>
+                                    <property name="show-editor">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="stop1_position">
+                                    <property name="width-request">75</property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="tooltip-text" translatable="yes">How far from the starting point to place the first stop. If any number other than "0" is specified, the gradient will use a solid color until it reaches this point before beginning it's transition to the next color.</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="adjustment">stop1_adjustment</property>
+                                    <property name="show-fill-level">True</property>
+                                    <property name="round-digits">1</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="name">page0</property>
+                                <property name="title" translatable="yes">page0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <!-- n-columns=2 n-rows=1 -->
+                              <object class="GtkGrid" id="stop2_grid">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="column-spacing">5</property>
+                                <child>
+                                  <object class="GtkColorButton" id="stop2_color">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <property name="tooltip-text" translatable="yes">The color of the second gradient stop.</property>
+                                    <property name="rgba">rgb(36,31,49)</property>
+                                    <property name="show-editor">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="stop2_position">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="tooltip-text" translatable="yes">How far from the beginning to place the second gradient stop.</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="adjustment">stop2_adjustment</property>
+                                    <property name="show-fill-level">True</property>
+                                    <property name="round-digits">1</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="name">page1</property>
+                                <property name="title" translatable="yes">page1</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <!-- n-columns=2 n-rows=1 -->
+                              <object class="GtkGrid" id="stop3_grid">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="column-spacing">5</property>
+                                <child>
+                                  <object class="GtkColorButton" id="stop3_color">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <property name="tooltip-text" translatable="yes">The color of the third gradient stop.</property>
+                                    <property name="rgba">rgb(61,56,70)</property>
+                                    <property name="show-editor">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="stop3_position">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="tooltip-text" translatable="yes">How far from the beginning to place the third gradient stop.</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="adjustment">stop3_adjustment</property>
+                                    <property name="show-fill-level">True</property>
+                                    <property name="round-digits">1</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="name">page2</property>
+                                <property name="title" translatable="yes">page2</property>
+                                <property name="position">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <!-- n-columns=2 n-rows=1 -->
+                              <object class="GtkGrid" id="stop4_grid">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="column-spacing">5</property>
+                                <child>
+                                  <object class="GtkColorButton" id="stop4_color">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <property name="tooltip-text" translatable="yes">The color of the fourth gradient stop.</property>
+                                    <property name="rgba">rgb(255,255,255)</property>
+                                    <property name="show-editor">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">0</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkScale" id="stop4_position">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="tooltip-text" translatable="yes">How far from the starting point to place the first stop. If any number other than "100" is specified, the gradient will end it's transitionfrom the previous color at that point and show a solid color from there until it's end.</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="adjustment">stop4_adjustment</property>
+                                    <property name="show-fill-level">True</property>
+                                    <property name="round-digits">1</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left-attach">1</property>
+                                    <property name="top-attach">0</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="name">page3</property>
+                                <property name="title" translatable="yes">page3</property>
+                                <property name="position">3</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="left-attach">4</property>
+                            <property name="top-attach">2</property>
+                            <property name="width">2</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="name">page3</property>
+                        <property name="title" translatable="yes">page3</property>
+                        <property name="position">3</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">10</property>
+                    <property name="position">8</property>
                   </packing>
                 </child>
               </object>
@@ -1021,500 +1471,10 @@
               </packing>
             </child>
             <child>
-              <object class="GtkBox" id="gradient_editor">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="margin-start">5</property>
-                <property name="margin-end">5</property>
-                <property name="margin-top">5</property>
-                <property name="margin-bottom">5</property>
-                <property name="orientation">vertical</property>
-                <property name="spacing">2</property>
-                <child>
-                  <!-- n-columns=6 n-rows=3 -->
-                  <object class="GtkGrid">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="hexpand">True</property>
-                    <property name="row-spacing">2</property>
-                    <property name="column-spacing">5</property>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="label" translatable="yes">Gradient Type:</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">0</property>
-                        <property name="top-attach">0</property>
-                        <property name="width">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkComboBoxText" id="gradient_kind">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="tooltip-text" translatable="yes">A linear gradient runs in a straight line between two points, while a radial gradient extends outwards from it's starting point.</property>
-                        <property name="hexpand">True</property>
-                        <property name="active-id">linear</property>
-                        <items>
-                          <item id="linear" translatable="yes">Linear</item>
-                          <item id="radial" translatable="yes">Radial (circle)</item>
-                          <item id="elliptical" translatable="yes">Radial (ellipse)</item>
-                        </items>
-                      </object>
-                      <packing>
-                        <property name="left-attach">2</property>
-                        <property name="top-attach">0</property>
-                        <property name="width">4</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkStack" id="position_type_stack">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <child>
-                          <object class="GtkLabel" id="start_position">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="halign">start</property>
-                            <property name="vexpand">True</property>
-                            <property name="label" translatable="yes">Start Position:</property>
-                          </object>
-                          <packing>
-                            <property name="name">page0</property>
-                            <property name="title" translatable="yes">page0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <!-- n-columns=2 n-rows=1 -->
-                          <object class="GtkGrid" id="end_position">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <child>
-                              <object class="GtkLabel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="vexpand">True</property>
-                                <property name="label" translatable="yes">Direction:</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkComboBoxText" id="gradient_direction_type">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">A linear gradient can run between a start and end point or can begin at a starting point and extend in a specified angle.</property>
-                                <property name="vexpand">True</property>
-                                <property name="active-id">angle</property>
-                                <items>
-                                  <item id="angle" translatable="yes">Angle</item>
-                                  <item id="edge" translatable="yes">To Edge</item>
-                                </items>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="name">page1</property>
-                            <property name="title" translatable="yes">page1</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="left-attach">0</property>
-                        <property name="top-attach">1</property>
-                        <property name="width">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkStack" id="gradient_direction_stack">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="hexpand">True</property>
-                        <child>
-                          <!-- n-columns=2 n-rows=1 -->
-                          <object class="GtkGrid" id="gradient_edge_grid">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="hexpand">True</property>
-                            <property name="column-spacing">5</property>
-                            <child>
-                              <object class="GtkComboBoxText" id="gradient_vertical_position">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">The location along the vertical axis to end the gradient.</property>
-                                <property name="hexpand">True</property>
-                                <property name="vexpand">True</property>
-                                <property name="active-id">top</property>
-                                <items>
-                                  <item id="top" translatable="yes">Top</item>
-                                  <item id="center" translatable="yes">Center</item>
-                                  <item id="bottom" translatable="yes">Bottom</item>
-                                </items>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkComboBoxText" id="gradient_horizontal_position">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">The location along the horizontal axis to end the gradient.</property>
-                                <property name="hexpand">True</property>
-                                <property name="vexpand">True</property>
-                                <property name="active-id">left</property>
-                                <items>
-                                  <item id="left" translatable="yes">Left</item>
-                                  <item id="center" translatable="yes">Center</item>
-                                  <item id="right" translatable="yes">Right</item>
-                                </items>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="name">page1</property>
-                            <property name="title" translatable="yes">page1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <!-- n-columns=2 n-rows=1 -->
-                          <object class="GtkGrid" id="gradient_angle_grid">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="hexpand">True</property>
-                            <property name="column-spacing">5</property>
-                            <property name="column-homogeneous">True</property>
-                            <child>
-                              <object class="GtkSpinButton" id="gradient_angle">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="tooltip-text" translatable="yes">The angle the gradient travels away from it's starting location.</property>
-                                <property name="halign">start</property>
-                                <property name="adjustment">angle_adjustment</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="halign">start</property>
-                                <property name="label" translatable="yes">Degrees:</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="name">page0</property>
-                            <property name="title" translatable="yes">page0</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="left-attach">2</property>
-                        <property name="top-attach">1</property>
-                        <property name="width">4</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="label" translatable="yes">Stops:</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">0</property>
-                        <property name="top-attach">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="gradient_stops">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="tooltip-text" translatable="yes">The number of different color stops used to define the gradient.</property>
-                        <property name="input-purpose">digits</property>
-                        <property name="adjustment">gradient_stops_adjustment</property>
-                        <property name="climb-rate">1</property>
-                        <property name="numeric">True</property>
-                        <property name="value">2</property>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
-                        <property name="top-attach">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkComboBoxText" id="gradient_stop_selector">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="tooltip-text" translatable="yes">Select a stop to edit</property>
-                        <property name="active">0</property>
-                        <property name="active-id">stop1</property>
-                        <items>
-                          <item id="stop1" translatable="yes">Stop 1</item>
-                          <item id="stop2" translatable="yes">Stop 2</item>
-                        </items>
-                      </object>
-                      <packing>
-                        <property name="left-attach">2</property>
-                        <property name="top-attach">2</property>
-                        <property name="width">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkStack" id="stops_stack">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="hexpand">True</property>
-                        <child>
-                          <!-- n-columns=2 n-rows=1 -->
-                          <object class="GtkGrid" id="stop1_grid">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="hexpand">True</property>
-                            <property name="column-spacing">5</property>
-                            <child>
-                              <object class="GtkColorButton" id="stop1_color">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">True</property>
-                                <property name="tooltip-text" translatable="yes">The color of the first gradient stop.</property>
-                                <property name="use-alpha">True</property>
-                                <property name="rgba">rgb(0,0,0)</property>
-                                <property name="show-editor">True</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkScale" id="stop1_position">
-                                <property name="width-request">75</property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="tooltip-text" translatable="yes">How far from the starting point to place the first stop. If any number other than "0" is specified, the gradient will use a solid color until it reaches this point before beginning it's transition to the next color.</property>
-                                <property name="hexpand">True</property>
-                                <property name="adjustment">stop1_adjustment</property>
-                                <property name="show-fill-level">True</property>
-                                <property name="round-digits">1</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="name">page0</property>
-                            <property name="title" translatable="yes">page0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <!-- n-columns=2 n-rows=1 -->
-                          <object class="GtkGrid" id="stop2_grid">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="column-spacing">5</property>
-                            <child>
-                              <object class="GtkColorButton" id="stop2_color">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">True</property>
-                                <property name="tooltip-text" translatable="yes">The color of the second gradient stop.</property>
-                                <property name="rgba">rgb(36,31,49)</property>
-                                <property name="show-editor">True</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkScale" id="stop2_position">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="tooltip-text" translatable="yes">How far from the beginning to place the second gradient stop.</property>
-                                <property name="hexpand">True</property>
-                                <property name="adjustment">stop2_adjustment</property>
-                                <property name="show-fill-level">True</property>
-                                <property name="round-digits">1</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="name">page1</property>
-                            <property name="title" translatable="yes">page1</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <!-- n-columns=2 n-rows=1 -->
-                          <object class="GtkGrid" id="stop3_grid">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="column-spacing">5</property>
-                            <child>
-                              <object class="GtkColorButton" id="stop3_color">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">True</property>
-                                <property name="tooltip-text" translatable="yes">The color of the third gradient stop.</property>
-                                <property name="rgba">rgb(61,56,70)</property>
-                                <property name="show-editor">True</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkScale" id="stop3_position">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="tooltip-text" translatable="yes">How far from the beginning to place the third gradient stop.</property>
-                                <property name="hexpand">True</property>
-                                <property name="adjustment">stop3_adjustment</property>
-                                <property name="show-fill-level">True</property>
-                                <property name="round-digits">1</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="name">page2</property>
-                            <property name="title" translatable="yes">page2</property>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <!-- n-columns=2 n-rows=1 -->
-                          <object class="GtkGrid" id="stop4_grid">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="column-spacing">5</property>
-                            <child>
-                              <object class="GtkColorButton" id="stop4_color">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">True</property>
-                                <property name="tooltip-text" translatable="yes">The color of the fourth gradient stop.</property>
-                                <property name="rgba">rgb(255,255,255)</property>
-                                <property name="show-editor">True</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkScale" id="stop4_position">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="tooltip-text" translatable="yes">How far from the starting point to place the first stop. If any number other than "100" is specified, the gradient will end it's transitionfrom the previous color at that point and show a solid color from there until it's end.</property>
-                                <property name="hexpand">True</property>
-                                <property name="adjustment">stop4_adjustment</property>
-                                <property name="show-fill-level">True</property>
-                                <property name="round-digits">1</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="name">page3</property>
-                            <property name="title" translatable="yes">page3</property>
-                            <property name="position">3</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="left-attach">4</property>
-                        <property name="top-attach">2</property>
-                        <property name="width">2</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkBox" id="gradient_preview">
-                    <property name="height-request">200</property>
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="tooltip-text" translatable="yes">The current gradient</property>
-                    <property name="margin-start">10</property>
-                    <property name="margin-end">10</property>
-                    <property name="margin-top">10</property>
-                    <property name="margin-bottom">10</property>
-                    <property name="hexpand">True</property>
-                    <property name="vexpand">True</property>
-                    <property name="orientation">vertical</property>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <style>
-                      <class name="workview"/>
-                    </style>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">4</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="position">2</property>
-              </packing>
+              <placeholder/>
             </child>
             <child type="tab">
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="tooltip-text" translatable="yes">An editor for the gradient used as the background of Zterm.</property>
-                <property name="label" translatable="yes">Gradient Editor</property>
-              </object>
-              <packing>
-                <property name="position">2</property>
-                <property name="tab-fill">False</property>
-              </packing>
+              <placeholder/>
             </child>
           </object>
           <packing>
@@ -1528,5 +1488,28 @@
     <action-widgets>
       <action-widget response="-5">close_button</action-widget>
     </action-widgets>
+  </object>
+  <object class="GtkAdjustment" id="stop1_adjustment">
+    <property name="upper">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="stop2_adjustment">
+    <property name="upper">100</property>
+    <property name="value">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="stop3_adjustment">
+    <property name="upper">100</property>
+    <property name="value">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="stop4_adjustment">
+    <property name="upper">100</property>
+    <property name="value">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
   </object>
 </interface>
