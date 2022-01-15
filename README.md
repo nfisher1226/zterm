@@ -11,10 +11,16 @@ Contents
 * [Roadmap](#roadmap)
 
 ## Introduction
-Zterm is a simple terminal emulator using Vte and Gtk+ writting using the
-[Zig](https://ziglang.org/) programming language. Currently basic functionality
-works including opening and closing terminals in tabs and panes, giving it a
-program to run on the command line and setting the title from the command line.
+Zterm (pronounced `Zed-Term`) is a simple terminal emulator using Vte and Gtk+
+written using the [Zig](https://ziglang.org/) programming language. Some useful
+features of Zterm are:
+* Multiple terminals can be open in tabs and panes within a single tab
+* Configurable keybindings
+* Comprehensive theming options
+  * Control over colors used
+  * Choice of backgrounds - solid color, transparent, image or gradient
+* Simple and small graphical interface taking up less screen space than other
+  similarly functional terminals
 
 ## Building
 You will need the Zig compiler, version 0.9.0, available from
@@ -75,6 +81,7 @@ effect.
 - [ ] Remove most color handling code and replace with `zig-color` color library
 - [ ] Finish implementing all preferences
   - [x] Background image
+  - [x] Background gradient
   - [ ] Expose charset settings
 - [x] User editable keybindings
 - [ ] Dialog to set keybindings

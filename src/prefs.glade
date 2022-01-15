@@ -36,6 +36,29 @@
     <property name="step-increment">10</property>
     <property name="page-increment">50</property>
   </object>
+  <object class="GtkAdjustment" id="stop1_adjustment">
+    <property name="upper">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="stop2_adjustment">
+    <property name="upper">100</property>
+    <property name="value">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="stop3_adjustment">
+    <property name="upper">100</property>
+    <property name="value">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="stop4_adjustment">
+    <property name="upper">100</property>
+    <property name="value">100</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
   <object class="GtkDialog" id="window">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">Zterm - Preferences</property>
@@ -89,7 +112,7 @@
             <property name="scrollable">True</property>
             <property name="enable-popup">True</property>
             <child>
-              <object class="GtkBox">
+              <object class="GtkBox" id="tab1">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="margin-start">5</property>
@@ -415,7 +438,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkBox">
+              <object class="GtkBox" id="tab2">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="margin-start">5</property>
@@ -464,7 +487,6 @@
                         <property name="receives-default">True</property>
                         <property name="tooltip-text" translatable="yes">Text Color</property>
                         <property name="rgba">rgb(227,227,227)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -497,7 +519,7 @@
                 </child>
                 <child>
                   <!-- n-columns=8 n-rows=2 -->
-                  <object class="GtkGrid">
+                  <object class="GtkGrid" id="color_grid">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="row-spacing">1</property>
@@ -510,7 +532,6 @@
                         <property name="tooltip-text" translatable="yes">Black</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(0,0,0)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">0</property>
@@ -525,7 +546,6 @@
                         <property name="tooltip-text" translatable="yes">Red</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(165,29,45)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">1</property>
@@ -540,7 +560,6 @@
                         <property name="tooltip-text" translatable="yes">Green</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(0,170,0)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">2</property>
@@ -555,7 +574,6 @@
                         <property name="tooltip-text" translatable="yes">Brown</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(99,69,44)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">3</property>
@@ -570,7 +588,6 @@
                         <property name="tooltip-text" translatable="yes">Blue</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(0,0,170)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">4</property>
@@ -585,7 +602,6 @@
                         <property name="tooltip-text" translatable="yes">Magenta</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(170,0,170)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">5</property>
@@ -600,7 +616,6 @@
                         <property name="tooltip-text" translatable="yes">Cyan</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(0,170,170)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">6</property>
@@ -615,7 +630,6 @@
                         <property name="tooltip-text" translatable="yes">Light Grey</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(170,170,170)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">7</property>
@@ -630,7 +644,6 @@
                         <property name="tooltip-text" translatable="yes">Dark Grey</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(85,85,85)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">0</property>
@@ -645,7 +658,6 @@
                         <property name="tooltip-text" translatable="yes">Light Red</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(255,85,85)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">1</property>
@@ -660,7 +672,6 @@
                         <property name="tooltip-text" translatable="yes">Light Green</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(85,255,85)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">2</property>
@@ -675,7 +686,6 @@
                         <property name="tooltip-text" translatable="yes">Yellow</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(225,189,0)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">3</property>
@@ -690,7 +700,6 @@
                         <property name="tooltip-text" translatable="yes">Light Blue</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(85,85,255)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">4</property>
@@ -705,7 +714,6 @@
                         <property name="tooltip-text" translatable="yes">Light Magenta</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(255,85,255)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">5</property>
@@ -720,7 +728,6 @@
                         <property name="tooltip-text" translatable="yes">Light Cyan</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(85,255,255)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">6</property>
@@ -735,7 +742,6 @@
                         <property name="tooltip-text" translatable="yes">White</property>
                         <property name="hexpand">True</property>
                         <property name="rgba">rgb(255,255,255)</property>
-                        <property name="show-editor">True</property>
                       </object>
                       <packing>
                         <property name="left-attach">7</property>
@@ -875,7 +881,6 @@
                             <property name="receives-default">True</property>
                             <property name="tooltip-text" translatable="yes">Background Color</property>
                             <property name="rgba">rgb(36,34,34)</property>
-                            <property name="show-editor">True</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1122,7 +1127,7 @@
                                   <object class="GtkComboBoxText" id="gradient_vertical_position">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">The location along the vertical axis to end the gradient.</property>
+                                    <property name="tooltip-text" translatable="yes">The location along the vertical axis of the gradient.</property>
                                     <property name="hexpand">True</property>
                                     <property name="vexpand">True</property>
                                     <property name="active-id">top</property>
@@ -1141,7 +1146,7 @@
                                   <object class="GtkComboBoxText" id="gradient_horizontal_position">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">The location along the horizontal axis to end the gradient.</property>
+                                    <property name="tooltip-text" translatable="yes">The location along the horizontal axis of the gradient.</property>
                                     <property name="hexpand">True</property>
                                     <property name="vexpand">True</property>
                                     <property name="active-id">left</property>
@@ -1276,9 +1281,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <property name="tooltip-text" translatable="yes">The color of the first gradient stop.</property>
-                                    <property name="use-alpha">True</property>
                                     <property name="rgba">rgb(0,0,0)</property>
-                                    <property name="show-editor">True</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -1320,7 +1323,6 @@
                                     <property name="receives-default">True</property>
                                     <property name="tooltip-text" translatable="yes">The color of the second gradient stop.</property>
                                     <property name="rgba">rgb(36,31,49)</property>
-                                    <property name="show-editor">True</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -1362,7 +1364,6 @@
                                     <property name="receives-default">True</property>
                                     <property name="tooltip-text" translatable="yes">The color of the third gradient stop.</property>
                                     <property name="rgba">rgb(61,56,70)</property>
-                                    <property name="show-editor">True</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -1404,7 +1405,6 @@
                                     <property name="receives-default">True</property>
                                     <property name="tooltip-text" translatable="yes">The color of the fourth gradient stop.</property>
                                     <property name="rgba">rgb(255,255,255)</property>
-                                    <property name="show-editor">True</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -1489,28 +1489,5 @@
     <action-widgets>
       <action-widget response="-5">close_button</action-widget>
     </action-widgets>
-  </object>
-  <object class="GtkAdjustment" id="stop1_adjustment">
-    <property name="upper">100</property>
-    <property name="step-increment">1</property>
-    <property name="page-increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="stop2_adjustment">
-    <property name="upper">100</property>
-    <property name="value">100</property>
-    <property name="step-increment">1</property>
-    <property name="page-increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="stop3_adjustment">
-    <property name="upper">100</property>
-    <property name="value">100</property>
-    <property name="step-increment">1</property>
-    <property name="page-increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="stop4_adjustment">
-    <property name="upper">100</property>
-    <property name="value">100</property>
-    <property name="step-increment">1</property>
-    <property name="page-increment">10</property>
   </object>
 </interface>
