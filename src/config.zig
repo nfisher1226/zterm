@@ -1,12 +1,13 @@
 const std = @import("std");
 const gui = @import("gui.zig");
+const Gradient = @import("gradient.zig").Gradient;
+const prefs = @import("prefs.zig");
 const VTE = @import("vte");
 const c = VTE.c;
 const gtk = VTE.gtk;
 const vte = VTE.vte;
 const known_folders = @import("known-folders");
 const nt = @import("nestedtext");
-const prefs = @import("prefs.zig");
 const allocator = std.heap.page_allocator;
 const fmt = std.fmt;
 const fs = std.fs;
@@ -214,7 +215,7 @@ pub const Background = union(BackgroundStyle) {
     solid_color: void,
     image: BackgroundImage,
     transparent: f64,
-    gradient: void,
+    gradient: Gradient,
 
     const Self = @This();
 
@@ -245,12 +246,6 @@ pub const RGB = struct {
             .green = @floatToInt(u8, math.round(rgba.green * 255.0)),
             .blue = @floatToInt(u8, math.round(rgba.blue * 255.0)),
         };
-    }
-
-    pub fn toHex(self: Self, alloc: mem.Allocator) ?[]const u8 {
-        const str = fmt.allocPrint(alloc, "#{x}{x}{x}",
-            .{ self.red, self.green, self.blue }) catch return null;
-        return str;
     }
 
     pub fn toGdk(self: Self) c.GdkRGBA {
@@ -428,10 +423,11 @@ pub const Config = struct {
                 _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
             },
             .transparent => {},
-            .gradient => {
-                //const provider = gui.css_provider;
-                //const css_string = ".workview stack {\n    background-image: radial-gradient(ellipse at bottom right, #211d1d, #181414 35%, #2d2929 95%, #423d3d);\n    background-size: 100% 100%;\n }";
-                //_ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
+            .gradient => |g| {
+                if (g.toCss(".workview stack")) |css| {
+                    defer allocator.free(css);
+                    _ = c.gtk_css_provider_load_from_data(provider, css, -1, null);
+                }
             },
         }
     }

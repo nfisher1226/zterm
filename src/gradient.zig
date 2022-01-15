@@ -10,6 +10,7 @@ const fmt = std.fmt;
 const math = std.math;
 const mem = std.mem;
 
+var grad: ?Gradient = undefined;
 var gradientEditor: GradientEditor = undefined;
 var numStops: u8 = 2;
 
@@ -110,6 +111,33 @@ pub const StopControls = struct {
             },
             else => unreachable,
         }
+    }
+
+    fn setStops(self: Self) void {
+        if (grad) |g| {
+            self.stop1_color.as_color_chooser().set_rgba(g.stop1.color.toGdk());
+            self.stop1_position.as_range().set_value(g.stop1.position);
+            self.stop2_color.as_color_chooser().set_rgba(g.stop2.color.toGdk());
+            self.stop2_position.as_range().set_value(g.stop2.position);
+            if (g.stop3) |s| {
+                self.stop3_color.as_color_chooser().set_rgba(s.color.toGdk());
+                numStops = 3;
+                self.stops.set_value(3);
+                self.stop_selector.append("stop3", "Stop 3");
+            } else numStops = 2;
+            if (g.stop4) |s| {
+                self.stop4_color.as_color_chooser().set_rgba(s.color.toGdk());
+                numStops = 4;
+                self.stops.set_value(4);
+                self.stop_selector.append("stop4", "Stop 4");
+            }
+        }
+    }
+
+    fn setup(self: Self) void {
+        self.connectSignals();
+        self.setStops();
+        self.toggle();
     }
 
     fn updateScale2(self: Self) void {
@@ -232,7 +260,11 @@ pub const GradientEditor = struct {
 
     const Self = @This();
 
-    pub fn init(builder: gtk.Builder) ?Self {
+    pub fn init(builder: gtk.Builder, conf: config.Config) ?Self {
+        grad = switch (conf.background) {
+            .gradient => |g| g,
+            else => null,
+        };
         gradientEditor = Self{
             .editor = builder.get_widget("gradient_editor").?,
             .kind = builder.get_widget("gradient_kind").?.to_combo_box().?,
@@ -252,33 +284,30 @@ pub const GradientEditor = struct {
         return gradientEditor;
     }
 
-    fn getGradientKind(self: Self) ?GradientKind {
+    fn getKind(self: Self) ?GradientKind {
         if (self.kind.get_active_id(allocator)) |id| {
             defer allocator.free(id);
             return if (config.parseEnum(GradientKind, id)) |k| k else null;
         } else return null;
     }
 
-    fn getKind(self: Self) ?Kind {
-        const gradient_kind = if (self.getGradientKind()) |k| k else return null;
-        const kind: ?Kind = switch (gradient_kind) {
-            .linear => lblk: {
-                if (self.getDirection()) |d| {
-                    break :lblk Kind{ .linear = d };
-                } else return null;
-            },
-            .radial => rblk: {
-                if (self.getPlacement()) |p| {
-                    break :rblk Kind{ .radial = p };
-                } else return null;
-            },
-            .elliptical => eblk: {
-                if (self.getPlacement()) |p| {
-                    break :eblk Kind{ .elliptical = p };
-                } else return null;
-            },
-        };
-        return kind;
+    fn setKind(self: Self) void {
+        if (grad) |g| {
+            switch (g.kind) {
+                .linear => {
+                    self.kind.set_active_id("linear");
+                    self.position_type.set_visible_child(self.end_position);
+                },
+                .radial => {
+                    self.kind.set_active_id("radial");
+                    self.position_type.set_visible_child(self.start_position);
+                },
+                .elliptical => {
+                    self.kind.set_active_id("elliptical");
+                    self.position_type.set_visible_child(self.start_position);
+                },
+            }
+        }
     }
 
     fn getPlacement(self: Self) ?Placement {
@@ -317,7 +346,33 @@ pub const GradientEditor = struct {
         } else return null;
     }
 
-    fn getGradient(self: Self) ?Gradient {
+    fn setDirection(self: Self) void {
+        if (grad) |g| {
+            switch (g.pos) {
+                .angle => |a| {
+                    self.dir_stack.set_visible_child(self.angle_grid);
+                    self.dir_type.set_active_id("angle");
+                    self.angle.set_value(a);
+                },
+                .edge => |p| {
+                    self.dir_stack.set_visible_child(self.edge_grid);
+                    self.dir_type.set_active_id("edge");
+                    switch (p.vertical) {
+                        .top => self.vertical_position.set_active_id("top"),
+                        .center => self.vertical_position.set_active_id("center"),
+                        .bottom => self.vertical_position.set_active_id("bottom"),
+                    }
+                    switch (p.horizontal) {
+                        .left => self.horizontal_position.set_active_id("left"),
+                        .center => self.horizontal_position.set_active_id("center"),
+                        .right => self.horizontal_position.set_active_id("right"),
+                    }
+                },
+            }
+        }
+    }
+
+    pub fn getGradient(self: Self) ?Gradient {
         const s3: ?Stop = switch (numStops) {
             2 => null,
             3, 4 => self.stops.getStop(self.stops.stop3_color, self.stops.stop3_position),
@@ -328,8 +383,22 @@ pub const GradientEditor = struct {
             4 => self.stops.getStop(self.stops.stop4_color, self.stops.stop4_position),
             else => return null,
         };
+        const kind = if (self.getKind()) |k| k else return null;
+        const pos = switch (kind) {
+            .linear => lblk: {
+                if (self.getDirection()) |d| {
+                    break :lblk d;
+                } else return null;
+            },
+            .radial, .elliptical => pblk: {
+                if (self.getPlacement()) |p| {
+                    break :pblk Direction{.edge = p, };
+                } else return null;
+            },
+        };
         return Gradient{
-            .kind = if (self.getKind()) |k| k else return null,
+            .kind = kind,
+            .pos = pos,
             .stop1 = self.stops.getStop(self.stops.stop1_color, self.stops.stop1_position),
             .stop2 = self.stops.getStop(self.stops.stop2_color, self.stops.stop2_position),
             .stop3 = if (s3) |x| x else null,
@@ -338,8 +407,8 @@ pub const GradientEditor = struct {
     }
 
     pub fn setBg(self: Self) void {
-        if (self.getGradient()) |grad| {
-            if (grad.toCss(".workview stack")) |css| {
+        if (self.getGradient()) |g| {
+            if (g.toCss(".workview stack")) |css| {
                 defer allocator.free(css);
                 const provider = gui.css_provider;
                 _ = c.gtk_css_provider_load_from_data(provider, css, -1, null);
@@ -374,7 +443,6 @@ pub const GradientEditor = struct {
             @ptrCast(c.GCallback, Callbacks.setBg), null);
         self.horizontal_position.connect_changed(
             @ptrCast(c.GCallback, Callbacks.setBg), null);
-        self.stops.connectSignals();
     }
 
     fn togglePositionType(self: Self) void {
@@ -411,12 +479,14 @@ pub const GradientEditor = struct {
     fn toggle(self: Self) void {
         self.toggleDirectionType();
         self.togglePositionType();
-        self.stops.toggle();
     }
 
     pub fn setup(self: Self) void {
         self.connectSignals();
         self.toggle();
+        self.setKind();
+        self.setDirection();
+        self.stops.setup();
     }
 };
 
@@ -424,8 +494,19 @@ pub const GradientKind = enum {
     linear,
     radial,
     elliptical,
+
+    const Self = @This();
+
+    fn default() Self {
+        return Self.linear;
+    }
 };
 
+// This isn't used currently, because `zig-nestedtext` doesn't save the tag when
+// parsing tagged unions and so cannot preserve our variant (linear, radial, elliptical)
+// I want to keep it around because by using it it becomes impossible to create
+// a `Gradient` struct that is a radial or elliptical variant with an angular
+// direction.
 pub const Kind = union(GradientKind) {
     linear: Direction,
     radial: Placement,
@@ -488,9 +569,7 @@ pub const Direction = union(DirectionType) {
     const Self = @This();
 
     fn default() Self {
-        return Self{
-            .angle = 45.0,
-        };
+        return Self{ .edge = Placement.default(), };
     }
 };
 
@@ -509,7 +588,8 @@ pub const Stop = struct {
 };
 
 pub const Gradient = struct {
-    kind: Kind,
+    kind: GradientKind,
+    pos: Direction,
     stop1: Stop,
     stop2: Stop,
     stop3: ?Stop,
@@ -520,8 +600,7 @@ pub const Gradient = struct {
     pub fn default() Self {
         return Self{
             .kind = GradientKind.default(),
-            .start = Placement.default(),
-            .direction = Direction.default(),
+            .pos = Direction.default(),
             .stop1 = Stop{
                 .color = RGB{ .red = 0, .green = 0, .blue = 0 },
                 .position = 0.0,
@@ -530,7 +609,7 @@ pub const Gradient = struct {
                 .color = RGB{ .red = 64, .green = 64, .blue = 64 },
                 .position = 100.0,
             },
-            .stop4 = null,
+            .stop3 = null,
             .stop4 = null,
         };
     }
@@ -540,9 +619,9 @@ pub const Gradient = struct {
         var positioning: []const u8 = "";
         var angle: ?u16 = null;
         switch (self.kind) {
-            .linear => |dir| {
+            .linear => {
                 variety = "linear-gradient";
-                switch (dir) {
+                switch (self.pos) {
                     .angle => |a| {
                         angle = @floatToInt(u16, math.round(a));
                     },
@@ -567,8 +646,12 @@ pub const Gradient = struct {
                     },
                 }
             },
-            .radial => |pos| {
+            .radial => {
                 variety = "radial-gradient";
+                const pos = switch (self.pos) {
+                    .angle => return null,
+                    .edge => |e| e,
+                };
                 positioning = switch (pos.vertical) {
                     .top => switch (pos.horizontal) {
                         .left => "circle at top left",
@@ -587,8 +670,12 @@ pub const Gradient = struct {
                     },
                 };
             },
-            .elliptical => |pos| {
+            .elliptical => {
                 variety = "radial-gradient";
+                const pos = switch (self.pos) {
+                    .angle => return null,
+                    .edge => |e| e,
+                };
                 positioning = switch (pos.vertical) {
                     .top => switch (pos.horizontal) {
                         .left => "ellipse at top left",

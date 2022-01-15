@@ -1,6 +1,7 @@
 const std = @import("std");
 const config = @import("config.zig");
 const gradient = @import("gradient.zig");
+const Gradient = gradient.Gradient;
 const version = @import("version.zig").version;
 const VTE = @import("vte");
 const c = VTE.c;
@@ -162,7 +163,7 @@ pub const PrefWidgets = struct {
                 .get_widget("background_style_opacity_scale").?.to_scale().?,
             .close_button = builder.get_widget("close_button").?.to_button().?,
             .color_buttons = ColorButtons.init(builder).?,
-            .gradient_editor = gradient.GradientEditor.init(builder).?,
+            .gradient_editor = gradient.GradientEditor.init(builder, conf).?,
         };
     }
 
@@ -317,6 +318,10 @@ pub const PrefWidgets = struct {
         }
     }
 
+    fn getBackgroundGradient(self: Self) ?Gradient {
+        return if (self.gradient_editor.getGradient()) |g| g else null;
+    }
+
     fn getBackgroundImage(self: Self) ?config.BackgroundImage {
         const button = @ptrCast(*c.GtkFileChooser, self.background_image_file_button);
         const val = c.gtk_file_chooser_get_filename(button);
@@ -360,7 +365,12 @@ pub const PrefWidgets = struct {
                 const val = self.background_style_opacity_scale.as_range().get_value();
                 return config.Background{ .transparent = val };
             },
-            .gradient => return config.Background.gradient,
+            .gradient => {
+                return config.Background{
+                    .gradient = if (self.getBackgroundGradient()) |g| g
+                        else Gradient.default(),
+                };
+            },
         }
     }
 

@@ -217,7 +217,7 @@ const Gui = struct {
         self.window.set_title(title);
     }
 
-    fn setBackground(self: Self) void {
+    fn setOpacity(self: Self) void {
         const bg = conf.background;
         switch (bg) {
             .transparent => |percent| {
@@ -228,16 +228,16 @@ const Gui = struct {
                 self.window.as_widget().set_opacity(1.0);
             },
         }
-        var iter = terms.valueIterator();
-        while (iter.next()) |term| {
-            conf.set(term.*);
-        }
         conf.setBg();
     }
 
     fn applySettings(self: Self) void {
+        var iter = terms.valueIterator();
+        while (iter.next()) |term| {
+            conf.set(term.*);
+        }
         self.setTitle();
-        self.setBackground();
+        self.setOpacity();
     }
 
     fn pageRemoved(self: Self) void {
@@ -427,7 +427,7 @@ const Callbacks = struct {
             if (config.getConfigDir(allocator)) |d| {
                 conf.save(d);
             }
-        }
+        } else conf.setBg();
     }
 };
 
