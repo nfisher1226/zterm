@@ -49,7 +49,6 @@ pub const Tab = struct {
             .close_button = gtk.Button.new_from_icon_name("window-close", .menu),
         };
         const term = Callbacks.newTerm(command);
-        term.set_clear_background(false);
         const lbox = gtk.Box.new(.horizontal, 10);
         tab.close_button.set_relief(.none);
         const close_button_widget = tab.close_button.as_widget();
@@ -344,6 +343,7 @@ const Callbacks = struct {
 
     fn newTerm(command: [:0]const u8) vte.Terminal {
         const term = vte.Terminal.new();
+        term.set_clear_background(false);
         terms.put(@ptrToInt(term.ptr), term.ptr) catch {};
         term.spawn_async(.default, options.directory, command, null, .default, null, -1, null);
         conf.set(term.ptr);
