@@ -27,19 +27,19 @@ You will need the Zig compiler, version 0.9.0, available from
 [ziglang.org](https://ziglang.org). You will also need the Gtk-3.x and vte
 libraries plus development headers installed on your system.
 
-Zterm can be built using either the [Gyro](https://github.com/mattnite/gyro) or
-[Zigmod](https://github.com/nektro/zigmod) package managers for Zig.
-### Gyro
-> NOTE: Gyro build is out of date and currently broken
-```sh
-gyro build -Drelease-safe=true
-```
+Zterm can be built using either the [Zigmod](https://github.com/nektro/zigmod)
+package manager for Zig.
 ### Zigmod
 ```sh
-zigmod fetch
+zigmod ci
 zig build -Drelease-safe=true
 ```
-Alternatively, build and install with the included `Makefile`.
+Alternatively, build and install with the included `Makefile` (still requires
+zigmod).
+```sh
+make all
+make install-strip
+```
 
 ## Keyboard Shortcuts
 The following table gives the default keybindings. If any customization is
@@ -87,3 +87,4 @@ effect.
 - [ ] Dialog to set keybindings
 - [ ] Set tab title based on running program / current directory
 - [ ] change from GtkBox widget to more flexible GtkPaned
+- [ ] change build to utilize only zig build system
