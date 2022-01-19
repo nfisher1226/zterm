@@ -4,6 +4,7 @@
 Contents
 ========
 * [Introduction](#introduction)
+* [Installing](#installing)
 * [Building](#building)
 * [Keyboard Shortcuts](#keyboard-shortcuts)
 * [Command Line Options](#command-line-options)
@@ -22,13 +23,21 @@ features of Zterm are:
 * Simple and small graphical interface taking up less screen space than other
   similarly functional terminals
 
+## Installing
+* Arch Linux and derivatives - Zterm is in the [aur](https://aur.archlinux.org/packages/zterm/)
+* FreeBSD - A binary tarball is provided for the latest release of FreeBSD (at
+  the time of release) on the [releases](https://codeberg.org/jeang3nie/zterm/releases)
+  page over at [codeberg](https://codeberg.org)
+Other Linux distros or operating systems will have to build from source, see
+[building](#building).
+
 ## Building
 You will need the Zig compiler, version 0.9.0, available from
 [ziglang.org](https://ziglang.org). You will also need the Gtk-3.x and vte
 libraries plus development headers installed on your system.
 
-Zterm can be built using either the [Zigmod](https://github.com/nektro/zigmod)
-package manager for Zig.
+Zterm can be built using the [Zigmod](https://github.com/nektro/zigmod) package
+manager for Zig.
 ### Zigmod
 ```sh
 zigmod ci
