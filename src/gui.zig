@@ -8,6 +8,7 @@ const keys = @import("keys.zig");
 const menus = @import("menus.zig");
 const prefs = @import("prefs.zig");
 const version = @import("version.zig").version;
+const about = @import("about.zig");
 const Keys = keys.Keys;
 const Menu = menus.Menu;
 const Nav = menus.Nav;
@@ -254,6 +255,7 @@ const Gui = struct {
         self.menu.rotate_view.connect_activate(@ptrCast(c.GCallback, Callbacks.rotateView), null);
         self.notebook.connect_page_removed(@ptrCast(c.GCallback, Callbacks.pageRemoved), null);
         self.notebook.connect_select_page(@ptrCast(c.GCallback, Callbacks.selectPage), null);
+        self.menu.about.connect_activate(@ptrCast(c.GCallback, Callbacks.showAbout), null);
         self.menu.preferences.connect_activate(@ptrCast(c.GCallback, Callbacks.runPrefs), null);
         self.menu.close_tab.connect_activate(@ptrCast(c.GCallback, Callbacks.closeCurrentTab), null);
         self.menu.quit.connect_activate(@ptrCast(c.GCallback, c.gtk_main_quit), null);
@@ -418,6 +420,11 @@ const Callbacks = struct {
                 c.gtk_widget_grab_focus(first_ptr);
             }
         }
+    }
+
+    pub fn showAbout() void {
+        const dlg = about.init();
+        dlg.as_widget().show_all();
     }
 
     pub fn runPrefs() void {

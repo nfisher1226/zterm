@@ -7,6 +7,6 @@ dev_dependencies:
   - src: git https://github.com/LewisGaul/zig-nestedtext.git tag-v0.4.0
     name: nestedtext
     main: src/nestedtext.zig
-  - src: git https://codeberg.org/jeang3nie/zig-vte tag-v0.1.4
+  - src: git https://codeberg.org/jeang3nie/zig-vte branch-odin
     name: vte
     main: lib.zig
