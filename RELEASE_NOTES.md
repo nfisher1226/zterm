@@ -1,6 +1,13 @@
 Contents
 ========
+* [0.3.1](0.3.0-release)
 * [0.3.0](0.3.0-release)
+
+## 0.3.1 release
+* Added `About` dialog with credits
+* Removed `Makefile`
+* Replaced functionality in `Makefile` in `build.zig`
+* Added ability to create a package archive in `build.zig`
 
 ## 0.3.0 release
 * Significant refactor
