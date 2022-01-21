@@ -93,7 +93,11 @@ pub fn build(b: *Builder) void {
         const Format = enum { gz, bz2, xz };
         const len = std.mem.len(archive_fmt);
         const format = std.meta.stringToEnum(Format, archive_fmt[0..len]);
-        const prefix_basename = fs.path.basenamePosix(b.install_prefix);
+        const prefix_basename = fs.path.relative(
+            b.allocator,
+            b.build_root,
+            b.install_prefix
+        ) catch unreachable;
         const exe_absolute_path = fs.path.join(
             b.allocator,
             &[_][]const u8{ prefix_basename, "/bin/zt" },
@@ -117,10 +121,12 @@ pub fn build(b: *Builder) void {
                 .bz2 => "tar.bz2",
                 .xz => "tar.xz",
             };
+            const basename = if (std.mem.containsAtLeast(
+                u8, prefix_basename, 1, "/")) "zterm" else prefix_basename;
             const archive_name = std.mem.join(
                 b.allocator,
                 ".",
-                &[_][]const u8{ prefix_basename, ext },
+                &[_][]const u8{ basename, ext },
             ) catch unreachable;
             const tar_cmd = b.addSystemCommand(
                 &[_][]const u8{
