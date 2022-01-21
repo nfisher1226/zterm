@@ -7,3 +7,4 @@ deps.zig
 gyro.lock
 notes
 .zigmod/
+*.tar.*
