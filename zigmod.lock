@@ -2,4 +2,4 @@
 git https://github.com/ziglibs/known-folders commit-9db1b99219c767d5e24994b1525273fe4031e464
 git https://github.com/Hejsil/zig-clap tag-0.5.0
 git https://github.com/LewisGaul/zig-nestedtext.git tag-v0.4.0
-git https://codeberg.org/jeang3nie/zig-vte commit-b36623c40fba2661bd4d4ae7b921bd7222872080
+git https://codeberg.org/jeang3nie/zig-vte commit-4cb45f1b886f2274b5d2dfcb2888725b40ed9826

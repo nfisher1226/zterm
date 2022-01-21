@@ -424,6 +424,7 @@ const Callbacks = struct {
 
     pub fn showAbout() void {
         const dlg = about.init();
+        dlg.as_window().set_transient_for(gui.window);
         dlg.as_widget().show_all();
     }
 

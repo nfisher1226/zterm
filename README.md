@@ -43,13 +43,21 @@ manager for Zig.
 zigmod ci
 zig build -Drelease-safe=true
 ```
-Alternatively, build and install with the included `Makefile` (still requires
-zigmod).
+This will place the executable in `zig-out/bin` and the icon and .desktop file in
+the appropriate subdirectories of `zig-out/share`. To Install somewhere else, one
+can simple set the `prefix` like so.
 ```sh
-make all
-make install-strip
+zig build -Drelease-safe=true --prefix /some/directory
 ```
-
+The data directory can also be adjusted if necessary. For instance, if one wanted
+to install **Zterm** in their home directory, with the executable in `~/bin` and
+the data files in `~/.local/share`, it can be done like so.
+```sh
+zig build -Drelease-safe=true --prefix $HOME -Ddatadir=".local/share"
+```
+Assuming one has `~/bin` in their `$PATH`, this should be sufficent to add a menu
+entry and icon in most modern `Unix` desktop environments, without needing root
+permissions.
 ## Keyboard Shortcuts
 The following table gives the default keybindings. If any customization is
 desired, see [configuration](#configuration)
