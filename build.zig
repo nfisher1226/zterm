@@ -34,16 +34,54 @@ pub fn build(b: *Builder) void {
         b.allocator,
         &[_][]const u8{ datadir, "/applications/zterm.desktop" },
     ) catch unreachable;
+    defer b.allocator.free(desktop_path);
     const icon_path = fs.path.join(
         b.allocator,
         &[_][]const u8{ datadir, "/icons/hicolor/scalable/apps/zterm.svg" },
     ) catch unreachable;
+    defer b.allocator.free(icon_path);
     // install data files
     b.installFile("data/zterm.desktop", desktop_path);
     b.installFile("data/zterm.svg", icon_path);
 
+    // `png-icons` option
+    const png = b.option(
+        bool,
+        "png-icons",
+        "Export png icons (requires inkscape)"
+    ) orelse false;
+    if (png) {
+        const sizes = .{"128", "64", "48", "32"};
+        inline for (sizes) |s| {
+            const size = std.fmt.allocPrint(b.allocator, "{s}x{s}", .{s, s}) catch unreachable;
+            defer b.allocator.free(size);
+            const icon = fs.path.join(
+                b.allocator,
+                &[_][]const u8{
+                    b.install_prefix,
+                    datadir,
+                    "/icons/hicolor/",
+                    size,
+                    "/apps/zterm.png"
+                },
+            ) catch unreachable;
+            defer b.allocator.free(icon);
+            if (fs.path.dirname(icon)) |d| {
+                std.fs.cwd().makePath(d) catch unreachable;
+                const exp_cmd = b.addSystemCommand(&[_][]const u8{
+                    "inkscape", "data/zterm.svg", "-w", s, "-h", s, "-o", icon,
+                });
+                b.getInstallStep().dependOn(&exp_cmd.step);
+            }
+        }
+    }
+
     // `strip` option
-    const strip = b.option(bool, "strip", "Strip the installed executable") orelse false;
+    const strip = b.option(
+        bool,
+        "strip",
+        "Strip the installed executable"
+    ) orelse false;
     const strip_cmd = b.addSystemCommand(&[_][]const u8{"strip", "-s"});
     if (strip) {
         strip_cmd.addArtifactArg(exe);
@@ -51,20 +89,27 @@ pub fn build(b: *Builder) void {
     }
 
     // `size` option
-    const size = b.option(bool, "size", "Show the installed sizes") orelse false;
+    const size = b.option(
+        bool,
+        "size",
+        "Show the installed sizes"
+    ) orelse false;
     if (size) {
         const exe_absolute_path = fs.path.join(
             b.allocator,
             &[_][]const u8{ b.install_prefix, "/bin/zt" },
         ) catch unreachable;
+        defer b.allocator.free(exe_absolute_path);
         const desktop_absolute_path = fs.path.join(
             b.allocator,
             &[_][]const u8{ b.install_prefix, "/", desktop_path},
         ) catch unreachable;
+        defer b.allocator.free(desktop_absolute_path);
         const icon_absolute_path = fs.path.join(
             b.allocator,
             &[_][]const u8{ b.install_prefix, "/", icon_path},
         ) catch unreachable;
+        defer b.allocator.free(icon_absolute_path);
         const size_cmd = b.addSystemCommand(
             &[_][]const u8{
                 "du",
@@ -98,18 +143,22 @@ pub fn build(b: *Builder) void {
             b.build_root,
             b.install_prefix
         ) catch unreachable;
+        defer b.allocator.free(prefix_basename);
         const exe_absolute_path = fs.path.join(
             b.allocator,
             &[_][]const u8{ prefix_basename, "/bin/zt" },
         ) catch unreachable;
+        defer b.allocator.free(exe_absolute_path);
         const desktop_absolute_path = fs.path.join(
             b.allocator,
             &[_][]const u8{ prefix_basename, desktop_path},
         ) catch unreachable;
+        defer b.allocator.free(desktop_absolute_path);
         const icon_absolute_path = fs.path.join(
             b.allocator,
             &[_][]const u8{ prefix_basename, icon_path},
         ) catch unreachable;
+        defer b.allocator.free(icon_absolute_path);
         if (format) |f| {
             const tar_opts: []const u8 = switch (f) {
                 .gz => "-czf",
@@ -128,6 +177,7 @@ pub fn build(b: *Builder) void {
                 ".",
                 &[_][]const u8{ basename, ext },
             ) catch unreachable;
+            defer b.allocator.free(archive_name);
             const tar_cmd = b.addSystemCommand(
                 &[_][]const u8{
                     "tar",
