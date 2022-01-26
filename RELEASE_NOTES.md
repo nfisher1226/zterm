@@ -8,6 +8,7 @@ Contents
 * Removed `Makefile`
 * Replaced functionality in `Makefile` in `build.zig`
 * Added ability to create a package archive in `build.zig`
+* Export png application icons in build.zig (requires inkscape)
 
 ## 0.3.0 release
 * Significant refactor
