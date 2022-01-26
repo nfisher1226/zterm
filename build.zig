@@ -3,6 +3,42 @@ const Builder = std.build.Builder;
 const fs = std.fs;
 const deps = @import("deps.zig");
 
+var icons: ?PngIcons = null;
+
+const PngIcons = struct {
+    xl: []const u8,
+    lg: []const u8,
+    md: []const u8,
+    sm: []const u8,
+
+    const Self = @This();
+
+    fn paths(allocator: std.mem.Allocator, prefix_basename: []const u8) Self {
+        const path128 = fs.path.join(
+            allocator,
+            &[_][]const u8{ prefix_basename, "/share/icons/hicolor/128x128/apps/zterm.png" },
+        ) catch unreachable;
+        const path64 = fs.path.join(
+            allocator,
+            &[_][]const u8{ prefix_basename, "/share/icons/hicolor/64x64/apps/zterm.png" },
+        ) catch unreachable;
+        const path48 = fs.path.join(
+            allocator,
+            &[_][]const u8{ prefix_basename, "/share/icons/hicolor/48x48/apps/zterm.png" },
+        ) catch unreachable;
+        const path32 = fs.path.join(
+            allocator,
+            &[_][]const u8{ prefix_basename, "/share/icons/hicolor/32x32/apps/zterm.png" },
+        ) catch unreachable;
+        return Self{
+            .xl = path128,
+            .lg = path64,
+            .md = path48,
+            .sm = path32,
+        };
+    }
+};
+
 pub fn build(b: *Builder) void {
     const target = b.standardTargetOptions(.{});
     const mode = b.standardReleaseOptions();
@@ -74,6 +110,20 @@ pub fn build(b: *Builder) void {
                 b.getInstallStep().dependOn(&exp_cmd.step);
             }
         }
+        const prefix_basename = fs.path.relative(
+            b.allocator,
+            b.build_root,
+            b.install_prefix
+        ) catch unreachable;
+        icons = PngIcons.paths(b.allocator, prefix_basename);
+    }
+    defer {
+        if (icons) |i| {
+            b.allocator.free(i.xl);
+            b.allocator.free(i.lg);
+            b.allocator.free(i.md);
+            b.allocator.free(i.sm);
+        }
     }
 
     // `strip` option
@@ -82,7 +132,12 @@ pub fn build(b: *Builder) void {
         "strip",
         "Strip the installed executable"
     ) orelse false;
-    const strip_cmd = b.addSystemCommand(&[_][]const u8{"strip", "-s"});
+    const strip_exe = b.option(
+        []const u8,
+        "strip_cmd",
+        "The strip binary to use"
+    ) orelse "strip";
+    const strip_cmd = b.addSystemCommand(&[_][]const u8{strip_exe, "-s"});
     if (strip) {
         strip_cmd.addArtifactArg(exe);
         b.getInstallStep().dependOn(&strip_cmd.step);
@@ -117,6 +172,10 @@ pub fn build(b: *Builder) void {
                 exe_absolute_path,
                 desktop_absolute_path,
                 icon_absolute_path,
+                if (icons) |i| i.xl else "",
+                if (icons) |i| i.lg else "",
+                if (icons) |i| i.md else "",
+                if (icons) |i| i.sm else "",
             }
         );
         b.getInstallStep().dependOn(&size_cmd.step);
@@ -133,6 +192,12 @@ pub fn build(b: *Builder) void {
         "archive_fmt",
         "The compression format to use for the package archive. One of gz, bz2 or xz",
     ) orelse "gz";
+
+    const tar_exe = b.option(
+        []const u8,
+        "tar_cmd",
+        "The command to run Gnu tar",
+    ) orelse "tar";
 
     if (archive) {
         const Format = enum { gz, bz2, xz };
@@ -180,7 +245,7 @@ pub fn build(b: *Builder) void {
             defer b.allocator.free(archive_name);
             const tar_cmd = b.addSystemCommand(
                 &[_][]const u8{
-                    "tar",
+                    tar_exe,
                     "--numeric-owner",
                     "--owner=0",
                     tar_opts,
@@ -188,6 +253,10 @@ pub fn build(b: *Builder) void {
                     exe_absolute_path,
                     desktop_absolute_path,
                     icon_absolute_path,
+                    if (icons) |i| i.xl else "",
+                    if (icons) |i| i.lg  else "",
+                    if (icons) |i| i.md else "",
+                    if (icons) |i| i.sm else "",
                 }
             );
             if (strip) {
