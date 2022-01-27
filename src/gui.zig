@@ -315,6 +315,7 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
         c.GTK_STYLE_PROVIDER_PRIORITY_USER);
 
     gui.window.set_title(options.title);
+    //gui.notebook.popup_enable();
 
     const tab = Tab.init(options.command);
     tabs.putNoClobber(@ptrToInt(tab.box.ptr), tab) catch |e| {

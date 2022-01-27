@@ -138,43 +138,43 @@ pub const Keys = struct {
 
     pub fn load(self: Self) void {
         var accel = Accel.parse(self.actions.copy);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Copy", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/ActionMenu/Copy", accel.key, accel.mods);
         accel = Accel.parse(self.actions.paste);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Paste", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/ActionMenu/Paste", accel.key, accel.mods);
         accel = Accel.parse(self.actions.quit);
         c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Quit", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.new_tab);
         c.gtk_accel_map_add_entry("<Zterm>/AppMenu/NewTab", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.prev_tab);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/PrevTab", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/PrevTab", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.next_tab);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/NextTab", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/NextTab", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.tab1);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab1", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/Tab1", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.tab2);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab2", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/Tab2", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.tab3);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab3", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/Tab3", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.tab4);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab4", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/Tab4", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.tab5);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab5", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/Tab5", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.tab6);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab6", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/Tab6", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.tab7);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab7", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/Tab7", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.tab8);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab8", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/Tab8", accel.key, accel.mods);
         accel = Accel.parse(self.tabs.tab9);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/Tab9", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/Tab9", accel.key, accel.mods);
         accel = Accel.parse(self.views.split_view);
         c.gtk_accel_map_add_entry("<Zterm>/AppMenu/SplitView", accel.key, accel.mods);
         accel = Accel.parse(self.views.rotate_view);
         c.gtk_accel_map_add_entry("<Zterm>/AppMenu/RotateView", accel.key, accel.mods);
         accel = Accel.parse(self.views.prev_view);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/PrevPane", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/PrevPane", accel.key, accel.mods);
         accel = Accel.parse(self.views.next_view);
-        c.gtk_accel_map_add_entry("<Zterm>/AppMenu/Nav/NextPane", accel.key, accel.mods);
+        c.gtk_accel_map_add_entry("<Zterm>/NavMenu/NextPane", accel.key, accel.mods);
     }
 
     pub fn save(self: Self) void {
