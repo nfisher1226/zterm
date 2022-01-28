@@ -9,6 +9,8 @@ Contents
 * Replaced functionality in `Makefile` in `build.zig`
 * Added ability to create a package archive in `build.zig`
 * Export png application icons in build.zig (requires inkscape)
+* Cleaned up application menu by moving navigation items and copy/paste into
+  currently not shown top level menus
 
 ## 0.3.0 release
 * Significant refactor
