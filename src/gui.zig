@@ -514,6 +514,7 @@ pub const Closures = struct {
         if (gui.currentTab()) |tab| {
             if (tab.currentTerm()) |term| {
                 term.copy_primary();
+                term.copy_clipboard_format(.text);
             }
         }
     }
@@ -521,7 +522,7 @@ pub const Closures = struct {
     pub fn paste() callconv(.C) void {
         if (gui.currentTab()) |tab| {
             if (tab.currentTerm()) |term| {
-                term.paste_primary();
+                term.paste_clipboard();
             }
         }
     }
