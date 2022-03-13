@@ -84,7 +84,7 @@ pub fn build(b: *Builder) void {
     const png = b.option(
         bool,
         "png-icons",
-        "Export png icons (requires inkscape)"
+        "Export png icons (requires rsvg-convert)"
     ) orelse false;
     if (png) {
         const sizes = .{"128", "64", "48", "32"};
@@ -105,7 +105,7 @@ pub fn build(b: *Builder) void {
             if (fs.path.dirname(icon)) |d| {
                 std.fs.cwd().makePath(d) catch unreachable;
                 const exp_cmd = b.addSystemCommand(&[_][]const u8{
-                    "inkscape", "data/zterm.svg", "-w", s, "-h", s, "-o", icon,
+                    "rsvg-convert", "data/zterm.svg", "-w", s, "-h", s, "-o", icon,
                 });
                 b.getInstallStep().dependOn(&exp_cmd.step);
             }
