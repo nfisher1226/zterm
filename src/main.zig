@@ -51,6 +51,15 @@ pub fn main() !void {
     defer allocator.free(opts.hostname);
 
     const app = c.gtk_application_new("org.hitchhiker-linux.zterm", c.G_APPLICATION_FLAGS_NONE) orelse @panic("null app :(");
+    // This was all a failed attempt at registering the app with dbus. Leaving it\
+    // in but commented out, as it's good to know how to set up GValues for future
+    // refernce, since it's set up in a C macro which doesn't translate to zig
+    // properly. But even though this failed to register the session it did compile
+    // and hopefulle set the GValue properly
+    //var value = c.GValue{.g_type = 0, .data = undefined };
+    //var t = c.g_value_init(&value, c.G_TYPE_BOOLEAN);
+    //c.g_value_set_boolean(&value, 1);
+    //c.g_object_set_property(@ptrCast(*c.GObject, app), "register-session", t);
     defer c.g_object_unref(app);
 
     _ = c.g_signal_connect_data(
@@ -63,7 +72,7 @@ pub fn main() !void {
         null,
         c.G_CONNECT_AFTER,
     );
-
+    _ = c.g_application_register(@ptrCast(*c.GApplication, app), null, null);
     _ = c.g_application_run(@ptrCast(*c.GApplication, app), 0, null);
 }
 
