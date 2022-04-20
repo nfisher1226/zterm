@@ -1,7 +1,12 @@
 Contents
 ========
+* [0.4.0](0.4.0-release)
 * [0.3.1](0.3.0-release)
 * [0.3.0](0.3.0-release)
+
+## 0.4.0 release
+* Update to 10.0 zig compiler
+* update zig-clap to most recent
 
 ## 0.3.1 release
 * Added `About` dialog with credits

@@ -3,7 +3,7 @@ name: zt
 main: src/main.zig
 dev_dependencies:
   - src: git https://github.com/ziglibs/known-folders commit-9db1b99219c767d5e24994b1525273fe4031e464
-  - src: git https://github.com/Hejsil/zig-clap tag-0.5.0
+  - src: git https://github.com/Hejsil/zig-clap branch-master
   - src: git https://github.com/LewisGaul/zig-nestedtext.git tag-v0.4.0
     name: nestedtext
     main: src/nestedtext.zig

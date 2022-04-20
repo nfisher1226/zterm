@@ -370,7 +370,7 @@ pub const Config = struct {
 
     pub fn fromFile(dir: []const u8) ?Config {
         if (getConfigDirHandle(dir)) |dir_fd| {
-            const fd = dir_fd.openFile("config.nt", .{ .read = true }) catch return null;
+            const fd = dir_fd.openFile("config.nt", .{ .mode = fs.File.OpenMode.read_only }) catch return null;
             defer {
                 fd.close();
                 var dir_handle = dir_fd;

@@ -267,7 +267,7 @@ const Gui = struct {
         // from the defaults
         const bindings: Keys = if (keys.getKeyFile(allocator)) |file| kblk: {
             defer allocator.free(file);
-            if (fs.cwd().openFile(file, .{ .read=true, .write=false })) |f| {
+            if (fs.cwd().openFile(file, .{ .mode = fs.File.OpenMode.read_write })) |f| {
                 defer f.close();
                 break :kblk if (Keys.fromFile(f)) |k| k else Keys.default();
             } else |_| {
