@@ -7,7 +7,6 @@ const gui = @import("gui.zig");
 const RGB = config.RGB;
 const allocator = std.heap.page_allocator;
 const fmt = std.fmt;
-const math = std.math;
 const mem = std.mem;
 
 var grad: ?Gradient = undefined;
@@ -581,7 +580,7 @@ pub const Stop = struct {
 
     fn toCss(self: Self, buf: *[26]u8) ?[]const u8 {
         const str = fmt.bufPrint(buf, ", rgb({d}, {d}, {d}) {d}%",
-            .{self.color.red, self.color.green, self.color.blue, math.round(self.position)})
+            .{self.color.red, self.color.green, self.color.blue, @round(self.position)})
             catch return null;
         return str;
     }
@@ -623,7 +622,7 @@ pub const Gradient = struct {
                 variety = "linear-gradient";
                 switch (self.pos) {
                     .angle => |a| {
-                        angle = @floatToInt(u16, math.round(a));
+                        angle = @floatToInt(u16, @round(a));
                     },
                     .edge => |e| {
                         positioning = switch (e.vertical) {

@@ -242,9 +242,9 @@ pub const RGB = struct {
     pub fn fromButton(button: gtk.ColorButton) Self {
         const rgba = button.as_color_chooser().get_rgba();
         return Self{
-            .red = @floatToInt(u8, math.round(rgba.red * 255.0)),
-            .green = @floatToInt(u8, math.round(rgba.green * 255.0)),
-            .blue = @floatToInt(u8, math.round(rgba.blue * 255.0)),
+            .red = @floatToInt(u8, @round(rgba.red * 255.0)),
+            .green = @floatToInt(u8, @round(rgba.green * 255.0)),
+            .blue = @floatToInt(u8, @round(rgba.blue * 255.0)),
         };
     }
 
