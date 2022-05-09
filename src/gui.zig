@@ -46,10 +46,19 @@ pub const Tab = struct {
     fn init(command: [:0]const u8) Self {
         const term = Callbacks.newTerm(command);
         const title = blk: {
-            if (c.vte_terminal_get_current_directory_uri(term.ptr)) |uri| {
-                var buf: [100]u8 = undefined;
-                const len = mem.len(uri);
-                const t = fmt.bufPrintZ(&buf, "{s}:{s}", .{ options.hostname, uri[7..len] }) catch {
+            var buf: [100]u8 = undefined;
+            if (gui.currentTerm()) |current| {
+                if (current.get_current_directory_uri(allocator)) |uri| {
+                    defer allocator.free(uri);
+                    const dir = fs.path.basename(uri);
+                    const t = fmt.bufPrintZ(&buf, "{s}:{s}", .{ options.hostname, dir }) catch {
+                        break :blk "Zterm";
+                    };
+                    break :blk t;
+                }
+            } else {
+                const dir = fs.path.basename(options.directory);
+                const t = fmt.bufPrintZ(&buf, "{s}:{s}", .{ options.hostname, dir }) catch {
                     break :blk "Zterm";
                 };
                 break :blk t;
