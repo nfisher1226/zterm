@@ -65,6 +65,7 @@ pub const Tab = struct {
             }
             break :blk "Zterm";
         };
+        term.connect_current_directory_uri_changed(@ptrCast(c.GCallback, Callbacks.setCurrentTabTitle), null);
         var tab = Self{
             .box = gtk.Box.new(.horizontal, 0),
             .tab_label = gtk.Label.new(title),
@@ -471,6 +472,15 @@ const Callbacks = struct {
                 const first = c.g_list_nth_data(kids, 0);
                 const first_ptr = @ptrCast(*c.GtkWidget, @alignCast(8, first));
                 c.gtk_widget_grab_focus(first_ptr);
+            }
+        }
+    }
+
+    fn setCurrentTabTitle() void {
+        if (gui.currentTab()) |tab| {
+            if (tab.currentTermTitle(allocator)) |title| {
+                defer allocator.free(title);
+                tab.setTitle(title);
             }
         }
     }
