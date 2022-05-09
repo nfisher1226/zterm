@@ -191,46 +191,16 @@ pub const StopControls = struct {
             }
         };
 
-        self.stops.connect_value_changed(
-            @ptrCast(c.GCallback, Callbacks.stopsValueChanged),
-            null
-        );
-        self.stop_selector.as_combo_box().connect_changed(
-            @ptrCast(c.GCallback, Callbacks.stopSelectorChanged),
-            null
-        );
-        self.stop1_position.as_range().connect_value_changed(
-            @ptrCast(c.GCallback, Callbacks.stop1PositionValueChanged),
-            null
-        );
-        self.stop1_color.connect_color_set(
-            @ptrCast(c.GCallback, Callbacks.updatePreview),
-            null
-        );
-        self.stop2_position.as_range().connect_value_changed(
-            @ptrCast(c.GCallback, Callbacks.stop2PositionValueChanged),
-            null
-        );
-        self.stop2_color.connect_color_set(
-            @ptrCast(c.GCallback, Callbacks.updatePreview),
-            null
-        );
-        self.stop3_position.as_range().connect_value_changed(
-            @ptrCast(c.GCallback, Callbacks.stop3PositionValueChanged),
-            null
-        );
-        self.stop3_color.connect_color_set(
-            @ptrCast(c.GCallback, Callbacks.updatePreview),
-            null
-        );
-        self.stop4_position.as_range().connect_value_changed(
-            @ptrCast(c.GCallback, Callbacks.updatePreview),
-            null
-        );
-        self.stop4_color.connect_color_set(
-            @ptrCast(c.GCallback, Callbacks.updatePreview),
-            null
-        );
+        self.stops.connect_value_changed(@ptrCast(c.GCallback, Callbacks.stopsValueChanged), null);
+        self.stop_selector.as_combo_box().connect_changed(@ptrCast(c.GCallback, Callbacks.stopSelectorChanged), null);
+        self.stop1_position.as_range().connect_value_changed(@ptrCast(c.GCallback, Callbacks.stop1PositionValueChanged), null);
+        self.stop1_color.connect_color_set(@ptrCast(c.GCallback, Callbacks.updatePreview), null);
+        self.stop2_position.as_range().connect_value_changed(@ptrCast(c.GCallback, Callbacks.stop2PositionValueChanged), null);
+        self.stop2_color.connect_color_set(@ptrCast(c.GCallback, Callbacks.updatePreview), null);
+        self.stop3_position.as_range().connect_value_changed(@ptrCast(c.GCallback, Callbacks.stop3PositionValueChanged), null);
+        self.stop3_color.connect_color_set(@ptrCast(c.GCallback, Callbacks.updatePreview), null);
+        self.stop4_position.as_range().connect_value_changed(@ptrCast(c.GCallback, Callbacks.updatePreview), null);
+        self.stop4_color.connect_color_set(@ptrCast(c.GCallback, Callbacks.updatePreview), null);
     }
 
     fn getStop(self: Self, button: gtk.ColorButton, scale: gtk.Scale) Stop {
@@ -391,7 +361,9 @@ pub const GradientEditor = struct {
             },
             .radial, .elliptical => pblk: {
                 if (self.getPlacement()) |p| {
-                    break :pblk Direction{.edge = p, };
+                    break :pblk Direction{
+                        .edge = p,
+                    };
                 } else return null;
             },
         };
@@ -432,16 +404,11 @@ pub const GradientEditor = struct {
             }
         };
 
-        self.kind.connect_changed(
-            @ptrCast(c.GCallback, Callbacks.kindChanged), null);
-        self.dir_type.connect_changed(
-            @ptrCast(c.GCallback, Callbacks.dirTypeChanged), null);
-        self.angle.connect_value_changed(
-            @ptrCast(c.GCallback, Callbacks.setBg), null);
-        self.vertical_position.connect_changed(
-            @ptrCast(c.GCallback, Callbacks.setBg), null);
-        self.horizontal_position.connect_changed(
-            @ptrCast(c.GCallback, Callbacks.setBg), null);
+        self.kind.connect_changed(@ptrCast(c.GCallback, Callbacks.kindChanged), null);
+        self.dir_type.connect_changed(@ptrCast(c.GCallback, Callbacks.dirTypeChanged), null);
+        self.angle.connect_value_changed(@ptrCast(c.GCallback, Callbacks.setBg), null);
+        self.vertical_position.connect_changed(@ptrCast(c.GCallback, Callbacks.setBg), null);
+        self.horizontal_position.connect_changed(@ptrCast(c.GCallback, Callbacks.setBg), null);
     }
 
     fn togglePositionType(self: Self) void {
@@ -514,7 +481,7 @@ pub const Kind = union(GradientKind) {
     const Self = @This();
 
     fn default() Self {
-        return Self{ .linear = Direction{ .edge = Placement.default() }};
+        return Self{ .linear = Direction{ .edge = Placement.default() } };
     }
 };
 
@@ -568,7 +535,9 @@ pub const Direction = union(DirectionType) {
     const Self = @This();
 
     fn default() Self {
-        return Self{ .edge = Placement.default(), };
+        return Self{
+            .edge = Placement.default(),
+        };
     }
 };
 
@@ -579,9 +548,7 @@ pub const Stop = struct {
     const Self = @This();
 
     fn toCss(self: Self, buf: *[26]u8) ?[]const u8 {
-        const str = fmt.bufPrint(buf, ", rgb({d}, {d}, {d}) {d}%",
-            .{self.color.red, self.color.green, self.color.blue, @round(self.position)})
-            catch return null;
+        const str = fmt.bufPrint(buf, ", rgb({d}, {d}, {d}) {d}%", .{ self.color.red, self.color.green, self.color.blue, @round(self.position) }) catch return null;
         return str;
     }
 };
@@ -719,17 +686,15 @@ pub const Gradient = struct {
             } else return null;
         } else "";
 
-        const css_string = fmt.allocPrintZ(allocator,
-            "{s} {{\n    background-image: {s}({s}{s}{s}{s}{s});\n    background-size: 100% 100%;\n\n}}",
-            .{  class,
-                variety,
-                positioning,
-                s1,
-                s2,
-                s3,
-                s4,
-            }
-        ) catch return null;
+        const css_string = fmt.allocPrintZ(allocator, "{s} {{\n    background-image: {s}({s}{s}{s}{s}{s});\n    background-size: 100% 100%;\n\n}}", .{
+            class,
+            variety,
+            positioning,
+            s1,
+            s2,
+            s3,
+            s4,
+        }) catch return null;
         return css_string;
     }
 };

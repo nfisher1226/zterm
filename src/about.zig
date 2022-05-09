@@ -24,21 +24,21 @@ pub fn setup(dlg: AboutDialog) void {
     dlg.set_wrap_license(true);
     dlg.set_website("https://jeang3nie.codeberg.page/zterm/");
     dlg.set_website_label("Website");
-    var authors = [_:0][*c]const u8{ "Nathan Fisher" };
+    var authors = [_:0][*c]const u8{"Nathan Fisher"};
     dlg.set_authors(&authors);
-    var artists = [_:0][*c]const u8{ "Nathan Fisher" };
+    var artists = [_:0][*c]const u8{"Nathan Fisher"};
     dlg.set_artists(&artists);
-    authors = [_:0][*c]const u8{ "Andrew Kelley and contributors" };
+    authors = [_:0][*c]const u8{"Andrew Kelley and contributors"};
     dlg.add_credit_section("Programmed in Zig by", &authors);
-    authors = [_:0][*c]const u8{ "Nektro and contributors" };
+    authors = [_:0][*c]const u8{"Nektro and contributors"};
     dlg.add_credit_section("Using Zigmod by", &authors);
-    authors = [_:0][*c]const u8{ "Komari Spaghetti and contributors" };
+    authors = [_:0][*c]const u8{"Komari Spaghetti and contributors"};
     dlg.add_credit_section("Using Zig-clap by", &authors);
-    authors = [_:0][*c]const u8{ "Lewis Gaul and contributors" };
+    authors = [_:0][*c]const u8{"Lewis Gaul and contributors"};
     dlg.add_credit_section("Using Zig-nestedtext by", &authors);
-    authors = [_:0][*c]const u8{ "the Ziglibs organization" };
+    authors = [_:0][*c]const u8{"the Ziglibs organization"};
     dlg.add_credit_section("Using known-folders by", &authors);
-    authors = [_:0][*c]const u8{ "Nathan Fisher" };
+    authors = [_:0][*c]const u8{"Nathan Fisher"};
     dlg.add_credit_section("Using Zig-vte by", &authors);
     dlg.set_logo_icon_name("zterm");
 }
@@ -52,4 +52,4 @@ const license =
     \\The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
     \\
     \\THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    ;
+;

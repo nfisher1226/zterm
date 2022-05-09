@@ -181,7 +181,9 @@ pub const PrefWidgets = struct {
     fn getTitleStyle(self: Self) config.DynamicTitleStyle {
         return if (self.dynamic_title_combobox.get_active_id(allocator)) |id| blk: {
             break :blk if (config.parseEnum(config.DynamicTitleStyle, id)) |s|
-                s else config.DynamicTitleStyle.default();
+                s
+            else
+                config.DynamicTitleStyle.default();
         } else config.DynamicTitleStyle.default();
     }
 
@@ -296,7 +298,9 @@ pub const PrefWidgets = struct {
         return if (self.background_style_combobox.get_active_id(allocator)) |id| blk: {
             defer allocator.free(id);
             break :blk if (config.parseEnum(config.BackgroundStyle, id)) |s|
-                s else config.BackgroundStyle.default();
+                s
+            else
+                config.BackgroundStyle.default();
         } else config.BackgroundStyle.default();
     }
 
@@ -304,7 +308,9 @@ pub const PrefWidgets = struct {
         return if (self.background_image_style_combobox.get_active_id(allocator)) |id| blk: {
             defer allocator.free(id);
             break :blk if (config.parseEnum(config.ImageStyle, id)) |s|
-                s else config.ImageStyle.default();
+                s
+            else
+                config.ImageStyle.default();
         } else config.ImageStyle.default();
     }
 
@@ -367,8 +373,7 @@ pub const PrefWidgets = struct {
             },
             .gradient => {
                 return config.Background{
-                    .gradient = if (self.getBackgroundGradient()) |g| g
-                        else Gradient.default(),
+                    .gradient = if (self.getBackgroundGradient()) |g| g else Gradient.default(),
                 };
             },
         }
@@ -406,7 +411,9 @@ pub const PrefWidgets = struct {
     fn getCursorStyle(self: Self) config.CursorStyle {
         if (self.cursor_style_combobox.get_active_id(allocator)) |id| {
             return if (config.parseEnum(config.CursorStyle, id)) |s|
-                s else config.CursorStyle.default();
+                s
+            else
+                config.CursorStyle.default();
         } else return config.CursorStyle.default();
     }
 
@@ -460,24 +467,20 @@ pub const PrefWidgets = struct {
     fn connectSignals(self: Self) void {
         const Callbacks = struct {
             fn toggleCustomCommand(custom_command_checkbutton: *c.GtkCheckButton) void {
-                const state = gtk.toggle_button_get_active(
-                    @ptrCast(*c.GtkToggleButton, custom_command_checkbutton));
+                const state = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, custom_command_checkbutton));
                 widgets.custom_command_entry.as_widget().set_sensitive(state);
                 widgets.custom_command_label.set_sensitive(state);
             }
 
             fn toggleScrollback(infinite_scrollback_checkbutton: *c.GtkCheckButton) void {
-                const state = gtk.toggle_button_get_active(
-                    @ptrCast(*c.GtkToggleButton, infinite_scrollback_checkbutton));
+                const state = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, infinite_scrollback_checkbutton));
                 widgets.scrollback_lines_label.set_sensitive(!state);
                 widgets.scrollback_lines_spinbox.as_widget().set_sensitive(!state);
             }
 
             fn toggleFont(system_font_checkbutton: *c.GtkCheckButton) void {
-                const state = gtk.toggle_button_get_active(
-                    @ptrCast(*c.GtkToggleButton, system_font_checkbutton));
-                gtk.widget_set_sensitive(
-                    @ptrCast(*c.GtkWidget, widgets.font_chooser_button), !state);
+                const state = gtk.toggle_button_get_active(@ptrCast(*c.GtkToggleButton, system_font_checkbutton));
+                gtk.widget_set_sensitive(@ptrCast(*c.GtkWidget, widgets.font_chooser_button), !state);
             }
 
             fn toggleBackground(background_combobox: *c.GtkComboBox) void {

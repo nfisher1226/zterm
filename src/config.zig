@@ -32,14 +32,14 @@ pub fn getConfigDir(alloc: mem.Allocator) ?[]const u8 {
     if (dir) |d| {
         return path.join(alloc, &[_][]const u8{ d, "zterm" }) catch return null;
     } else {
-        return if (os.getenv("HOME")) |h| path.join(alloc, &[_][]const u8{ h, ".config/zterm"}) catch return null else null;
+        return if (os.getenv("HOME")) |h| path.join(alloc, &[_][]const u8{ h, ".config/zterm" }) catch return null else null;
     }
 }
 
 pub fn getConfigDirHandle(dir: []const u8) ?std.fs.Dir {
     defer allocator.free(dir);
     if (fs.openDirAbsolute(dir, .{})) |d| {
-            return d;
+        return d;
     } else |err| {
         switch (err) {
             fs.File.OpenError.FileNotFound => {
@@ -390,13 +390,10 @@ pub const Config = struct {
         const provider = gui.css_provider;
         const color = self.colors.background_color;
         var buf: [55]u8 = undefined;
-        const bg_color = fmt.bufPrint(&buf, "\n    background-color: rgb({d}, {d}, {d});",
-            .{color.red, color.green, color.blue}) catch return;
+        const bg_color = fmt.bufPrint(&buf, "\n    background-color: rgb({d}, {d}, {d});", .{ color.red, color.green, color.blue }) catch return;
         switch (self.background) {
             .solid_color => {
-                const css_string = fmt.allocPrintZ(allocator,
-                    ".workview stack {{{s}\n    background-size: 100% 100%;}}",
-                    .{bg_color}) catch return;
+                const css_string = fmt.allocPrintZ(allocator, ".workview stack {{{s}\n    background-size: 100% 100%;}}", .{bg_color}) catch return;
                 _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
             },
             .image => |img| {
@@ -405,21 +402,19 @@ pub const Config = struct {
                 const centered =
                     \\    background-position: center;
                     \\    background-repeat: no-repeat;
-                    ;
+                ;
                 const scaled =
                     \\    background-size: contain;
                     \\    background-repeat: no-repeat;
                     \\    background-position: center;
-                    ;
+                ;
                 const styling = switch (img.style) {
                     .tiled => "    background-repeat: repeat;\n",
                     .centered => centered,
                     .scaled => scaled,
                     .stretched => "    background-size: 100% 100%;\n",
                 };
-                const css_string = fmt.allocPrintZ(allocator,
-                    ".workview stack {{\n    background-image: url(\"{s}\");{s}\n{s}}}",
-                    .{img.file, bg_color, styling}) catch return;
+                const css_string = fmt.allocPrintZ(allocator, ".workview stack {{\n    background-image: url(\"{s}\");{s}\n{s}}}", .{ img.file, bg_color, styling }) catch return;
                 _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
             },
             .transparent => {},

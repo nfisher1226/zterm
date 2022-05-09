@@ -6,7 +6,8 @@ Contents
 
 ## 0.4.0 release
 * Update to 10.0 zig compiler
-* update zig-clap to most recent
+* Update zig-clap to most recent
+* Tab title follows host:cwd
 
 ## 0.3.1 release
 * Added `About` dialog with credits
