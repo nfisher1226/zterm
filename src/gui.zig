@@ -44,12 +44,23 @@ pub const Tab = struct {
     const Self = @This();
 
     fn init(command: [:0]const u8) Self {
+        const term = Callbacks.newTerm(command);
+        const title = blk: {
+            if (c.vte_terminal_get_current_directory_uri(term.ptr)) |uri| {
+                var buf: [100]u8 = undefined;
+                const len = mem.len(uri);
+                const t = fmt.bufPrintZ(&buf, "{s}:{s}", .{ options.hostname, uri[7..len] }) catch {
+                    break :blk "Zterm";
+                };
+                break :blk t;
+            }
+            break :blk "Zterm";
+        };
         var tab = Self{
             .box = gtk.Box.new(.horizontal, 0),
-            .tab_label = gtk.Label.new("Zterm"),
+            .tab_label = gtk.Label.new(title),
             .close_button = gtk.Button.new_from_icon_name("window-close", .menu),
         };
-        const term = Callbacks.newTerm(command);
         const lbox = gtk.Box.new(.horizontal, 10);
         tab.close_button.set_relief(.none);
         const close_button_widget = tab.close_button.as_widget();
@@ -83,10 +94,24 @@ pub const Tab = struct {
         } else return null;
     }
 
-    fn termTitle(self: Self, alloc: mem.Allocator) ?[:0]const u8 {
+    fn currentTermTitle(self: Self, alloc: mem.Allocator) ?[:0]const u8 {
         if (self.currentTerm()) |term| {
-            return if (term.get_window_title(alloc)) |s| s else null;
-        } else return null;
+            if (term.get_window_title(alloc)) |t| {
+                if (!mem.eql(u8, t, "")) {
+                    return t;
+                } else alloc.free(t);
+            }
+            if (c.vte_terminal_get_current_directory_uri(term.ptr)) |uri| {
+                const len = mem.len(uri);
+                const dir = fs.path.basename(uri[0..len]);
+                return fmt.allocPrintZ(alloc, "{s}:{s}", .{ options.hostname, dir }) catch return null;
+            }
+        }
+        return null;
+    }
+
+    fn setTitle(self: Self, title: [:0]const u8) void {
+        self.tab_label.set_text(title);
     }
 
     fn nextPane(self: Self) void {
@@ -102,6 +127,11 @@ pub const Tab = struct {
                     }
                 }
                 kids.items[next].grab_focus();
+                if (self.currentTermTitle(allocator)) |title| {
+                    if (gui.currentTab()) |tab| {
+                        tab.setTitle(title);
+                    }
+                }
             }
         }
     }
@@ -119,6 +149,11 @@ pub const Tab = struct {
                     }
                 }
                 kids.items[prev].grab_focus();
+                if (self.currentTermTitle(allocator)) |title| {
+                    if (gui.currentTab()) |tab| {
+                        tab.setTitle(title);
+                    }
+                }
             }
         }
     }
@@ -211,7 +246,7 @@ const Gui = struct {
             .replaces_title => fmt.allocPrintZ(allocator, "{s} on {s}", .{ options.directory, options.hostname }),
             .before_title => fmt.allocPrintZ(allocator, "{s} on {s} ~ {s}-{s}", .{ options.directory, options.hostname, conf.initial_title, version }),
             .after_title => fmt.allocPrintZ(allocator, "{s}-{s} ~ {s} on {s}", .{ conf.initial_title, version, options.directory, options.hostname }),
-            .not_displayed => fmt.allocPrintZ(allocator, "{s}-{s}", .{conf.initial_title, version}),
+            .not_displayed => fmt.allocPrintZ(allocator, "{s}-{s}", .{ conf.initial_title, version }),
         } catch return;
         defer allocator.free(title);
         self.window.set_title(title);
@@ -309,10 +344,7 @@ pub fn activate(application: *c.GtkApplication, opts: c.gpointer) void {
     if (visual) |v| gui.window.as_widget().set_visual(v);
 
     css_provider = c.gtk_css_provider_new();
-    c.gtk_style_context_add_provider_for_screen(
-        screen,
-        @ptrCast(*c.GtkStyleProvider, css_provider),
-        c.GTK_STYLE_PROVIDER_PRIORITY_USER);
+    c.gtk_style_context_add_provider_for_screen(screen, @ptrCast(*c.GtkStyleProvider, css_provider), c.GTK_STYLE_PROVIDER_PRIORITY_USER);
 
     gui.window.set_title(options.title);
     //gui.notebook.popup_enable();
@@ -345,10 +377,21 @@ const Callbacks = struct {
     }
 
     fn newTerm(command: [:0]const u8) vte.Terminal {
+        const dir = blk: {
+            if (gui.currentTerm()) |t| {
+                if (c.vte_terminal_get_current_directory_uri(t.ptr)) |uri| {
+                    var buf: [100]u8 = undefined;
+                    const len = mem.len(uri);
+                    const dir = fmt.bufPrintZ(&buf, "{s}", .{uri[7..len]}) catch break :blk options.directory;
+                    break :blk dir;
+                }
+            }
+            break :blk options.directory;
+        };
         const term = vte.Terminal.new();
         term.set_clear_background(false);
         terms.put(@ptrToInt(term.ptr), term.ptr) catch {};
-        term.spawn_async(.default, options.directory, command, null, .default, null, -1, null);
+        term.spawn_async(.default, dir, command, null, .default, null, -1, null);
         conf.set(term.ptr);
         _ = gtk.signal_connect(
             term.ptr,
