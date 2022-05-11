@@ -65,7 +65,7 @@ pub const Tab = struct {
             }
             break :blk "Zterm";
         };
-        term.connect_current_directory_uri_changed(@ptrCast(c.GCallback, Callbacks.setCurrentTabTitle), null);
+        term.connect_current_directory_uri_changed(@ptrCast(c.GCallback, Callbacks.setTitle), null);
         var tab = Self{
             .box = gtk.Box.new(.horizontal, 0),
             .tab_label = gtk.Label.new(title),
@@ -124,6 +124,13 @@ pub const Tab = struct {
         self.tab_label.set_text(title);
     }
 
+    fn setTitleFromUri(self: Self, uri: [:0]const u8) void {
+        const dir = fs.path.basename(uri);
+        const title = fmt.allocPrintZ(allocator, "{s}:{s}", .{ options.hostname, dir }) catch return;
+        defer allocator.free(title);
+        self.setTitle(title);
+    }
+
     fn nextPane(self: Self) void {
         if (self.box.as_container().get_children(allocator)) |kids| {
             defer kids.deinit();
@@ -137,9 +144,11 @@ pub const Tab = struct {
                     }
                 }
                 kids.items[next].grab_focus();
-                if (self.currentTermTitle(allocator)) |title| {
-                    if (gui.currentTab()) |tab| {
-                        tab.setTitle(title);
+                if (self.currentTerm()) |term| {
+                    if (term.get_current_directory_uri(allocator)) |uri| {
+                        defer allocator.free(uri);
+                        gui.setTitleFromUri(uri);
+                        self.setTitleFromUri(uri);
                     }
                 }
             }
@@ -159,9 +168,11 @@ pub const Tab = struct {
                     }
                 }
                 kids.items[prev].grab_focus();
-                if (self.currentTermTitle(allocator)) |title| {
-                    if (gui.currentTab()) |tab| {
-                        tab.setTitle(title);
+                if (self.currentTerm()) |term| {
+                    if (term.get_current_directory_uri(allocator)) |uri| {
+                        defer allocator.free(uri);
+                        gui.setTitleFromUri(uri);
+                        self.setTitleFromUri(uri);
                     }
                 }
             }
@@ -252,10 +263,38 @@ const Gui = struct {
 
     fn setTitle(self: Self) void {
         const style = conf.dynamic_title_style;
+        const dir = blk: {
+            if (self.currentTerm()) |term| {
+                if (term.get_current_directory_uri(allocator)) |uri| {
+                    defer allocator.free(uri);
+                    const len = mem.len(uri);
+                    var buf: [50]u8 = undefined;
+                    const d = fmt.bufPrintZ(&buf, "{s}", .{uri[7..len]}) catch {
+                        break :blk options.directory;
+                    };
+                    break :blk d;
+                }
+            }
+            break :blk options.directory;
+        };
         const title = switch (style) {
-            .replaces_title => fmt.allocPrintZ(allocator, "{s} on {s}", .{ options.directory, options.hostname }),
-            .before_title => fmt.allocPrintZ(allocator, "{s} on {s} ~ {s}-{s}", .{ options.directory, options.hostname, conf.initial_title, version }),
-            .after_title => fmt.allocPrintZ(allocator, "{s}-{s} ~ {s} on {s}", .{ conf.initial_title, version, options.directory, options.hostname }),
+            .replaces_title => fmt.allocPrintZ(allocator, "{s} on {s}", .{ dir, options.hostname }),
+            .before_title => fmt.allocPrintZ(allocator, "{s} on {s} ~ {s}-{s}", .{ dir, options.hostname, conf.initial_title, version }),
+            .after_title => fmt.allocPrintZ(allocator, "{s}-{s} ~ {s} on {s}", .{ conf.initial_title, version, dir, options.hostname }),
+            .not_displayed => fmt.allocPrintZ(allocator, "{s}-{s}", .{ conf.initial_title, version }),
+        } catch return;
+        defer allocator.free(title);
+        self.window.set_title(title);
+    }
+
+    fn setTitleFromUri(self: Self, uri: [:0]const u8) void {
+        const len = mem.len(uri);
+        const dir = fmt.allocPrintZ(allocator, "{s}", .{uri[7..len]}) catch return;
+        defer allocator.free(dir);
+        const title = switch (conf.dynamic_title_style) {
+            .replaces_title => fmt.allocPrintZ(allocator, "{s} on {s}", .{ dir, options.hostname }),
+            .before_title => fmt.allocPrintZ(allocator, "{s} on {s} ~ {s}-{s}", .{ dir, options.hostname, conf.initial_title, version }),
+            .after_title => fmt.allocPrintZ(allocator, "{s}-{s} ~ {s} on {s}", .{ conf.initial_title, version, dir, options.hostname }),
             .not_displayed => fmt.allocPrintZ(allocator, "{s}-{s}", .{ conf.initial_title, version }),
         } catch return;
         defer allocator.free(title);
@@ -300,6 +339,7 @@ const Gui = struct {
         self.menu.rotate_view.connect_activate(@ptrCast(c.GCallback, Callbacks.rotateView), null);
         self.notebook.connect_page_removed(@ptrCast(c.GCallback, Callbacks.pageRemoved), null);
         self.notebook.connect_select_page(@ptrCast(c.GCallback, Callbacks.selectPage), null);
+        self.notebook.connect_switch_page(@ptrCast(c.GCallback, Callbacks.switchPage), null);
         self.menu.about.connect_activate(@ptrCast(c.GCallback, Callbacks.showAbout), null);
         self.menu.preferences.connect_activate(@ptrCast(c.GCallback, Callbacks.runPrefs), null);
         self.menu.close_tab.connect_activate(@ptrCast(c.GCallback, Callbacks.closeCurrentTab), null);
@@ -428,6 +468,19 @@ const Callbacks = struct {
         if (gui.currentTab()) |t| t.selectPage();
     }
 
+    fn switchPage(_: *c.GtkNotebook, box: *c.GtkWidget, _: c_uint) void {
+        if (tabs.get(@ptrToInt(box))) |tab| {
+            if (tab.box.as_container().get_children(allocator)) |kids| {
+                defer kids.deinit();
+                const term = vte.Terminal.from_widget(kids.items[0]).?;
+                if (term.get_current_directory_uri(allocator)) |uri| {
+                    defer allocator.free(uri);
+                    gui.setTitleFromUri(uri);
+                }
+            }
+        }
+    }
+
     fn closeCurrentTab() void {
         const num = gui.notebook.get_current_page();
         const box = gui.notebook.get_nth_page(num);
@@ -476,11 +529,14 @@ const Callbacks = struct {
         }
     }
 
-    fn setCurrentTabTitle() void {
+    fn setTitle() void {
         if (gui.currentTab()) |tab| {
-            if (tab.currentTermTitle(allocator)) |title| {
-                defer allocator.free(title);
-                tab.setTitle(title);
+            if (tab.currentTerm()) |term| {
+                if (term.get_current_directory_uri(allocator)) |uri| {
+                    defer allocator.free(uri);
+                    gui.setTitleFromUri(uri);
+                    tab.setTitleFromUri(uri);
+                }
             }
         }
     }
