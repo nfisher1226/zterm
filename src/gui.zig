@@ -71,6 +71,10 @@ pub const Tab = struct {
             .tab_label = gtk.Label.new(title),
             .close_button = gtk.Button.new_from_icon_name("window-close", .menu),
         };
+        tab.box.as_widget().set_hexpand(true);
+        tab.tab_label.as_widget().set_hexpand(true);
+        tab.box.as_widget().set_halign(gtk.Widget.Align.fill);
+        tab.tab_label.as_widget().set_halign(gtk.Widget.Align.fill);
         const lbox = gtk.Box.new(.horizontal, 10);
         tab.close_button.set_relief(.none);
         const close_button_widget = tab.close_button.as_widget();
