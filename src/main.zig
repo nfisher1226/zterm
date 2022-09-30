@@ -65,7 +65,7 @@ pub fn main() !void {
     _ = c.g_signal_connect_data(
         app,
         "activate",
-        @ptrCast(c.GCallback, gui.activate),
+        @ptrCast(c.GCallback, &gui.activate),
         // Here we cast a pointer to "opts" to a gpointer and pass it into the
         // GCallback created above
         @ptrCast(c.gpointer, &opts),

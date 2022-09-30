@@ -180,7 +180,7 @@ pub const PrefWidgets = struct {
 
     fn getTitleStyle(self: Self) config.DynamicTitleStyle {
         return if (self.dynamic_title_combobox.get_active_id(allocator)) |id| blk: {
-            break :blk if (config.parseEnum(config.DynamicTitleStyle, id)) |s|
+            break :blk if (config.parseEnum(config.DynamicTitleStyle, id.ptr)) |s|
                 s
             else
                 config.DynamicTitleStyle.default();
@@ -215,7 +215,7 @@ pub const PrefWidgets = struct {
                 self.custom_command_entry.as_widget().set_sensitive(true);
                 self.custom_command_label.set_sensitive(true);
                 const cmd = fmt.allocPrintZ(allocator, "{s}", .{val}) catch |e| {
-                    stderr.print("{s}\n", .{e}) catch {};
+                    stderr.print("{}\n", .{e}) catch {};
                     return;
                 };
                 defer allocator.free(cmd);
@@ -263,7 +263,7 @@ pub const PrefWidgets = struct {
         } else {
             const val = c.gtk_font_chooser_get_font(chooser);
             const font = fmt.allocPrintZ(allocator, "{s}", .{val}) catch |e| {
-                stderr.print("{s}\n", .{e}) catch {};
+                stderr.print("{}\n", .{e}) catch {};
                 return .system;
             };
             return config.Font{ .custom = font };
@@ -281,7 +281,7 @@ pub const PrefWidgets = struct {
             },
             .custom => |val| {
                 const fontname = fmt.allocPrintZ(allocator, "{s}", .{val}) catch |e| {
-                    stderr.print("{s}\n", .{e}) catch {};
+                    stderr.print("{}\n", .{e}) catch {};
                     toggle.set_active(true);
                     c.gtk_widget_set_sensitive(self.font_chooser_button, 0);
                     return;
@@ -289,7 +289,7 @@ pub const PrefWidgets = struct {
                 defer allocator.free(fontname);
                 toggle.set_active(false);
                 c.gtk_widget_set_sensitive(self.font_chooser_button, 1);
-                c.gtk_font_chooser_set_font(chooser, fontname);
+                c.gtk_font_chooser_set_font(chooser, fontname.ptr);
             },
         }
     }
@@ -297,7 +297,7 @@ pub const PrefWidgets = struct {
     fn getBackgroundStyle(self: Self) config.BackgroundStyle {
         return if (self.background_style_combobox.get_active_id(allocator)) |id| blk: {
             defer allocator.free(id);
-            break :blk if (config.parseEnum(config.BackgroundStyle, id)) |s|
+            break :blk if (config.parseEnum(config.BackgroundStyle, id.ptr)) |s|
                 s
             else
                 config.BackgroundStyle.default();
@@ -307,7 +307,7 @@ pub const PrefWidgets = struct {
     fn getImageStyle(self: PrefWidgets) config.ImageStyle {
         return if (self.background_image_style_combobox.get_active_id(allocator)) |id| blk: {
             defer allocator.free(id);
-            break :blk if (config.parseEnum(config.ImageStyle, id)) |s|
+            break :blk if (config.parseEnum(config.ImageStyle, id.ptr)) |s|
                 s
             else
                 config.ImageStyle.default();
@@ -346,11 +346,11 @@ pub const PrefWidgets = struct {
         // stub
         const button = @ptrCast(*c.GtkFileChooser, self.background_image_file_button);
         const file = fmt.allocPrintZ(allocator, "{s}", .{image.file}) catch |e| {
-            stderr.print("{s}\n", .{e}) catch {};
+            stderr.print("{}\n", .{e}) catch {};
             return;
         };
         defer allocator.free(file);
-        _ = c.gtk_file_chooser_set_filename(button, file);
+        _ = c.gtk_file_chooser_set_filename(button, file.ptr);
         self.setImageStyle(image);
     }
 
@@ -410,7 +410,7 @@ pub const PrefWidgets = struct {
 
     fn getCursorStyle(self: Self) config.CursorStyle {
         if (self.cursor_style_combobox.get_active_id(allocator)) |id| {
-            return if (config.parseEnum(config.CursorStyle, id)) |s|
+            return if (config.parseEnum(config.CursorStyle, id.ptr)) |s|
                 s
             else
                 config.CursorStyle.default();
@@ -505,22 +505,22 @@ pub const PrefWidgets = struct {
         };
 
         self.custom_command_checkbutton.as_toggle_button().connect_toggled(
-            @ptrCast(c.GCallback, Callbacks.toggleCustomCommand),
+            @ptrCast(c.GCallback, &Callbacks.toggleCustomCommand),
             null,
         );
 
         self.infinite_scrollback_checkbutton.as_toggle_button().connect_toggled(
-            @ptrCast(c.GCallback, Callbacks.toggleScrollback),
+            @ptrCast(c.GCallback, &Callbacks.toggleScrollback),
             null,
         );
 
         self.system_font_checkbutton.as_toggle_button().connect_toggled(
-            @ptrCast(c.GCallback, Callbacks.toggleFont),
+            @ptrCast(c.GCallback, &Callbacks.toggleFont),
             null,
         );
 
         self.background_style_combobox.connect_changed(
-            @ptrCast(c.GCallback, Callbacks.toggleBackground),
+            @ptrCast(c.GCallback, &Callbacks.toggleBackground),
             null,
         );
     }
@@ -530,14 +530,14 @@ pub fn run(data: config.Config) ?config.Config {
     const builder = gtk.Builder.new();
     conf = data;
     builder.add_from_string(@embedFile("prefs.glade")) catch |e| {
-        stderr.print("{s}\n", .{e}) catch {};
+        stderr.print("{}\n", .{e}) catch {};
         return null;
     };
     widgets = PrefWidgets.init(builder);
     widgets.setValues();
     widgets.connectSignals();
 
-    widgets.close_button.connect_clicked(@ptrCast(c.GCallback, saveAndClose), null);
+    widgets.close_button.connect_clicked(@ptrCast(c.GCallback, &saveAndClose), null);
 
     const res = c.gtk_dialog_run(@ptrCast(*c.GtkDialog, widgets.window.ptr));
     if (res == -1) {

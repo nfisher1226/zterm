@@ -47,12 +47,12 @@ pub fn getConfigDirHandle(dir: []const u8) ?std.fs.Dir {
                 if (fs.openDirAbsolute(dir, .{})) |d| {
                     return d;
                 } else |new_err| {
-                    std.debug.print("OpenDir: {s}\n", .{new_err});
+                    std.debug.print("OpenDir: {}\n", .{new_err});
                     return null;
                 }
             },
             else => {
-                std.debug.print("Create Directory: {s}\n", .{err});
+                std.debug.print("Create Directory: {}\n", .{err});
                 return null;
             },
         }
@@ -125,7 +125,7 @@ pub const Font = union(enum) {
             .system => c.vte_terminal_set_font(term, null),
             .custom => |v| {
                 const font = fmt.allocPrintZ(allocator, "{s}", .{v}) catch |e| {
-                    stderr.print("{s}\n", .{e}) catch {};
+                    stderr.print("{}\n", .{e}) catch {};
                     c.vte_terminal_set_font(term, null);
                     return;
                 };
@@ -394,7 +394,7 @@ pub const Config = struct {
         switch (self.background) {
             .solid_color => {
                 const css_string = fmt.allocPrintZ(allocator, ".workview stack {{{s}\n    background-size: 100% 100%;}}", .{bg_color}) catch return;
-                _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
+                _ = c.gtk_css_provider_load_from_data(provider, css_string.ptr, -1, null);
             },
             .image => |img| {
                 const file = fs.cwd().openFile(img.file, .{}) catch return;
@@ -415,13 +415,13 @@ pub const Config = struct {
                     .stretched => "    background-size: 100% 100%;\n",
                 };
                 const css_string = fmt.allocPrintZ(allocator, ".workview stack {{\n    background-image: url(\"{s}\");{s}\n{s}}}", .{ img.file, bg_color, styling }) catch return;
-                _ = c.gtk_css_provider_load_from_data(provider, css_string, -1, null);
+                _ = c.gtk_css_provider_load_from_data(provider, css_string.ptr, -1, null);
             },
             .transparent => {},
             .gradient => |g| {
                 if (g.toCss(".workview stack")) |css| {
                     defer allocator.free(css);
-                    _ = c.gtk_css_provider_load_from_data(provider, css, -1, null);
+                    _ = c.gtk_css_provider_load_from_data(provider, css.ptr, -1, null);
                 }
             },
         }
@@ -443,7 +443,7 @@ pub const Config = struct {
             if (handle.createFile("config.nt", .{ .truncate = true })) |file| {
                 cfg_tree.stringify(.{}, file.writer()) catch return;
             } else |write_err| {
-                std.debug.print("Write Error: {s}\n", .{write_err});
+                std.debug.print("Write Error: {}\n", .{write_err});
                 return;
             }
         }

@@ -49,43 +49,43 @@ pub const Menu = struct {
         if (self.new_tab.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.new_tab);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, newTab);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, newTab);
         }
 
         if (self.split_view.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.views.split_view);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, splitView);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, splitView);
         }
 
         if (self.rotate_view.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.views.rotate_view);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, rotateView);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, rotateView);
         }
 
         if (self.copy.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.actions.copy);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, copy);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, copy);
         }
 
         if (self.paste.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.actions.paste);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, paste);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, paste);
         }
 
         if (self.quit.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.actions.quit);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, quit);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, quit);
         }
     }
 };
@@ -145,92 +145,92 @@ pub const Nav = struct {
         if (self.tab1.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.tab1);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab1);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, tab1);
         }
 
         if (self.tab2.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.tab2);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab2);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, tab2);
         }
 
         if (self.tab3.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.tab3);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab3);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, tab3);
         }
 
         if (self.tab4.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.tab4);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab4);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, tab4);
         }
 
         if (self.tab5.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.tab5);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab5);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, tab5);
         }
 
         if (self.tab6.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.tab6);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab6);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, tab6);
         }
 
         if (self.tab7.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.tab7);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab7);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, tab7);
         }
 
         if (self.tab8.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.tab8);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab8);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, tab8);
         }
 
         if (self.tab9.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.tab9);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, tab9);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, tab9);
         }
 
         if (self.prev_pane.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.views.prev_view);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, prevPane);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, prevPane);
         }
 
         if (self.next_pane.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.views.next_view);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, nextPane);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, nextPane);
         }
 
         if (self.prev_tab.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.prev_tab);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, prevTab);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, prevTab);
         }
 
         if (self.next_tab.get_accel_path(allocator)) |p| {
             defer allocator.free(p);
             accel = Accel.parse(keys.tabs.next_tab);
-            c.gtk_accel_map_add_entry(p, accel.key, accel.mods);
-            c.gtk_accel_group_connect_by_path(accel_group, p, nextTab);
+            c.gtk_accel_map_add_entry(p.ptr, accel.key, accel.mods);
+            c.gtk_accel_group_connect_by_path(accel_group, p.ptr, nextTab);
         }
     }
 };

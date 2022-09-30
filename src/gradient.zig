@@ -191,16 +191,16 @@ pub const StopControls = struct {
             }
         };
 
-        self.stops.connect_value_changed(@ptrCast(c.GCallback, Callbacks.stopsValueChanged), null);
-        self.stop_selector.as_combo_box().connect_changed(@ptrCast(c.GCallback, Callbacks.stopSelectorChanged), null);
-        self.stop1_position.as_range().connect_value_changed(@ptrCast(c.GCallback, Callbacks.stop1PositionValueChanged), null);
-        self.stop1_color.connect_color_set(@ptrCast(c.GCallback, Callbacks.updatePreview), null);
-        self.stop2_position.as_range().connect_value_changed(@ptrCast(c.GCallback, Callbacks.stop2PositionValueChanged), null);
-        self.stop2_color.connect_color_set(@ptrCast(c.GCallback, Callbacks.updatePreview), null);
-        self.stop3_position.as_range().connect_value_changed(@ptrCast(c.GCallback, Callbacks.stop3PositionValueChanged), null);
-        self.stop3_color.connect_color_set(@ptrCast(c.GCallback, Callbacks.updatePreview), null);
-        self.stop4_position.as_range().connect_value_changed(@ptrCast(c.GCallback, Callbacks.updatePreview), null);
-        self.stop4_color.connect_color_set(@ptrCast(c.GCallback, Callbacks.updatePreview), null);
+        self.stops.connect_value_changed(@ptrCast(c.GCallback, &Callbacks.stopsValueChanged), null);
+        self.stop_selector.as_combo_box().connect_changed(@ptrCast(c.GCallback, &Callbacks.stopSelectorChanged), null);
+        self.stop1_position.as_range().connect_value_changed(@ptrCast(c.GCallback, &Callbacks.stop1PositionValueChanged), null);
+        self.stop1_color.connect_color_set(@ptrCast(c.GCallback, &Callbacks.updatePreview), null);
+        self.stop2_position.as_range().connect_value_changed(@ptrCast(c.GCallback, &Callbacks.stop2PositionValueChanged), null);
+        self.stop2_color.connect_color_set(@ptrCast(c.GCallback, &Callbacks.updatePreview), null);
+        self.stop3_position.as_range().connect_value_changed(@ptrCast(c.GCallback, &Callbacks.stop3PositionValueChanged), null);
+        self.stop3_color.connect_color_set(@ptrCast(c.GCallback, &Callbacks.updatePreview), null);
+        self.stop4_position.as_range().connect_value_changed(@ptrCast(c.GCallback, &Callbacks.updatePreview), null);
+        self.stop4_color.connect_color_set(@ptrCast(c.GCallback, &Callbacks.updatePreview), null);
     }
 
     fn getStop(self: Self, button: gtk.ColorButton, scale: gtk.Scale) Stop {
@@ -256,7 +256,7 @@ pub const GradientEditor = struct {
     fn getKind(self: Self) ?GradientKind {
         if (self.kind.get_active_id(allocator)) |id| {
             defer allocator.free(id);
-            return if (config.parseEnum(GradientKind, id)) |k| k else null;
+            return if (config.parseEnum(GradientKind, id.ptr)) |k| k else null;
         } else return null;
     }
 
@@ -283,14 +283,14 @@ pub const GradientEditor = struct {
         const vert = vblk: {
             if (self.vertical_position.get_active_id(allocator)) |id| {
                 defer allocator.free(id);
-                if (config.parseEnum(VerticalPlacement, id)) |v| break :vblk v else return null;
+                if (config.parseEnum(VerticalPlacement, id.ptr)) |v| break :vblk v else return null;
             } else return null;
         };
 
         const hor = hblk: {
             if (self.horizontal_position.get_active_id(allocator)) |id| {
                 defer allocator.free(id);
-                if (config.parseEnum(HorizontalPlacement, id)) |h| break :hblk h else return null;
+                if (config.parseEnum(HorizontalPlacement, id.ptr)) |h| break :hblk h else return null;
             } else return null;
         };
         return Placement{
@@ -302,7 +302,7 @@ pub const GradientEditor = struct {
     fn getDirectionType(self: Self) ?DirectionType {
         if (self.dir_type.get_active_id(allocator)) |id| {
             defer allocator.free(id);
-            return if (config.parseEnum(DirectionType, id)) |d| d else null;
+            return if (config.parseEnum(DirectionType, id.ptr)) |d| d else null;
         } else return null;
     }
 
@@ -382,7 +382,7 @@ pub const GradientEditor = struct {
             if (g.toCss(".workview stack")) |css| {
                 defer allocator.free(css);
                 const provider = gui.css_provider;
-                _ = c.gtk_css_provider_load_from_data(provider, css, -1, null);
+                _ = c.gtk_css_provider_load_from_data(provider, css.ptr, -1, null);
             }
         }
     }
@@ -404,11 +404,11 @@ pub const GradientEditor = struct {
             }
         };
 
-        self.kind.connect_changed(@ptrCast(c.GCallback, Callbacks.kindChanged), null);
-        self.dir_type.connect_changed(@ptrCast(c.GCallback, Callbacks.dirTypeChanged), null);
-        self.angle.connect_value_changed(@ptrCast(c.GCallback, Callbacks.setBg), null);
-        self.vertical_position.connect_changed(@ptrCast(c.GCallback, Callbacks.setBg), null);
-        self.horizontal_position.connect_changed(@ptrCast(c.GCallback, Callbacks.setBg), null);
+        self.kind.connect_changed(@ptrCast(c.GCallback, &Callbacks.kindChanged), null);
+        self.dir_type.connect_changed(@ptrCast(c.GCallback, &Callbacks.dirTypeChanged), null);
+        self.angle.connect_value_changed(@ptrCast(c.GCallback, &Callbacks.setBg), null);
+        self.vertical_position.connect_changed(@ptrCast(c.GCallback, &Callbacks.setBg), null);
+        self.horizontal_position.connect_changed(@ptrCast(c.GCallback, &Callbacks.setBg), null);
     }
 
     fn togglePositionType(self: Self) void {
@@ -429,7 +429,7 @@ pub const GradientEditor = struct {
     fn toggleDirectionType(self: Self) void {
         if (self.dir_type.get_active_id(allocator)) |id| {
             defer allocator.free(id);
-            if (config.parseEnum(DirectionType, id)) |kind| {
+            if (config.parseEnum(DirectionType, id.ptr)) |kind| {
                 switch (kind) {
                     .angle => {
                         self.dir_stack.set_visible_child(self.angle_grid);

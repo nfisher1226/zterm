@@ -187,7 +187,7 @@ pub const Keys = struct {
                 if (handle.createFile("keys.nt", .{ .truncate = true })) |file| {
                     tree.stringify(.{}, file.writer()) catch return;
                 } else |write_err| {
-                    std.debug.print("Write Error: {s}\n", .{write_err});
+                    std.debug.print("Write Error: {}\n", .{write_err});
                     return;
                 }
             }

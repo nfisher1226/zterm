@@ -65,7 +65,7 @@ pub const Tab = struct {
             }
             break :blk "Zterm";
         };
-        term.connect_current_directory_uri_changed(@ptrCast(c.GCallback, Callbacks.setTitle), null);
+        term.connect_current_directory_uri_changed(@ptrCast(c.GCallback, &Callbacks.setTitle), null);
         var tab = Self{
             .box = gtk.Box.new(.horizontal, 0),
             .tab_label = gtk.Label.new(title),
@@ -91,7 +91,7 @@ pub const Tab = struct {
         gui.notebook.set_tab_label(tab.box.as_widget(), lbox.as_widget());
         gui.notebook.set_tab_reorderable(tab.box.as_widget(), true);
 
-        tab.close_button.connect_clicked(@ptrCast(c.GCallback, Callbacks.closeTabByButton), @ptrCast(c.gpointer, tab.box.ptr));
+        tab.close_button.connect_clicked(@ptrCast(c.GCallback, &Callbacks.closeTabByButton), @ptrCast(c.gpointer, tab.box.ptr));
 
         return tab;
     }
@@ -338,17 +338,17 @@ const Gui = struct {
     }
 
     fn connectSignals(self: Self) void {
-        self.menu.new_tab.connect_activate(@ptrCast(c.GCallback, Callbacks.newTab), null);
-        self.menu.split_view.connect_activate(@ptrCast(c.GCallback, Callbacks.splitTab), null);
-        self.menu.rotate_view.connect_activate(@ptrCast(c.GCallback, Callbacks.rotateView), null);
-        self.notebook.connect_page_removed(@ptrCast(c.GCallback, Callbacks.pageRemoved), null);
-        self.notebook.connect_select_page(@ptrCast(c.GCallback, Callbacks.selectPage), null);
-        self.notebook.connect_switch_page(@ptrCast(c.GCallback, Callbacks.switchPage), null);
-        self.menu.about.connect_activate(@ptrCast(c.GCallback, Callbacks.showAbout), null);
-        self.menu.preferences.connect_activate(@ptrCast(c.GCallback, Callbacks.runPrefs), null);
-        self.menu.close_tab.connect_activate(@ptrCast(c.GCallback, Callbacks.closeCurrentTab), null);
-        self.menu.quit.connect_activate(@ptrCast(c.GCallback, c.gtk_main_quit), null);
-        self.window.as_widget().connect("delete-event", @ptrCast(c.GCallback, c.gtk_main_quit), null);
+        self.menu.new_tab.connect_activate(@ptrCast(c.GCallback, &Callbacks.newTab), null);
+        self.menu.split_view.connect_activate(@ptrCast(c.GCallback, &Callbacks.splitTab), null);
+        self.menu.rotate_view.connect_activate(@ptrCast(c.GCallback, &Callbacks.rotateView), null);
+        self.notebook.connect_page_removed(@ptrCast(c.GCallback, &Callbacks.pageRemoved), null);
+        self.notebook.connect_select_page(@ptrCast(c.GCallback, &Callbacks.selectPage), null);
+        self.notebook.connect_switch_page(@ptrCast(c.GCallback, &Callbacks.switchPage), null);
+        self.menu.about.connect_activate(@ptrCast(c.GCallback, &Callbacks.showAbout), null);
+        self.menu.preferences.connect_activate(@ptrCast(c.GCallback, &Callbacks.runPrefs), null);
+        self.menu.close_tab.connect_activate(@ptrCast(c.GCallback, &Callbacks.closeCurrentTab), null);
+        self.menu.quit.connect_activate(@ptrCast(c.GCallback, &c.gtk_main_quit), null);
+        self.window.as_widget().connect("delete-event", @ptrCast(c.GCallback, &c.gtk_main_quit), null);
     }
 
     fn connectAccels(self: Self) void {
@@ -450,7 +450,7 @@ const Callbacks = struct {
         _ = gtk.signal_connect(
             term.ptr,
             "child-exited",
-            @ptrCast(c.GCallback, Callbacks.closeTermCallback),
+            @ptrCast(c.GCallback, &Callbacks.closeTermCallback),
             null,
         );
         return term;
