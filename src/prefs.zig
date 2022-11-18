@@ -12,6 +12,7 @@ const mem = std.mem;
 const meta = std.meta;
 const stderr = std.io.getStdErr().writer();
 const stdout = std.io.getStdOut().writer();
+const gettext = @import("gettext.zig").gettext;
 
 var widgets: PrefWidgets = undefined;
 var conf = config.Config.default();
@@ -168,7 +169,12 @@ pub const PrefWidgets = struct {
     }
 
     fn setWindowTitle(self: Self) void {
-        self.window.set_title("Zterm-" ++ version ++ " ~ Preferences");
+        if (gettext(allocator, "Preferences")) |txt| {
+            defer allocator.free(txt);
+            const title = fmt.allocPrintZ(allocator, "Zterm-{s} ~ {s}", .{ version, txt }) catch return;
+            defer allocator.free(title);
+            self.window.set_title(title);
+        }
     }
 
     fn setInitialTitle(self: Self) void {

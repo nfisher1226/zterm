@@ -22,9 +22,9 @@ pub const known_folders_config = .{
     .xdg_on_mac = true,
 };
 
-pub fn parseEnum(comptime T: type, style: [*c]const u8) ?T {
-    const len = mem.len(style);
-    return meta.stringToEnum(T, style[0..len]);
+pub fn parseEnum(comptime T: type, str: [*c]const u8) ?T {
+    const len = mem.len(str);
+    return meta.stringToEnum(T, str[0..len]);
 }
 
 pub fn getConfigDir(alloc: mem.Allocator) ?[]const u8 {

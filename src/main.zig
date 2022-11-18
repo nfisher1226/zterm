@@ -33,6 +33,10 @@ pub fn main() !void {
         usage(0);
     }
 
+    _ = c.bindtextdomain("zterm", "/usr/local/share/locale");
+    _ = c.bind_textdomain_codeset("zterm", "UTF-8");
+    _ = c.textdomain("zterm");
+
     const cmd = if (res.args.command) |e| e else os.getenvZ("SHELL") orelse "/bin/sh";
     const title = if (res.args.title) |t| t else "Zterm";
     const directory = if (res.args.directory) |d| d else os.getenv("PWD") orelse os.getenv("HOME") orelse "/";

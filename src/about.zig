@@ -9,6 +9,7 @@ const fmt = std.fmt;
 const fs = std.fs;
 const mem = std.mem;
 const os = std.os;
+const gettext = @import("gettext.zig").gettext;
 
 pub fn init() AboutDialog {
     const dlg = AboutDialog.new();
@@ -28,18 +29,36 @@ pub fn setup(dlg: AboutDialog) void {
     dlg.set_authors(&authors);
     var artists = [_:0][*c]const u8{"Nathan Fisher"};
     dlg.set_artists(&artists);
-    authors = [_:0][*c]const u8{"Andrew Kelley and contributors"};
-    dlg.add_credit_section("Programmed in Zig by", &authors);
-    authors = [_:0][*c]const u8{"Nektro and contributors"};
-    dlg.add_credit_section("Using Zigmod by", &authors);
-    authors = [_:0][*c]const u8{"Komari Spaghetti and contributors"};
-    dlg.add_credit_section("Using Zig-clap by", &authors);
-    authors = [_:0][*c]const u8{"Lewis Gaul and contributors"};
-    dlg.add_credit_section("Using Zig-nestedtext by", &authors);
-    authors = [_:0][*c]const u8{"the Ziglibs organization"};
-    dlg.add_credit_section("Using known-folders by", &authors);
-    authors = [_:0][*c]const u8{"Nathan Fisher"};
-    dlg.add_credit_section("Using Zig-vte by", &authors);
+    if (gettext(allocator, "Programmed in Zig by")) |txt| {
+        authors = [_:0][*c]const u8{"Andrew Kelley and contributors"};
+        defer allocator.free(txt);
+        dlg.add_credit_section(txt, &authors);
+    }
+    if (gettext(allocator, "Using Zigmod by")) |txt| {
+        authors = [_:0][*c]const u8{"Nektro and contributors"};
+        defer allocator.free(txt);
+        dlg.add_credit_section(txt, &authors);
+    }
+    if (gettext(allocator, "Using Zig-clap by")) |txt| {
+        authors = [_:0][*c]const u8{"Komari Spaghetti and contributors"};
+        defer allocator.free(txt);
+        dlg.add_credit_section(txt, &authors);
+    }
+    if (gettext(allocator, "Using Zig-nestedtext by")) |txt| {
+        authors = [_:0][*c]const u8{"Lewis Gaul and contributors"};
+        defer allocator.free(txt);
+        dlg.add_credit_section(txt, &authors);
+    }
+    if (gettext(allocator, "Using known-folders by")) |txt| {
+        authors = [_:0][*c]const u8{"the Ziglibs organization"};
+        defer allocator.free(txt);
+        dlg.add_credit_section(txt, &authors);
+    }
+    if (gettext(allocator, "Using Zig-vte by")) |txt| {
+        authors = [_:0][*c]const u8{"Nathan Fisher"};
+        defer allocator.free(txt);
+        dlg.add_credit_section(txt, &authors);
+    }
     dlg.set_logo_icon_name("zterm");
 }
 

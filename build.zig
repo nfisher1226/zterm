@@ -47,6 +47,7 @@ pub fn build(b: *Builder) void {
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.linkLibC();
+    exe.linkage = .dynamic;
     exe.linkSystemLibrary("vte-2.91");
     exe.install();
 
@@ -58,11 +59,7 @@ pub fn build(b: *Builder) void {
     }
 
     // set the `datadir`
-    const datadir = b.option(
-        []const u8,
-        "datadir",
-        "Path to install data files (relative tp prefix)"
-    ) orelse "share";
+    const datadir = b.option([]const u8, "datadir", "Path to install data files (relative tp prefix)") orelse "share";
 
     // get some paths
     const desktop_path = fs.path.join(
@@ -80,25 +77,15 @@ pub fn build(b: *Builder) void {
     b.installFile("data/zterm.svg", icon_path);
 
     // `png-icons` option
-    const png = b.option(
-        bool,
-        "png-icons",
-        "Export png icons (requires rsvg-convert)"
-    ) orelse false;
+    const png = b.option(bool, "png-icons", "Export png icons (requires rsvg-convert)") orelse false;
     if (png) {
-        const sizes = .{"128", "64", "48", "32"};
+        const sizes = .{ "128", "64", "48", "32" };
         inline for (sizes) |s| {
-            const size = std.fmt.allocPrint(b.allocator, "{s}x{s}", .{s, s}) catch unreachable;
+            const size = std.fmt.allocPrint(b.allocator, "{s}x{s}", .{ s, s }) catch unreachable;
             defer b.allocator.free(size);
             const icon = fs.path.join(
                 b.allocator,
-                &[_][]const u8{
-                    b.install_prefix,
-                    datadir,
-                    "/icons/hicolor/",
-                    size,
-                    "/apps/zterm.png"
-                },
+                &[_][]const u8{ b.install_prefix, datadir, "/icons/hicolor/", size, "/apps/zterm.png" },
             ) catch unreachable;
             defer b.allocator.free(icon);
             if (fs.path.dirname(icon)) |d| {
@@ -109,11 +96,7 @@ pub fn build(b: *Builder) void {
                 b.getInstallStep().dependOn(&exp_cmd.step);
             }
         }
-        const prefix_basename = fs.path.relative(
-            b.allocator,
-            b.build_root,
-            b.install_prefix
-        ) catch unreachable;
+        const prefix_basename = fs.path.relative(b.allocator, b.build_root, b.install_prefix) catch unreachable;
         icons = PngIcons.paths(b.allocator, prefix_basename);
     }
     defer {
@@ -126,28 +109,16 @@ pub fn build(b: *Builder) void {
     }
 
     // `strip` option
-    const strip = b.option(
-        bool,
-        "strip",
-        "Strip the installed executable"
-    ) orelse false;
-    const strip_exe = b.option(
-        []const u8,
-        "strip_cmd",
-        "The strip binary to use"
-    ) orelse "strip";
-    const strip_cmd = b.addSystemCommand(&[_][]const u8{strip_exe, "-s"});
+    const strip = b.option(bool, "strip", "Strip the installed executable") orelse false;
+    const strip_exe = b.option([]const u8, "strip_cmd", "The strip binary to use") orelse "strip";
+    const strip_cmd = b.addSystemCommand(&[_][]const u8{ strip_exe, "-s" });
     if (strip) {
         strip_cmd.addArtifactArg(exe);
         b.getInstallStep().dependOn(&strip_cmd.step);
     }
 
     // `size` option
-    const size = b.option(
-        bool,
-        "size",
-        "Show the installed sizes"
-    ) orelse false;
+    const size = b.option(bool, "size", "Show the installed sizes") orelse false;
     if (size) {
         const exe_absolute_path = fs.path.join(
             b.allocator,
@@ -156,27 +127,25 @@ pub fn build(b: *Builder) void {
         defer b.allocator.free(exe_absolute_path);
         const desktop_absolute_path = fs.path.join(
             b.allocator,
-            &[_][]const u8{ b.install_prefix, "/", desktop_path},
+            &[_][]const u8{ b.install_prefix, "/", desktop_path },
         ) catch unreachable;
         defer b.allocator.free(desktop_absolute_path);
         const icon_absolute_path = fs.path.join(
             b.allocator,
-            &[_][]const u8{ b.install_prefix, "/", icon_path},
+            &[_][]const u8{ b.install_prefix, "/", icon_path },
         ) catch unreachable;
         defer b.allocator.free(icon_absolute_path);
-        const size_cmd = b.addSystemCommand(
-            &[_][]const u8{
-                "du",
-                "-hc",
-                exe_absolute_path,
-                desktop_absolute_path,
-                icon_absolute_path,
-                if (icons) |i| i.xl else "",
-                if (icons) |i| i.lg else "",
-                if (icons) |i| i.md else "",
-                if (icons) |i| i.sm else "",
-            }
-        );
+        const size_cmd = b.addSystemCommand(&[_][]const u8{
+            "du",
+            "-hc",
+            exe_absolute_path,
+            desktop_absolute_path,
+            icon_absolute_path,
+            if (icons) |i| i.xl else "",
+            if (icons) |i| i.lg else "",
+            if (icons) |i| i.md else "",
+            if (icons) |i| i.sm else "",
+        });
         b.getInstallStep().dependOn(&size_cmd.step);
     }
 
@@ -202,11 +171,7 @@ pub fn build(b: *Builder) void {
         const Format = enum { gz, bz2, xz };
         const len = std.mem.len(archive_fmt);
         const format = std.meta.stringToEnum(Format, archive_fmt[0..len]);
-        const prefix_basename = fs.path.relative(
-            b.allocator,
-            b.build_root,
-            b.install_prefix
-        ) catch unreachable;
+        const prefix_basename = fs.path.relative(b.allocator, b.build_root, b.install_prefix) catch unreachable;
         defer b.allocator.free(prefix_basename);
         const exe_absolute_path = fs.path.join(
             b.allocator,
@@ -215,12 +180,12 @@ pub fn build(b: *Builder) void {
         defer b.allocator.free(exe_absolute_path);
         const desktop_absolute_path = fs.path.join(
             b.allocator,
-            &[_][]const u8{ prefix_basename, desktop_path},
+            &[_][]const u8{ prefix_basename, desktop_path },
         ) catch unreachable;
         defer b.allocator.free(desktop_absolute_path);
         const icon_absolute_path = fs.path.join(
             b.allocator,
-            &[_][]const u8{ prefix_basename, icon_path},
+            &[_][]const u8{ prefix_basename, icon_path },
         ) catch unreachable;
         defer b.allocator.free(icon_absolute_path);
         if (format) |f| {
@@ -229,35 +194,32 @@ pub fn build(b: *Builder) void {
                 .bz2 => "-cjf",
                 .xz => "-cJf",
             };
-            const ext = switch(f) {
+            const ext = switch (f) {
                 .gz => "tar.gz",
                 .bz2 => "tar.bz2",
                 .xz => "tar.xz",
             };
-            const basename = if (std.mem.containsAtLeast(
-                u8, prefix_basename, 1, "/")) "zterm" else prefix_basename;
+            const basename = if (std.mem.containsAtLeast(u8, prefix_basename, 1, "/")) "zterm" else prefix_basename;
             const archive_name = std.mem.join(
                 b.allocator,
                 ".",
                 &[_][]const u8{ basename, ext },
             ) catch unreachable;
             defer b.allocator.free(archive_name);
-            const tar_cmd = b.addSystemCommand(
-                &[_][]const u8{
-                    tar_exe,
-                    "--numeric-owner",
-                    "--owner=0",
-                    tar_opts,
-                    archive_name,
-                    exe_absolute_path,
-                    desktop_absolute_path,
-                    icon_absolute_path,
-                    if (icons) |i| i.xl else "",
-                    if (icons) |i| i.lg  else "",
-                    if (icons) |i| i.md else "",
-                    if (icons) |i| i.sm else "",
-                }
-            );
+            const tar_cmd = b.addSystemCommand(&[_][]const u8{
+                tar_exe,
+                "--numeric-owner",
+                "--owner=0",
+                tar_opts,
+                archive_name,
+                exe_absolute_path,
+                desktop_absolute_path,
+                icon_absolute_path,
+                if (icons) |i| i.xl else "",
+                if (icons) |i| i.lg else "",
+                if (icons) |i| i.md else "",
+                if (icons) |i| i.sm else "",
+            });
             if (strip) {
                 tar_cmd.step.dependOn(&strip_cmd.step);
             }

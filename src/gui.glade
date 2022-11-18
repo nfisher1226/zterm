@@ -159,7 +159,6 @@
       <object class="GtkMenuItem" id="prev_pane">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go one pane to the left or one pane up</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/PrevPane</property>
       </object>
     </child>
@@ -167,7 +166,6 @@
       <object class="GtkMenuItem" id="next_pane">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go one pane to the right or one pane down</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/NextPane</property>
       </object>
     </child>
@@ -181,7 +179,6 @@
       <object class="GtkMenuItem" id="prev_tab">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go one tab to the left</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/PrevTab</property>
       </object>
     </child>
@@ -189,7 +186,6 @@
       <object class="GtkMenuItem" id="next_tab">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go one tab to the right</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/NextTab</property>
       </object>
     </child>
@@ -197,7 +193,6 @@
       <object class="GtkMenuItem" id="tab_1">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go to tab 1</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/Tab1</property>
       </object>
     </child>
@@ -205,7 +200,6 @@
       <object class="GtkMenuItem" id="tab_2">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go to tab 2</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/Tab2</property>
       </object>
     </child>
@@ -213,7 +207,6 @@
       <object class="GtkMenuItem" id="tab_3">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go to tab 3</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/Tab3</property>
       </object>
     </child>
@@ -221,7 +214,6 @@
       <object class="GtkMenuItem" id="tab_4">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go to tab 4</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/Tab4</property>
       </object>
     </child>
@@ -229,7 +221,6 @@
       <object class="GtkMenuItem" id="tab_5">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go to tab 5</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/Tab5</property>
       </object>
     </child>
@@ -237,7 +228,6 @@
       <object class="GtkMenuItem" id="tab_6">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go to tab 6</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/Tab6</property>
       </object>
     </child>
@@ -245,7 +235,6 @@
       <object class="GtkMenuItem" id="tab_7">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go to tab 7</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/Tab7</property>
       </object>
     </child>
@@ -253,7 +242,6 @@
       <object class="GtkMenuItem" id="tab_8">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go to tab 8</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/Tab8</property>
       </object>
     </child>
@@ -261,7 +249,6 @@
       <object class="GtkMenuItem" id="tab_9">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Go to tab 9</property>
         <property name="accel-path">&lt;Zterm&gt;/NavMenu/Tab9</property>
       </object>
     </child>

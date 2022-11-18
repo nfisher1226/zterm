@@ -160,7 +160,7 @@
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="tooltip-text" translatable="yes">The first component of the program title displayed in the title bar.</property>
-                        <property name="text" translatable="yes">Zterm</property>
+                        <property name="text" >Zterm</property>
                         <property name="input-purpose">alpha</property>
                       </object>
                       <packing>
@@ -506,7 +506,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">Color Pallette</property>
+                    <property name="label" translatable="yes">Color Palette</property>
                     <attributes>
                       <attribute name="weight" value="bold"/>
                     </attributes>
@@ -802,7 +802,7 @@
                         <property name="font">Sans 12</property>
                         <property name="language">en-us</property>
                         <property name="level">GTK_FONT_CHOOSER_LEVEL_STYLE | GTK_FONT_CHOOSER_LEVEL_SIZE | GTK_FONT_CHOOSER_LEVEL_FEATURES | GTK_FONT_CHOOSER_LEVEL_FAMILY</property>
-                        <property name="preview-text">All your fonts are belong to us.</property>
+                        <property name="preview-text" translatable="yes">All your fonts are belong to us.</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -939,7 +939,6 @@
                             <property name="tooltip-text" translatable="yes">An image file of type png, jpeg, or svg to use as the background image.</property>
                             <property name="hexpand">True</property>
                             <property name="filter">filefilter1</property>
-                            <property name="title" translatable="yes"/>
                           </object>
                           <packing>
                             <property name="left-attach">1</property>
@@ -1060,7 +1059,6 @@
                               </object>
                               <packing>
                                 <property name="name">page0</property>
-                                <property name="title" translatable="yes">page0</property>
                               </packing>
                             </child>
                             <child>
@@ -1100,7 +1098,6 @@
                               </object>
                               <packing>
                                 <property name="name">page1</property>
-                                <property name="title" translatable="yes">page1</property>
                                 <property name="position">1</property>
                               </packing>
                             </child>
@@ -1181,7 +1178,7 @@
                                     <property name="can-focus">True</property>
                                     <property name="tooltip-text" translatable="yes">The angle the gradient travels away from it's starting location.</property>
                                     <property name="halign">start</property>
-                                    <property name="text" translatable="yes">45</property>
+                                    <property name="text">45</property>
                                     <property name="adjustment">angle_adjustment</property>
                                     <property name="value">115</property>
                                   </object>
@@ -1205,7 +1202,6 @@
                               </object>
                               <packing>
                                 <property name="name">page0</property>
-                                <property name="title" translatable="yes">page0</property>
                                 <property name="position">1</property>
                               </packing>
                             </child>
@@ -1347,7 +1343,6 @@
                               </object>
                               <packing>
                                 <property name="name">page1</property>
-                                <property name="title" translatable="yes">page1</property>
                                 <property name="position">1</property>
                               </packing>
                             </child>
@@ -1388,7 +1383,6 @@
                               </object>
                               <packing>
                                 <property name="name">page2</property>
-                                <property name="title" translatable="yes">page2</property>
                                 <property name="position">2</property>
                               </packing>
                             </child>
@@ -1429,7 +1423,6 @@
                               </object>
                               <packing>
                                 <property name="name">page3</property>
-                                <property name="title" translatable="yes">page3</property>
                                 <property name="position">3</property>
                               </packing>
                             </child>
@@ -1443,7 +1436,6 @@
                       </object>
                       <packing>
                         <property name="name">page3</property>
-                        <property name="title" translatable="yes">page3</property>
                         <property name="position">3</property>
                       </packing>
                     </child>
