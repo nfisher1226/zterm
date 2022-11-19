@@ -8,6 +8,7 @@ Contents
 * Update to 10.0 zig compiler
 * Update zig-clap to most recent
 * Tab title follows host:cwd
+* Prepare for i18n using Gettext
 
 ## 0.3.1 release
 * Added `About` dialog with credits

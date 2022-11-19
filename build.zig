@@ -2,6 +2,7 @@ const std = @import("std");
 const Builder = std.build.Builder;
 const fs = std.fs;
 const deps = @import("deps.zig");
+const languages = .{};
 
 var icons: ?PngIcons = null;
 
@@ -84,7 +85,6 @@ pub fn build(b: *Builder) void {
             &[_][]const u8{ datadir, "locale" },
         ) catch unreachable;
         defer b.allocator.free(locale_path);
-        const languages = .{};
         inline for (languages) |lang| {
             const input = std.fmt.allocPrint(b.allocator, "po/{s}.po", .{lang}) catch unreachable;
             defer b.allocator.free(input);
