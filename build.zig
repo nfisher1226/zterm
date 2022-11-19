@@ -76,6 +76,33 @@ pub fn build(b: *Builder) void {
     b.installFile("data/zterm.desktop", desktop_path);
     b.installFile("data/zterm.svg", icon_path);
 
+    // `locale` option
+    const locales = b.option(bool, "install-locales", "Install locales (requires gettext utilities)") orelse false;
+    if (locales) {
+        const locale_path = fs.path.join(
+            b.allocator,
+            &[_][]const u8{ datadir, "locale" },
+        ) catch unreachable;
+        defer b.allocator.free(locale_path);
+        const languages = .{};
+        inline for (languages) |lang| {
+            const input = std.fmt.allocPrint(b.allocator, "po/{s}.po", .{lang}) catch unreachable;
+            defer b.allocator.free(input);
+            const output = fs.path.join(
+                b.allocator,
+                &[_][]const u8{ locale_path, lang, "LC_MESSAGES/zterm.mo" },
+            ) catch unreachable;
+            defer b.allocator.free(output);
+            if (fs.path.dirname(output)) |d| {
+                std.fs.cwd().makePath(d) catch unreachable;
+                const gettext_cmd = b.addSystemCommand(&[_][]const u8{
+                    "msgfmt", input, "-o", output,
+                });
+                b.getInstallStep().dependOn(&gettext_cmd.step);
+            }
+        }
+    }
+
     // `png-icons` option
     const png = b.option(bool, "png-icons", "Export png icons (requires rsvg-convert)") orelse false;
     if (png) {

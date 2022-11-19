@@ -1,0 +1,581 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-11-18 18:30-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/gui.glade:12
+msgid "Copy the highlighted text in the current terminal"
+msgstr ""
+
+#: src/gui.glade:20
+msgid "Paste into the current terminal"
+msgstr ""
+
+#: src/gui.glade:33
+msgid "Open a new tab"
+msgstr ""
+
+#: src/gui.glade:35
+msgid "New Tab"
+msgstr ""
+
+#: src/gui.glade:42
+msgid "Split the current view"
+msgstr ""
+
+#: src/gui.glade:44
+msgid "Split View"
+msgstr ""
+
+#: src/gui.glade:51
+msgid ""
+"Change the orientation of the split views from vertical to horizontal or "
+"vice versa"
+msgstr ""
+
+#: src/gui.glade:53
+msgid "Rotate View"
+msgstr ""
+
+#: src/gui.glade:66
+msgid "Open the About dialog"
+msgstr ""
+
+#: src/gui.glade:67
+msgid "About"
+msgstr ""
+
+#: src/gui.glade:75
+msgid "Open the preferences dialog to configure Zterm"
+msgstr ""
+
+#: src/gui.glade:76
+msgid "Preferences"
+msgstr ""
+
+#: src/gui.glade:89
+msgid "Close the current tab"
+msgstr ""
+
+#: src/gui.glade:90
+msgid "Close Tab"
+msgstr ""
+
+#: src/gui.glade:97
+msgid "Quit the application"
+msgstr ""
+
+#: src/gui.glade:99
+msgid "Quit"
+msgstr ""
+
+#: src/gui.glade:135
+msgid "Open the application menu"
+msgstr ""
+
+#: src/prefs.glade:64
+msgid "Zterm - Preferences"
+msgstr ""
+
+#: src/prefs.glade:87
+msgid "Close the preferences dialog."
+msgstr ""
+
+#: src/prefs.glade:129
+msgid "Title"
+msgstr ""
+
+#: src/prefs.glade:151
+msgid "Initial Title:"
+msgstr ""
+
+#: src/prefs.glade:162
+msgid "The first component of the program title displayed in the title bar."
+msgstr ""
+
+#: src/prefs.glade:176
+msgid "Dynamically Set Title:"
+msgstr ""
+
+#: src/prefs.glade:187
+msgid ""
+"Where to place the automatically generated portion of the title string, if "
+"used."
+msgstr ""
+
+#: src/prefs.glade:190
+msgid "Replaces initial title"
+msgstr ""
+
+#: src/prefs.glade:191
+msgid "Goes before initial title"
+msgstr ""
+
+#: src/prefs.glade:192
+msgid "Goes after initial title"
+msgstr ""
+
+#: src/prefs.glade:193
+msgid "Isn't displayed"
+msgstr ""
+
+#: src/prefs.glade:213
+msgid "Command"
+msgstr ""
+
+#: src/prefs.glade:226
+msgid "Run a custom command instead of user shell"
+msgstr ""
+
+#: src/prefs.glade:230
+msgid "Whether to run a custom command or default to the user's shell."
+msgstr ""
+
+#: src/prefs.glade:249
+msgid "Custom Command:"
+msgstr ""
+
+#: src/prefs.glade:262
+msgid "The custom command to run in lieu of the user's shell."
+msgstr ""
+
+#: src/prefs.glade:283
+msgid "Cursor"
+msgstr ""
+
+#: src/prefs.glade:304
+msgid "Cursor Style:"
+msgstr ""
+
+#: src/prefs.glade:316
+msgid "The style of the cursor."
+msgstr ""
+
+#: src/prefs.glade:320
+msgid "Block"
+msgstr ""
+
+#: src/prefs.glade:321
+msgid "I-Beam"
+msgstr ""
+
+#: src/prefs.glade:322
+msgid "Underline"
+msgstr ""
+
+#: src/prefs.glade:333
+msgid "Cursor Blinks"
+msgstr ""
+
+#: src/prefs.glade:338
+msgid "Whether or not to let the cursor blink to aid in seeing it's location."
+msgstr ""
+
+#: src/prefs.glade:361
+msgid "Scrollback"
+msgstr ""
+
+#: src/prefs.glade:374
+msgid "Infinite Scrollback"
+msgstr ""
+
+#: src/prefs.glade:378
+msgid ""
+"If checked, an unlimited number of lines will be saved in the scrollback "
+"history. This feature can significantly increase memory consumption for a "
+"long running terminal, particularly with multiple terminals open "
+"simultaneously."
+msgstr ""
+
+#: src/prefs.glade:398
+msgid "Scrollback Lines:"
+msgstr ""
+
+#: src/prefs.glade:410
+msgid "The number of lines to save in the scrollback history."
+msgstr ""
+
+#: src/prefs.glade:433
+msgid "Settings affecting how Zterm behaves."
+msgstr ""
+
+#: src/prefs.glade:434
+msgid "General"
+msgstr ""
+
+#: src/prefs.glade:455
+msgid "Colors"
+msgstr ""
+
+#: src/prefs.glade:475
+msgid "Text Color:"
+msgstr ""
+
+#: src/prefs.glade:488
+msgid "Text Color"
+msgstr ""
+
+#: src/prefs.glade:509
+msgid "Color Palette"
+msgstr ""
+
+#: src/prefs.glade:532
+msgid "Black"
+msgstr ""
+
+#: src/prefs.glade:546
+msgid "Red"
+msgstr ""
+
+#: src/prefs.glade:560
+msgid "Green"
+msgstr ""
+
+#: src/prefs.glade:574
+msgid "Brown"
+msgstr ""
+
+#: src/prefs.glade:588
+msgid "Blue"
+msgstr ""
+
+#: src/prefs.glade:602
+msgid "Magenta"
+msgstr ""
+
+#: src/prefs.glade:616
+msgid "Cyan"
+msgstr ""
+
+#: src/prefs.glade:630
+msgid "Light Grey"
+msgstr ""
+
+#: src/prefs.glade:644
+msgid "Dark Grey"
+msgstr ""
+
+#: src/prefs.glade:658
+msgid "Light Red"
+msgstr ""
+
+#: src/prefs.glade:672
+msgid "Light Green"
+msgstr ""
+
+#: src/prefs.glade:686
+msgid "Yellow"
+msgstr ""
+
+#: src/prefs.glade:700
+msgid "Light Blue"
+msgstr ""
+
+#: src/prefs.glade:714
+msgid "Light Magenta"
+msgstr ""
+
+#: src/prefs.glade:728
+msgid "Light Cyan"
+msgstr ""
+
+#: src/prefs.glade:742
+msgid "White"
+msgstr ""
+
+#: src/prefs.glade:763
+msgid "Font"
+msgstr ""
+
+#: src/prefs.glade:781
+msgid "Use system font"
+msgstr ""
+
+#: src/prefs.glade:785
+msgid "Use the monospace variant of the standard system typeface."
+msgstr ""
+
+#: src/prefs.glade:800
+msgid "The font to display in the terminal."
+msgstr ""
+
+#: src/prefs.glade:805
+msgid "All your fonts are belong to us."
+msgstr ""
+
+#: src/prefs.glade:825
+msgid "Background"
+msgstr ""
+
+#: src/prefs.glade:840
+msgid "The type of background to display in the terminal window."
+msgstr ""
+
+#: src/prefs.glade:843
+msgid "Solid Color"
+msgstr ""
+
+#: src/prefs.glade:844
+msgid "Image"
+msgstr ""
+
+#: src/prefs.glade:845
+msgid "Transparent Color"
+msgstr ""
+
+#: src/prefs.glade:846
+msgid "Gradient"
+msgstr ""
+
+#: src/prefs.glade:869
+msgid "Color:"
+msgstr ""
+
+#: src/prefs.glade:882
+msgid "Background Color"
+msgstr ""
+
+#: src/prefs.glade:894 src/prefs.glade:1306
+msgid "page0"
+msgstr ""
+
+#: src/prefs.glade:909
+msgid "Style:"
+msgstr ""
+
+#: src/prefs.glade:920
+msgid "How the image is to be scaled and positioned."
+msgstr ""
+
+#: src/prefs.glade:924
+msgid "Tiled"
+msgstr ""
+
+#: src/prefs.glade:925
+msgid "Centered"
+msgstr ""
+
+#: src/prefs.glade:926
+msgid "Scaled"
+msgstr ""
+
+#: src/prefs.glade:927
+msgid "Stretched"
+msgstr ""
+
+#: src/prefs.glade:939
+msgid "An image file of type png, jpeg, or svg to use as the background image."
+msgstr ""
+
+#: src/prefs.glade:952
+msgid "File:"
+msgstr ""
+
+#: src/prefs.glade:962 src/prefs.glade:1164
+msgid "page1"
+msgstr ""
+
+#: src/prefs.glade:977
+msgid "Opacity:"
+msgstr ""
+
+#: src/prefs.glade:989
+msgid "The opacity of the terminal window."
+msgstr ""
+
+#: src/prefs.glade:1004
+msgid "page2"
+msgstr ""
+
+#: src/prefs.glade:1021
+msgid "Gradient Type:"
+msgstr ""
+
+#: src/prefs.glade:1033
+msgid ""
+"A linear gradient runs in a straight line between two points, while a radial "
+"gradient extends outwards from it's starting point."
+msgstr ""
+
+#: src/prefs.glade:1037
+msgid "Linear"
+msgstr ""
+
+#: src/prefs.glade:1038
+msgid "Radial (circle)"
+msgstr ""
+
+#: src/prefs.glade:1039
+msgid "Radial (ellipse)"
+msgstr ""
+
+#: src/prefs.glade:1058
+msgid "Start Position:"
+msgstr ""
+
+#: src/prefs.glade:1074
+msgid "Direction:"
+msgstr ""
+
+#: src/prefs.glade:1085
+msgid ""
+"A linear gradient can run between a start and end point or can begin at a "
+"starting point and extend in a specified angle."
+msgstr ""
+
+#: src/prefs.glade:1089
+msgid "Angle"
+msgstr ""
+
+#: src/prefs.glade:1090
+msgid "To Edge"
+msgstr ""
+
+#: src/prefs.glade:1127
+msgid "The location along the vertical axis of the gradient."
+msgstr ""
+
+#: src/prefs.glade:1132
+msgid "Top"
+msgstr ""
+
+#: src/prefs.glade:1133 src/prefs.glade:1152
+msgid "Center"
+msgstr ""
+
+#: src/prefs.glade:1134
+msgid "Bottom"
+msgstr ""
+
+#: src/prefs.glade:1146
+msgid "The location along the horizontal axis of the gradient."
+msgstr ""
+
+#: src/prefs.glade:1151
+msgid "Left"
+msgstr ""
+
+#: src/prefs.glade:1153
+msgid "Right"
+msgstr ""
+
+#: src/prefs.glade:1179
+msgid "The angle the gradient travels away from it's starting location."
+msgstr ""
+
+#: src/prefs.glade:1195
+msgid "Degrees:"
+msgstr ""
+
+#: src/prefs.glade:1220
+msgid "Stops:"
+msgstr ""
+
+#: src/prefs.glade:1231
+msgid "The number of different color stops used to define the gradient."
+msgstr ""
+
+#: src/prefs.glade:1232
+msgid "2"
+msgstr ""
+
+#: src/prefs.glade:1248
+msgid "Select a stop to edit"
+msgstr ""
+
+#: src/prefs.glade:1252
+msgid "Stop 1"
+msgstr ""
+
+#: src/prefs.glade:1253
+msgid "Stop 2"
+msgstr ""
+
+#: src/prefs.glade:1279
+msgid "The color of the first gradient stop."
+msgstr ""
+
+#: src/prefs.glade:1292
+msgid ""
+"How far from the starting point to place the first stop. If any number other "
+"than \"0\" is specified, the gradient will use a solid color until it "
+"reaches this point before beginning it's transition to the next color."
+msgstr ""
+
+#: src/prefs.glade:1320
+msgid "The color of the second gradient stop."
+msgstr ""
+
+#: src/prefs.glade:1332
+msgid "How far from the beginning to place the second gradient stop."
+msgstr ""
+
+#: src/prefs.glade:1360
+msgid "The color of the third gradient stop."
+msgstr ""
+
+#: src/prefs.glade:1372
+msgid "How far from the beginning to place the third gradient stop."
+msgstr ""
+
+#: src/prefs.glade:1400
+msgid "The color of the fourth gradient stop."
+msgstr ""
+
+#: src/prefs.glade:1412
+msgid ""
+"How far from the starting point to place the first stop. If any number other "
+"than \"100\" is specified, the gradient will end it's transitionfrom the "
+"previous color at that point and show a solid color from there until it's "
+"end."
+msgstr ""
+
+#: src/prefs.glade:1458
+msgid "Settings affecting how Zterm looks."
+msgstr ""
+
+#: src/prefs.glade:1459
+msgid "Appearance"
+msgstr ""
+
+#: src/about.zig:32
+msgid "Programmed in Zig by"
+msgstr ""
+
+#: src/about.zig:37
+msgid "Using Zigmod by"
+msgstr ""
+
+#: src/about.zig:42
+msgid "Using Zig-clap by"
+msgstr ""
+
+#: src/about.zig:47
+msgid "Using Zig-nestedtext by"
+msgstr ""
+
+#: src/about.zig:52
+msgid "Using known-folders by"
+msgstr ""
+
+#: src/about.zig:57
+msgid "Using Zig-vte by"
+msgstr ""
+
+#: src/prefs.zig:172
+msgid "Preferences"
+msgstr
